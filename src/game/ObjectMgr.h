@@ -72,7 +72,7 @@ struct GameTele
     std::wstring wnameLow;
 };
 
-typedef HM_NAMESPACE::hash_map<uint32, GameTele > GameTeleMap;
+typedef UNORDERED_MAP<uint32, GameTele > GameTeleMap;
 
 struct ScriptInfo
 {
@@ -81,7 +81,7 @@ struct ScriptInfo
     uint32 command;
     uint32 datalong;
     uint32 datalong2;
-    std::string datatext;
+    int32  dataint;
     float x;
     float y;
     float z;
@@ -120,26 +120,33 @@ struct CellObjectGuids
     CellGuidSet gameobjects;
     CellCorpseSet corpses;
 };
-typedef HM_NAMESPACE::hash_map<uint32/*cell_id*/,CellObjectGuids> CellObjectGuidsMap;
-typedef HM_NAMESPACE::hash_map<uint32/*(mapid,spawnMode) pair*/,CellObjectGuidsMap> MapObjectGuids;
+typedef UNORDERED_MAP<uint32/*cell_id*/,CellObjectGuids> CellObjectGuidsMap;
+typedef UNORDERED_MAP<uint32/*(mapid,spawnMode) pair*/,CellObjectGuidsMap> MapObjectGuids;
 
-typedef HM_NAMESPACE::hash_map<uint64/*(instance,guid) pair*/,time_t> RespawnTimes;
+typedef UNORDERED_MAP<uint64/*(instance,guid) pair*/,time_t> RespawnTimes;
+
+
+// mangos string ranges
+#define MIN_MANGOS_STRING_ID    1
+#define MAX_MANGOS_STRING_ID    2000000000
+#define MIN_DB_SCRIPT_STRING_ID MAX_MANGOS_STRING_ID
+#define MAX_DB_SCRIPT_STRING_ID 2000010000
 
 struct MangosStringLocale
 {
     std::vector<std::string> Content;                       // 0 -> default, i -> i-1 locale index
 };
 
-typedef HM_NAMESPACE::hash_map<uint32,CreatureData> CreatureDataMap;
-typedef HM_NAMESPACE::hash_map<uint32,GameObjectData> GameObjectDataMap;
-typedef HM_NAMESPACE::hash_map<uint32,CreatureLocale> CreatureLocaleMap;
-typedef HM_NAMESPACE::hash_map<uint32,GameObjectLocale> GameObjectLocaleMap;
-typedef HM_NAMESPACE::hash_map<uint32,ItemLocale> ItemLocaleMap;
-typedef HM_NAMESPACE::hash_map<uint32,QuestLocale> QuestLocaleMap;
-typedef HM_NAMESPACE::hash_map<uint32,NpcTextLocale> NpcTextLocaleMap;
-typedef HM_NAMESPACE::hash_map<uint32,PageTextLocale> PageTextLocaleMap;
-typedef HM_NAMESPACE::hash_map<uint32,MangosStringLocale> MangosStringLocaleMap;
-typedef HM_NAMESPACE::hash_map<uint32,NpcOptionLocale> NpcOptionLocaleMap;
+typedef UNORDERED_MAP<uint32,CreatureData> CreatureDataMap;
+typedef UNORDERED_MAP<uint32,GameObjectData> GameObjectDataMap;
+typedef UNORDERED_MAP<uint32,CreatureLocale> CreatureLocaleMap;
+typedef UNORDERED_MAP<uint32,GameObjectLocale> GameObjectLocaleMap;
+typedef UNORDERED_MAP<uint32,ItemLocale> ItemLocaleMap;
+typedef UNORDERED_MAP<uint32,QuestLocale> QuestLocaleMap;
+typedef UNORDERED_MAP<uint32,NpcTextLocale> NpcTextLocaleMap;
+typedef UNORDERED_MAP<uint32,PageTextLocale> PageTextLocaleMap;
+typedef UNORDERED_MAP<uint32,MangosStringLocale> MangosStringLocaleMap;
+typedef UNORDERED_MAP<uint32,NpcOptionLocale> NpcOptionLocaleMap;
 
 typedef std::multimap<uint32,uint32> QuestRelations;
 
@@ -229,11 +236,13 @@ struct PlayerCondition
 };
 
 // NPC gossip text id
-typedef HM_NAMESPACE::hash_map<uint32, uint32> CacheNpcTextIdMap;
+typedef UNORDERED_MAP<uint32, uint32> CacheNpcTextIdMap;
 typedef std::list<GossipOption> CacheNpcOptionList;
 
-typedef HM_NAMESPACE::hash_map<uint32, VendorItemData> CacheVendorItemMap;
-typedef HM_NAMESPACE::hash_map<uint32, TrainerSpellData> CacheTrainerSpellMap;
+typedef UNORDERED_MAP<uint32, VendorItemData> CacheVendorItemMap;
+typedef UNORDERED_MAP<uint32, TrainerSpellData> CacheTrainerSpellMap;
+
+typedef std::list<const AchievementCriteriaEntry*> AchievementCriteriaEntryList;
 
 enum SkillRangeType
 {
@@ -271,23 +280,26 @@ class ObjectMgr
         ObjectMgr();
         ~ObjectMgr();
 
-        typedef HM_NAMESPACE::hash_map<uint32, Item*> ItemMap;
+        typedef UNORDERED_MAP<uint32, Item*> ItemMap;
 
         typedef std::set< Group * > GroupSet;
         typedef std::set< Guild * > GuildSet;
-        typedef std::set< ArenaTeam * > ArenaTeamSet;
 
-        typedef HM_NAMESPACE::hash_map<uint32, Quest*> QuestMap;
+        typedef UNORDERED_MAP<uint32, ArenaTeam* > ArenaTeamMap;
 
-        typedef HM_NAMESPACE::hash_map<uint32, AreaTrigger> AreaTriggerMap;
+        typedef UNORDERED_MAP<uint32, Quest*> QuestMap;
 
-        typedef HM_NAMESPACE::hash_map<uint32, std::string> AreaTriggerScriptMap;
+        typedef UNORDERED_MAP<uint32, AreaTrigger> AreaTriggerMap;
 
-        typedef HM_NAMESPACE::hash_map<uint32, ReputationOnKillEntry> RepOnKillMap;
+        typedef UNORDERED_MAP<uint32, uint32> AreaTriggerScriptMap;
 
-        typedef HM_NAMESPACE::hash_map<uint32, WeatherZoneChances> WeatherZoneMap;
+        typedef UNORDERED_MAP<uint32, ReputationOnKillEntry> RepOnKillMap;
 
-        typedef HM_NAMESPACE::hash_map<uint32, PetCreateSpellEntry> PetCreateSpellMap;
+        typedef UNORDERED_MAP<uint32, WeatherZoneChances> WeatherZoneMap;
+
+        typedef UNORDERED_MAP<uint32, PetCreateSpellEntry> PetCreateSpellMap;
+
+        typedef std::vector<std::string> ScriptNameMap;
 
         Player* GetPlayer(const char* name) const { return ObjectAccessor::Instance().FindPlayerByName(name);}
         Player* GetPlayer(uint64 guid) const { return ObjectAccessor::FindPlayer(guid); }
@@ -303,16 +315,18 @@ class ObjectMgr
 
         Guild* GetGuildByLeader(uint64 const&guid) const;
         Guild* GetGuildById(const uint32 GuildId) const;
-        Guild* GetGuildByName(std::string guildname) const;
+        Guild* GetGuildByName(const std::string& guildname) const;
         std::string GetGuildNameById(const uint32 GuildId) const;
         void AddGuild(Guild* guild) { mGuildSet.insert( guild ); }
         void RemoveGuild(Guild* guild) { mGuildSet.erase( guild ); }
 
-        ArenaTeam* GetArenaTeamById(const uint32 ArenaTeamId) const;
-        ArenaTeam* GetArenaTeamByName(std::string ArenaTeamName) const;
-        ArenaTeam* GetArenaTeamByCapitan(uint64 const& guid) const;
-        void AddArenaTeam(ArenaTeam* arenateam) { mArenaTeamSet.insert( arenateam ); }
-        void RemoveArenaTeam(ArenaTeam* arenateam) { mArenaTeamSet.erase( arenateam ); }
+        ArenaTeam* GetArenaTeamById(const uint32 arenateamid) const;
+        ArenaTeam* GetArenaTeamByName(const std::string& arenateamname) const;
+        ArenaTeam* GetArenaTeamByCaptain(uint64 const& guid) const;
+        void AddArenaTeam(ArenaTeam* arenaTeam);
+        void RemoveArenaTeam(ArenaTeam* arenaTeam);
+        ArenaTeamMap::iterator GetArenaTeamMapBegin() { return mArenaTeamMap.begin(); }
+        ArenaTeamMap::iterator GetArenaTeamMapEnd()   { return mArenaTeamMap.end(); }
 
         static CreatureInfo const *GetCreatureTemplate( uint32 id );
         CreatureModelInfo const *GetCreatureModelInfo( uint32 modelid );
@@ -395,7 +409,7 @@ class ObjectMgr
         bool GetPlayerNameByGUID(const uint64 &guid, std::string &name) const;
         uint32 GetPlayerTeamByGUID(const uint64 &guid) const;
         uint32 GetPlayerAccountIdByGUID(const uint64 &guid) const;
-        uint32 GetPlayerAccountIdByPlayerName(std::string name) const;
+        uint32 GetPlayerAccountIdByPlayerName(const std::string& name) const;
 
         uint32 GetNearestTaxiNode( float x, float y, float z, uint32 mapid );
         void GetTaxiPath( uint32 source, uint32 destination, uint32 &path, uint32 &cost);
@@ -453,7 +467,7 @@ class ObjectMgr
 
         AreaTrigger const* GetGoBackTrigger(uint32 Map) const;
 
-        const char* GetAreaTriggerScriptName(uint32 id);
+        uint32 GetAreaTriggerScriptId(uint32 trigger_id);
 
         ReputationOnKillEntry const* GetReputationOnKilEntry(uint32 id) const
         {
@@ -499,7 +513,8 @@ class ObjectMgr
         void LoadSpellScripts();
 
         bool LoadMangosStrings(DatabaseType& db, char const* table, int32 min_value, int32 max_value);
-        bool LoadMangosStrings() { return LoadMangosStrings(WorldDatabase,"mangos_string",1,std::numeric_limits<int32>::max()); }
+        bool LoadMangosStrings() { return LoadMangosStrings(WorldDatabase,"mangos_string",MIN_MANGOS_STRING_ID,MAX_MANGOS_STRING_ID); }
+        void LoadDbScriptStrings();
         void LoadPetCreateSpells();
         void LoadCreatureLocales();
         void LoadCreatureTemplates();
@@ -551,6 +566,7 @@ class ObjectMgr
         void LoadNpcTextId();
         void LoadVendors();
         void LoadTrainerSpell();
+        void LoadCompletedAchievements();
 
         std::string GeneratePetName(uint32 entry);
         uint32 GetBaseXP(uint32 level);
@@ -569,6 +585,8 @@ class ObjectMgr
         uint32 GenerateMailID();
         uint32 GenerateItemTextID();
         uint32 GeneratePetNumber();
+        uint32 GenerateArenaTeamId();
+        uint32 GenerateGuildId();
 
         uint32 CreateItemText(std::string text);
         std::string GetItemText( uint32 id )
@@ -685,15 +703,15 @@ class ObjectMgr
 
         // reserved names
         void LoadReservedPlayersNames();
-        bool IsReservedName(std::string name) const
+        bool IsReservedName(const std::string& name) const
         {
             return m_ReservedNames.find(name) != m_ReservedNames.end();
         }
 
         // name with valid structure and symbols
-        static bool IsValidName( std::string name, bool create = false );
-        static bool IsValidCharterName( std::string name );
-        static bool IsValidPetName( std::string name );
+        static bool IsValidName( const std::string& name, bool create = false );
+        static bool IsValidCharterName( const std::string& name );
+        static bool IsValidPetName( const std::string& name );
 
         static bool CheckDeclinedNames(std::wstring mainpart, DeclinedName const& names);
 
@@ -717,10 +735,10 @@ class ObjectMgr
             if(itr==m_GameTeleMap.end()) return NULL;
             return &itr->second;
         }
-        GameTele const* GetGameTele(std::string name) const;
+        GameTele const* GetGameTele(const std::string& name) const;
         GameTeleMap const& GetGameTeleMap() const { return m_GameTeleMap; }
         bool AddGameTele(GameTele& data);
-        bool DeleteGameTele(std::string name);
+        bool DeleteGameTele(const std::string& name);
 
         CacheNpcOptionList const& GetNpcOptions() const { return m_mCacheNpcOptionList; }
 
@@ -753,34 +771,46 @@ class ObjectMgr
         void AddVendorItem(uint32 entry,uint32 item, uint32 maxcount, uint32 incrtime, uint32 ExtendedCost);
         bool RemoveVendorItem(uint32 entry,uint32 item);
         bool IsVendorItemValid( uint32 vendor_entry, uint32 item, uint32 maxcount, uint32 ptime, uint32 ExtendedCost, Player* pl = NULL, std::set<uint32>* skip_vendors = NULL ) const;
+        void LoadAchievementCriteriaList();
+        AchievementCriteriaEntryList const& GetAchievementCriteriaByType(AchievementCriteriaTypes type);
+        std::set<uint32> allCompletedAchievements;
 
+        void LoadScriptNames();
+        ScriptNameMap &GetScriptNames() { return m_scriptNames; }
+        const char * GetScriptName(uint32 id) { return id < m_scriptNames.size() ? m_scriptNames[id].c_str() : ""; }
+        uint32 GetScriptId(const char *name);
     protected:
+
+        // first free id for selected id type
         uint32 m_auctionid;
         uint32 m_mailid;
         uint32 m_ItemTextId;
+        uint32 m_arenaTeamId;
+        uint32 m_guildId;
+        uint32 m_hiPetNumber;
 
+        // first free low guid for seelcted guid type
         uint32 m_hiCharGuid;
         uint32 m_hiCreatureGuid;
         uint32 m_hiPetGuid;
+        uint32 m_hiVehicleGuid;
         uint32 m_hiItemGuid;
         uint32 m_hiGoGuid;
         uint32 m_hiDoGuid;
         uint32 m_hiCorpseGuid;
 
-        uint32 m_hiPetNumber;
+        QuestMap            mQuestTemplates;
 
-        QuestMap mQuestTemplates;
-
-        typedef HM_NAMESPACE::hash_map<uint32, GossipText*> GossipTextMap;
-        typedef HM_NAMESPACE::hash_map<uint32, uint32> QuestAreaTriggerMap;
-        typedef HM_NAMESPACE::hash_map<uint32, uint32> BattleMastersMap;
-        typedef HM_NAMESPACE::hash_map<uint32, std::string> ItemTextMap;
+        typedef UNORDERED_MAP<uint32, GossipText*> GossipTextMap;
+        typedef UNORDERED_MAP<uint32, uint32> QuestAreaTriggerMap;
+        typedef UNORDERED_MAP<uint32, uint32> BattleMastersMap;
+        typedef UNORDERED_MAP<uint32, std::string> ItemTextMap;
         typedef std::set<uint32> TavernAreaTriggerSet;
         typedef std::set<uint32> GameObjectForQuestSet;
 
         GroupSet            mGroupSet;
         GuildSet            mGuildSet;
-        ArenaTeamSet        mArenaTeamSet;
+        ArenaTeamMap        mArenaTeamMap;
 
         ItemMap             mItems;
         ItemMap             mAitems;
@@ -813,13 +843,17 @@ class ObjectMgr
 
         GameTeleMap         m_GameTeleMap;
 
+        ScriptNameMap       m_scriptNames;
+
         typedef             std::vector<LocaleConstant> LocalForIndex;
         LocalForIndex        m_LocalForIndex;
         int GetOrNewIndexForLocale(LocaleConstant loc);
 
         int DBCLocaleIndex;
+
     private:
         void LoadScripts(ScriptMapMap& scripts, char const* tablename);
+        void CheckScripts(ScriptMapMap const& scripts,std::set<int32>& ids);
         void ConvertCreatureAddonAuras(CreatureDataAddon* addon, char const* table, char const* guidEntryStr);
         void LoadQuestRelationsHelper(QuestRelations& map,char const* table);
 
@@ -867,12 +901,17 @@ class ObjectMgr
         CacheNpcTextIdMap m_mCacheNpcTextIdMap;
         CacheVendorItemMap m_mCacheVendorItemMap;
         CacheTrainerSpellMap m_mCacheTrainerSpellMap;
+
+        // store achievement criterias by type to speed up lookup
+        AchievementCriteriaEntryList m_AchievementCriteriasByType[ACHIEVEMENT_CRITERIA_TYPE_TOTAL];
 };
 
 #define objmgr MaNGOS::Singleton<ObjectMgr>::Instance()
 
 // scripting access functions
-bool MANGOS_DLL_SPEC LoadMangosStrings(DatabaseType& db, char const* table,int32 start_value = -1, int32 end_value = std::numeric_limits<int32>::min());
-MANGOS_DLL_SPEC const char* GetAreaTriggerScriptNameById(uint32 id);
+MANGOS_DLL_SPEC bool LoadMangosStrings(DatabaseType& db, char const* table,int32 start_value = -1, int32 end_value = std::numeric_limits<int32>::min());
+MANGOS_DLL_SPEC uint32 GetAreaTriggerScriptId(uint32 trigger_id);
+MANGOS_DLL_SPEC uint32 GetScriptId(const char *name);
+MANGOS_DLL_SPEC ObjectMgr::ScriptNameMap& GetScriptNames();
 
 #endif

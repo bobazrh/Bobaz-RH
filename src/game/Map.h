@@ -31,6 +31,7 @@
 #include "Timer.h"
 #include "SharedDefines.h"
 #include "GameSystem/GridRefManager.h"
+#include "MapRefManager.h"
 
 #include <bitset>
 #include <list>
@@ -102,7 +103,7 @@ struct InstanceTemplate
     float startLocY;
     float startLocZ;
     float startLocO;
-    char const* script;
+    uint32 script_id;
 };
 
 enum LevelRequirementVsMode
@@ -116,7 +117,7 @@ enum LevelRequirementVsMode
 #pragma pack(pop)
 #endif
 
-typedef HM_NAMESPACE::hash_map<Creature*, CreatureMover> CreatureMoveList;
+typedef UNORDERED_MAP<Creature*, CreatureMover> CreatureMoveList;
 
 #define MAX_HEIGHT            100000.0f                     // can be use for find ground height at surface
 #define INVALID_HEIGHT       -100000.0f                     // for check, must be equal to VMAP_INVALID_HEIGHT, real value for unknown height is VMAP_INVALID_HEIGHT_VALUE
@@ -124,6 +125,7 @@ typedef HM_NAMESPACE::hash_map<Creature*, CreatureMover> CreatureMoveList;
 
 class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::ObjectLevelLockable<Map, ZThread::Mutex>
 {
+    friend class MapReference;
     public:
         Map(uint32 id, time_t, uint32 InstanceId, uint8 SpawnMode);
         virtual ~Map();
@@ -219,6 +221,17 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         bool IsBattleGround() const { return i_mapEntry && i_mapEntry->IsBattleGround(); }
         bool IsBattleArena() const { return i_mapEntry && i_mapEntry->IsBattleArena(); }
         bool IsBattleGroundOrArena() const { return i_mapEntry && i_mapEntry->IsBattleGroundOrArena(); }
+        bool GetEntrancePos(int32 &mapid, float &x, float &y)
+        {
+            if(!i_mapEntry)
+                return false;
+            if(i_mapEntry->entrance_map < 0)
+                return false;
+            mapid = i_mapEntry->entrance_map;
+            x = i_mapEntry->entrance_x;
+            y = i_mapEntry->entrance_y;
+            return true;
+        }
 
         void AddObjectToRemoveList(WorldObject *obj);
         void DoDelayedMovesAndRemoves();
@@ -232,6 +245,15 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         void resetMarkedCells() { marked_cells.reset(); }
         bool isCellMarked(uint32 pCellId) { return marked_cells.test(pCellId); }
         void markCell(uint32 pCellId) { marked_cells.set(pCellId); }
+
+        bool HavePlayers() const { return !m_mapRefManager.isEmpty(); }
+        uint32 GetPlayersCountExceptGMs() const;
+        bool PlayersNearGrid(uint32 x,uint32 y) const;
+
+        void SendToPlayers(WorldPacket const* data) const;
+
+        typedef MapRefManager PlayerList;
+        PlayerList const& GetPlayers() const { return m_mapRefManager; }
     private:
         void LoadVMap(int pX, int pY);
         void LoadMap(uint32 mapid, uint32 instanceid, int x,int y);
@@ -280,6 +302,8 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         uint32 i_InstanceId;
         uint32 m_unloadTimer;
 
+        MapRefManager m_mapRefManager;
+        MapRefManager::iterator m_mapRefIter;
     private:
         typedef GridReadGuard ReadGuard;
         typedef GridWriteGuard WriteGuard;
@@ -319,8 +343,6 @@ enum InstanceResetMethod
 class MANGOS_DLL_SPEC InstanceMap : public Map
 {
     public:
-        typedef std::list<Player *> PlayerList;                 // online players only
-
         InstanceMap(uint32 id, time_t, uint32 InstanceId, uint8 SpawnMode);
         ~InstanceMap();
         bool Add(Player *);
@@ -328,33 +350,24 @@ class MANGOS_DLL_SPEC InstanceMap : public Map
         void Update(const uint32&);
         void CreateInstanceData(bool load);
         bool Reset(uint8 method);
-        std::string GetScript() { return i_script; }
+        uint32 GetScriptId() { return i_script_id; }
         InstanceData* GetInstanceData() { return i_data; }
         void PermBindAllPlayers(Player *player);
-        PlayerList const& GetPlayers() const { return i_Players;}
-        void SendToPlayers(WorldPacket const* data) const;
         time_t GetResetTime();
         void UnloadAll(bool pForce);
         bool CanEnter(Player* player);
-        uint32 GetPlayersCountExceptGMs() const;
-        uint32 HavePlayers() const { return !i_Players.empty(); }
-        void SendResetWarnings(uint32 timeLeft);
+        void SendResetWarnings(uint32 timeLeft) const;
         void SetResetSchedule(bool on);
     private:
         bool m_resetAfterUnload;
         bool m_unloadWhenEmpty;
         InstanceData* i_data;
-        std::string i_script;
-        // only online players that are inside the instance currently
-        // TODO ? - use the grid instead to access the players
-        PlayerList i_Players;
+        uint32 i_script_id;
 };
 
 class MANGOS_DLL_SPEC BattleGroundMap : public Map
 {
     public:
-        typedef std::list<Player *> PlayerList;                 // online players only
-
         BattleGroundMap(uint32 id, time_t, uint32 InstanceId);
         ~BattleGroundMap();
 
@@ -363,8 +376,6 @@ class MANGOS_DLL_SPEC BattleGroundMap : public Map
         bool CanEnter(Player* player);
         void SetUnload();
         void UnloadAll(bool pForce);
-    private:
-        PlayerList i_Players;
 };
 
 /*inline

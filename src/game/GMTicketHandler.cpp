@@ -64,8 +64,6 @@ void WorldSession::HandleGMTicketUpdateTextOpcode( WorldPacket & recv_data )
     std::string ticketText;
     recv_data >> ticketText;
 
-    CharacterDatabase.escape_string(ticketText);
-
     if(GMTicket* ticket = ticketmgr.GetGMTicket(GetPlayer()->GetGUIDLow()))
         ticket->SetText(ticketText.c_str());
     else
@@ -103,9 +101,7 @@ void WorldSession::HandleGMTicketCreateOpcode( WorldPacket & recv_data )
 
     sLog.outDebug("TicketCreate: map %u, x %f, y %f, z %f, text %s, unk1 %u, unk2 %u", map, x, y, z, ticketText.c_str(), unk1, unk2);
 
-    CharacterDatabase.escape_string(ticketText);
-
-    if(GMTicket* ticket = ticketmgr.GetGMTicket(GetPlayer()->GetGUIDLow()))
+    if(ticketmgr.GetGMTicket(GetPlayer()->GetGUIDLow()))
     {
         WorldPacket data( SMSG_GMTICKET_CREATE, 4 );
         data << uint32(1);

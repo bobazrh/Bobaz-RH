@@ -288,7 +288,7 @@ bool ChatHandler::HandleGPSCommand(const char* args)
 
     Map2ZoneCoordinates(zone_x,zone_y,zone_id);
 
-    Map const *map = MapManager::Instance().GetMap(obj->GetMapId(), obj);
+    Map const *map = obj->GetMap();
     float ground_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), MAX_HEIGHT);
     float floor_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ());
 
@@ -349,11 +349,18 @@ bool ChatHandler::HandleNamegoCommand(const char* args)
             return false;
         }
 
-        Map* pMap = MapManager::Instance().GetMap(m_session->GetPlayer()->GetMapId(),m_session->GetPlayer());
+        Map* pMap = m_session->GetPlayer()->GetMap();
 
-        if(pMap->Instanceable())
+        if(pMap->IsBattleGroundOrArena())
         {
-            Map* cMap = MapManager::Instance().GetMap(chr->GetMapId(),chr);
+            // cannot summon to bg
+            PSendSysMessage(LANG_CANNOT_SUMMON_TO_BG,chr->GetName());
+            SetSentErrorMessage(true);
+            return false;
+        }
+        else if(pMap->IsDungeon())
+        {
+            Map* cMap = chr->GetMap();
             if( cMap->Instanceable() && cMap->GetInstanceId() != pMap->GetInstanceId() )
             {
                 // cannot summon from instance to instance
@@ -435,11 +442,31 @@ bool ChatHandler::HandleGonameCommand(const char* args)
     Player *chr = objmgr.GetPlayer(name.c_str());
     if (chr)
     {
-        Map* cMap = MapManager::Instance().GetMap(chr->GetMapId(),chr);
+        Map* cMap = chr->GetMap();
+        if(cMap->IsBattleGroundOrArena())
+        {
+            // only allow if gm mode is on
+            if (!_player->isGameMaster())
+            {
+                PSendSysMessage(LANG_CANNOT_GO_TO_BG_GM,chr->GetName());
+                SetSentErrorMessage(true);
+                return false;
+            }
+            // if already in a bg, don't let port to other
+            else if (_player->GetBattleGroundId())
+            {
+                PSendSysMessage(LANG_CANNOT_GO_TO_BG_FROM_BG,chr->GetName());
+                SetSentErrorMessage(true);
+                return false;
+            }
+            // all's well, set bg id
+            // when porting out from the bg, it will be reset to 0
+            _player->SetBattleGroundId(chr->GetBattleGroundId());
+        }
+        else if(cMap->IsDungeon())
+        Map* cMap = chr->GetMap();
         if(cMap->Instanceable())
         {
-            Map* pMap = MapManager::Instance().GetMap(_player->GetMapId(),_player);
-
             // we have to go to instance, and can go to player only if:
             //   1) we are in his group (either as leader or as member)
             //   2) we are not bound to any group and have GM mode on
@@ -800,6 +827,40 @@ bool ChatHandler::HandleModifyRageCommand(const char* args)
     return true;
 }
 
+// Edit Player Runic Power
+bool ChatHandler::HandleModifyRunicPowerCommand(const char* args)
+{
+    if(!*args)
+        return false;
+
+    int32 rune = atoi((char*)args)*10;
+    int32 runem = atoi((char*)args)*10;
+
+    if (rune <= 0 || runem <= 0 || runem < rune)
+    {
+        SendSysMessage(LANG_BAD_VALUE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    Player *chr = getSelectedPlayer();
+    if (chr == NULL)
+    {
+        SendSysMessage(LANG_NO_CHAR_SELECTED);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    PSendSysMessage(LANG_YOU_CHANGE_RUNIC_POWER, chr->GetName(), rune/10, runem/10);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_RUNIC_POWER_CHANGED, GetName(), rune/10, runem/10);
+
+    chr->SetMaxPower(POWER_RUNIC_POWER,runem );
+    chr->SetPower(POWER_RUNIC_POWER, rune );
+
+    return true;
+}
+
 //Edit Player Faction
 bool ChatHandler::HandleModifyFactionCommand(const char* args)
 {
@@ -1030,7 +1091,7 @@ bool ChatHandler::HandleModifyASpeedCommand(const char* args)
     chr->SetSpeed(MOVE_RUN,     ASpeed,true);
     chr->SetSpeed(MOVE_SWIM,    ASpeed,true);
     //chr->SetSpeed(MOVE_TURN,    ASpeed,true);
-    chr->SetSpeed(MOVE_FLY,     ASpeed,true);
+    chr->SetSpeed(MOVE_FLIGHT,     ASpeed,true);
     return true;
 }
 
@@ -1146,7 +1207,7 @@ bool ChatHandler::HandleModifyBWalkCommand(const char* args)
     if (needReportToTarget(chr))
         ChatHandler(chr).PSendSysMessage(LANG_YOURS_BACK_SPEED_CHANGED, GetName(), BSpeed);
 
-    chr->SetSpeed(MOVE_WALKBACK,BSpeed,true);
+    chr->SetSpeed(MOVE_RUN_BACK,BSpeed,true);
 
     return true;
 }
@@ -1178,7 +1239,7 @@ bool ChatHandler::HandleModifyFlyCommand(const char* args)
     if (needReportToTarget(chr))
         ChatHandler(chr).PSendSysMessage(LANG_YOURS_FLY_SPEED_CHANGED, GetName(), FSpeed);
 
-    chr->SetSpeed(MOVE_FLY,FSpeed,true);
+    chr->SetSpeed(MOVE_FLIGHT,FSpeed,true);
 
     return true;
 }
@@ -1816,7 +1877,7 @@ bool ChatHandler::HandleSendMailCommand(const char* args)
     if(!*args)
         return false;
 
-    // format: name "subject text" "mail text" item1[:count1] item2[:count2] ... item12[:count12]
+    // format: name "subject text" "mail text"
 
     char* pName = strtok((char*)args, " ");
     if(!pName)
@@ -1863,60 +1924,6 @@ bool ChatHandler::HandleSendMailCommand(const char* args)
     std::string subject = msgSubject;
     std::string text    = msgText;
 
-    // extract items
-    typedef std::pair<uint32,uint32> ItemPair;
-    typedef std::list< ItemPair > ItemPairs;
-    ItemPairs items;
-
-    // get all tail string
-    char* tail = strtok(NULL, "");
-
-    // get from tail next item str
-    while(char* itemStr = strtok(tail, " "))
-    {
-        // and get new tail
-        tail = strtok(NULL, "");
-
-        // parse item str
-        char* itemIdStr = strtok(itemStr, ":");
-        char* itemCountStr = strtok(NULL, " ");
-
-        uint32 item_id = atoi(itemIdStr);
-        if(!item_id)
-            return false;
-
-        ItemPrototype const* item_proto = objmgr.GetItemPrototype(item_id);
-        if(!item_proto)
-        {
-            PSendSysMessage(LANG_COMMAND_ITEMIDINVALID, item_id);
-            SetSentErrorMessage(true);
-            return false;
-        }
-
-        uint32 item_count = itemCountStr ? atoi(itemCountStr) : 1;
-        if(item_count < 1 || item_proto->MaxCount && item_count > item_proto->MaxCount)
-        {
-            PSendSysMessage(LANG_COMMAND_INVALID_ITEM_COUNT, item_count,item_id);
-            SetSentErrorMessage(true);
-            return false;
-        }
-
-        while(item_count > item_proto->Stackable)
-        {
-            items.push_back(ItemPair(item_id,item_proto->Stackable));
-            item_count -= item_proto->Stackable;
-        }
-
-        items.push_back(ItemPair(item_id,item_count));
-
-        if(items.size() > MAX_MAIL_ITEMS)
-        {
-            PSendSysMessage(LANG_COMMAND_MAIL_ITEMS_LIMIT, MAX_MAIL_ITEMS);
-            SetSentErrorMessage(true);
-            return false;
-        }
-    }
-
     if(!normalizePlayerName(name))
     {
         SendSysMessage(LANG_PLAYER_NOT_FOUND);
@@ -1932,31 +1939,16 @@ bool ChatHandler::HandleSendMailCommand(const char* args)
         return false;
     }
 
-    uint32 mailId = objmgr.GenerateMailID();
-    uint32 sender_guidlo = m_session->GetPlayer()->GetGUIDLow();
+    // from console show not existed sender
+    uint32 sender_guidlo = m_session ? m_session->GetPlayer()->GetGUIDLow() : 0;
+
     uint32 messagetype = MAIL_NORMAL;
     uint32 stationery = MAIL_STATIONERY_GM;
-    uint32 itemTextId = 0;
-    if (!text.empty())
-    {
-        itemTextId = objmgr.CreateItemText( text );
-    }
+    uint32 itemTextId = !text.empty() ? objmgr.CreateItemText( text ) : 0;
 
     Player *receiver = objmgr.GetPlayer(receiver_guid);
 
-    // fill mail
-    MailItemsInfo mi;                                       // item list preparing
-
-    for(ItemPairs::const_iterator itr = items.begin(); itr != items.end(); ++itr)
-    {
-        if(Item* item = Item::CreateItem(itr->first,itr->second,m_session->GetPlayer()))
-        {
-            item->SaveToDB();                               // save for prevent lost at next mail load, if send fail then item will deleted
-            mi.AddItem(item->GetGUIDLow(), item->GetEntry(), item);
-        }
-    }
-
-    WorldSession::SendMailTo(receiver,messagetype, stationery, sender_guidlo, GUID_LOPART(receiver_guid), subject, itemTextId, &mi, 0, 0, MAIL_CHECK_MASK_NONE);
+    WorldSession::SendMailTo(receiver,messagetype, stationery, sender_guidlo, GUID_LOPART(receiver_guid), subject, itemTextId, NULL, 0, 0, MAIL_CHECK_MASK_NONE);
 
     PSendSysMessage(LANG_MAIL_SENT, name.c_str());
     return true;
@@ -2129,7 +2121,7 @@ bool ChatHandler::HandleGroupgoCommand(const char* args)
         return false;
     }
 
-    Map* gmMap = MapManager::Instance().GetMap(m_session->GetPlayer()->GetMapId(),m_session->GetPlayer());
+    Map* gmMap = m_session->GetPlayer()->GetMap();
     bool to_instance =  gmMap->Instanceable();
 
     // we are in instance, and can summon only player in our group with us as lead
@@ -2159,7 +2151,7 @@ bool ChatHandler::HandleGroupgoCommand(const char* args)
 
         if (to_instance)
         {
-            Map* plMap = MapManager::Instance().GetMap(pl->GetMapId(),pl);
+            Map* plMap = pl->GetMap();
 
             if ( plMap->Instanceable() && plMap->GetInstanceId() != gmMap->GetInstanceId() )
             {

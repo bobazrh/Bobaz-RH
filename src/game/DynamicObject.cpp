@@ -36,7 +36,7 @@ DynamicObject::DynamicObject() : WorldObject()
     m_objectType |= TYPEMASK_DYNAMICOBJECT;
     m_objectTypeId = TYPEID_DYNAMICOBJECT;
                                                             // 2.3.2 - 0x58
-    m_updateFlag = (UPDATEFLAG_LOWGUID | UPDATEFLAG_HIGHGUID | UPDATEFLAG_HASPOSITION);
+    m_updateFlag = (UPDATEFLAG_LOWGUID | UPDATEFLAG_HIGHGUID | UPDATEFLAG_HAS_POSITION);
 
     m_valuesCount = DYNAMICOBJECT_END;
 }
@@ -122,8 +122,8 @@ void DynamicObject::Update(uint32 p_time)
     TypeContainerVisitor<MaNGOS::DynamicObjectUpdater, GridTypeMapContainer > grid_object_notifier(notifier);
 
     CellLock<GridReadGuard> cell_lock(cell, p);
-    cell_lock->Visit(cell_lock, world_object_notifier, *MapManager::Instance().GetMap(GetMapId(), this));
-    cell_lock->Visit(cell_lock, grid_object_notifier,  *MapManager::Instance().GetMap(GetMapId(), this));
+    cell_lock->Visit(cell_lock, world_object_notifier, *GetMap());
+    cell_lock->Visit(cell_lock, grid_object_notifier,  *GetMap());
 
     if(deleteThis)
     {
@@ -148,5 +148,5 @@ void DynamicObject::Delay(int32 delaytime)
 
 bool DynamicObject::isVisibleForInState(Player const* u, bool inVisibleList) const
 {
-    return IsInWorld() && u->IsInWorld() && IsWithinDistInMap(u,World::GetMaxVisibleDistanceForObject()+(inVisibleList ? World::GetVisibleObjectGreyDistance() : 0.0f));
+    return IsInWorld() && u->IsInWorld() && IsWithinDistInMap(u,World::GetMaxVisibleDistanceForObject()+(inVisibleList ? World::GetVisibleObjectGreyDistance() : 0.0f), false);
 }

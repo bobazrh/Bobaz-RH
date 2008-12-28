@@ -34,7 +34,7 @@ ActiveState::Update(Map &m, NGridType &grid, GridInfo & info, const uint32 &x, c
     info.UpdateTimeTracker(t_diff);
     if( info.getTimeTracker().Passed() )
     {
-        if( grid.ActiveObjectsInGrid() == 0 && !ObjectAccessor::Instance().PlayersNearGrid(x, y, m.GetId(), m.GetInstanceId()) )
+        if( grid.ActiveObjectsInGrid() == 0 && !m.PlayersNearGrid(x, y) )
         {
             ObjectGridStoper stoper(grid);
             stoper.StopN();
@@ -48,7 +48,7 @@ ActiveState::Update(Map &m, NGridType &grid, GridInfo & info, const uint32 &x, c
 }
 
 void
-IdleState::Update(Map &m, NGridType &grid, GridInfo &info, const uint32 &x, const uint32 &y, const uint32 &) const
+IdleState::Update(Map &m, NGridType &grid, GridInfo &, const uint32 &x, const uint32 &y, const uint32 &) const
 {
     m.ResetGridExpiry(grid);
     grid.SetGridState(GRID_STATE_REMOVAL);

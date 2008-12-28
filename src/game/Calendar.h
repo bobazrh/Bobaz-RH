@@ -15,12 +15,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef MANGOS_TOOLS_H
-#define MANGOS_TOOLS_H
 
-#include "Common.h"
-#include "WorldPacket.h"
+#ifndef MANGOS_CALENDAR_H
+#define MANGOS_CALENDAR_H
 
-bool readGUID(WorldPacket & data, uint64& guid);
-void    writeGUID(WorldPacket & data, uint64 & guid);
+class Calendar
+{
+
+};
 #endif

@@ -107,9 +107,9 @@ MapManager::_GetBaseMap(uint32 id)
         Guard guard(*this);
 
         const MapEntry* entry = sMapStore.LookupEntry(id);
-        if (entry && entry->IsDungeon())
+        if (entry && entry->Instanceable())
         {
-            m = new MapInstanced(id, i_gridCleanUpDelay, 0);
+            m = new MapInstanced(id, i_gridCleanUpDelay);
         }
         else
         {
@@ -173,7 +173,8 @@ bool MapManager::CanPlayerEnter(uint32 mapid, Player* player)
         //The player has a heroic mode and tries to enter into instance which has no a heroic mode
         if (!entry->SupportsHeroicMode() && player->GetDifficulty() == DIFFICULTY_HEROIC)
         {
-            player->SendTransferAborted(mapid, TRANSFER_ABORT_DIFFICULTY2);      //Send aborted message
+            //Send aborted message
+            player->SendTransferAborted(mapid, TRANSFER_ABORT_DIFFICULTY, DIFFICULTY_HEROIC);
             return false;
         }
 
@@ -220,7 +221,7 @@ bool MapManager::CanPlayerEnter(uint32 mapid, Player* player)
         return true;
 }
 
-void MapManager::DeleteInstance(uint32 mapid, uint32 instanceId, uint8 mode)
+void MapManager::DeleteInstance(uint32 mapid, uint32 instanceId)
 {
     Map *m = _GetBaseMap(mapid);
     if (m && m->Instanceable())
@@ -243,6 +244,8 @@ MapManager::Update(time_t diff)
     i_timer.Update(diff);
     if( !i_timer.Passed() )
         return;
+
+    ObjectAccessor::Instance().UpdatePlayers(i_timer.GetCurrent());
 
     for(MapMapType::iterator iter=i_maps.begin(); iter != i_maps.end(); ++iter)
     {
@@ -276,7 +279,8 @@ bool MapManager::ExistMapAndVMap(uint32 mapid, float x,float y)
 bool MapManager::IsValidMAP(uint32 mapid)
 {
     MapEntry const* mEntry = sMapStore.LookupEntry(mapid);
-    return mEntry && (!mEntry->Instanceable() || objmgr.GetInstanceTemplate(mapid));
+    return mEntry && (!mEntry->IsDungeon() || objmgr.GetInstanceTemplate(mapid));
+    // TODO: add check for battleground template
 }
 
 void MapManager::LoadGrid(int mapid, float x, float y, const WorldObject* obj, bool no_unload)
@@ -334,7 +338,7 @@ uint32 MapManager::GetNumPlayersInInstances()
         MapInstanced::InstancedMaps &maps = ((MapInstanced *)map)->GetInstancedMaps();
         for(MapInstanced::InstancedMaps::iterator mitr = maps.begin(); mitr != maps.end(); ++mitr)
             if(mitr->second->IsDungeon())
-                ret += ((InstanceMap*)mitr->second)->GetPlayers().size();
+                ret += ((InstanceMap*)mitr->second)->GetPlayers().getSize();
     }
     return ret;
 }

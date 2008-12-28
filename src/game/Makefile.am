@@ -30,6 +30,8 @@ noinst_LIBRARIES = libmangosgame.a
 libmangosgame_a_SOURCES = \
     AccountMgr.cpp \
     AccountMgr.h \
+    AchievementMgr.h \
+    AchievementMgr.cpp \
     AddonHandler.cpp \
     AddonHandler.h \
     AggressorAI.cpp \
@@ -63,6 +65,9 @@ libmangosgame_a_SOURCES = \
     BattleGroundHandler.cpp \
     BattleGroundMgr.cpp \
     BattleGroundMgr.h \
+    Calendar.cpp \
+    Calendar.h \
+    CalendarHandler.cpp \
     Cell.h \
     CellImpl.h \
     Channel.cpp \
@@ -122,7 +127,6 @@ libmangosgame_a_SOURCES = \
     Guild.cpp \
     Guild.h \
     GuildHandler.cpp \
-    HateMatrix.h \
     HomeMovementGenerator.cpp \
     HomeMovementGenerator.h \
     HostilRefManager.cpp \
@@ -156,6 +160,8 @@ libmangosgame_a_SOURCES = \
     MapInstanced.h \
     MapManager.cpp \
     MapManager.h \
+    MapReference.h \
+    MapRefManager.h \
     MiscHandler.cpp \
     MotionMaster.cpp \
     MotionMaster.h \
@@ -226,8 +232,6 @@ libmangosgame_a_SOURCES = \
     TaxiHandler.cpp \
     TemporarySummon.cpp \
     TemporarySummon.h \
-    tools.cpp \
-    Tools.h \
     TotemAI.cpp \
     TotemAI.h \
     Totem.cpp \
@@ -245,6 +249,8 @@ libmangosgame_a_SOURCES = \
     UpdateData.h \
     UpdateFields.h \
     UpdateMask.h \
+    Vehicle.cpp \
+    Vehicle.h \
     VoiceChatHandler.cpp \
     WaypointManager.cpp \
     WaypointManager.h \

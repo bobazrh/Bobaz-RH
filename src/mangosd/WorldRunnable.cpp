@@ -49,7 +49,7 @@ void WorldRunnable::run()
     uint32 prevSleepTime = 0;                               // used for balanced full tick time length near WORLD_SLEEP_CONST
 
     ///- While we have not World::m_stopEvent, update the world
-    while (!World::m_stopEvent)
+    while (!World::IsStopped())
     {
         ++World::m_worldLoopCounter;
         realCurrTime = getMSTime();
@@ -72,7 +72,6 @@ void WorldRunnable::run()
             prevSleepTime = 0;
     }
 
-    sWorld.KickAllQueued();                                 // kick all queued players (and prevent its login at kick in game players)
     sWorld.KickAll();                                       // save and kick all players
     sWorld.UpdateSessions( 1 );                             // real players unload required UpdateSessions call
 

@@ -39,6 +39,7 @@ LootStore LootTemplates_Disenchant(   "disenchant_loot_template",   "item disenc
 LootStore LootTemplates_Fishing(      "fishing_loot_template",      "area id");
 LootStore LootTemplates_Gameobject(   "gameobject_loot_template",   "gameobject entry");
 LootStore LootTemplates_Item(         "item_loot_template",         "item entry");
+LootStore LootTemplates_Milling(      "milling_loot_template",      "item entry");
 LootStore LootTemplates_Pickpocketing("pickpocketing_loot_template","creature pickpocket lootid");
 LootStore LootTemplates_Prospecting(  "prospecting_loot_template",  "item entry");
 LootStore LootTemplates_QuestMail(    "quest_mail_loot_template",   "quest id");
@@ -58,7 +59,7 @@ class LootTemplate::LootGroup                               // A set of loot def
 
         void Verify(LootStore const& lootstore, uint32 id, uint32 group_id) const;
         void CollectLootIds(LootIdSet& set) const;
-        void CheckLootRefs(LootTemplateMap const& store, LootIdSet* ref_set) const;
+        void CheckLootRefs(LootIdSet* ref_set) const;
     private:
         LootStoreItemList ExplicitlyChanced;                // Entries with chances defined in DB
         LootStoreItemList EqualChanced;                     // Zero chances - every entry takes the same chance
@@ -206,7 +207,7 @@ void LootStore::LoadAndCollectLootIds(LootIdSet& ids_set)
 void LootStore::CheckLootRefs(LootIdSet* ref_set) const
 {
     for(LootTemplateMap::const_iterator ltItr = m_LootTemplates.begin(); ltItr != m_LootTemplates.end(); ++ltItr)
-        ltItr->second->CheckLootRefs(m_LootTemplates,ref_set);
+        ltItr->second->CheckLootRefs(ref_set);
 }
 
 void LootStore::ReportUnusedIds(LootIdSet const& ids_set) const
@@ -855,7 +856,7 @@ void LootTemplate::LootGroup::Verify(LootStore const& lootstore, uint32 id, uint
     }
 }
 
-void LootTemplate::LootGroup::CheckLootRefs(LootTemplateMap const& store, LootIdSet* ref_set) const
+void LootTemplate::LootGroup::CheckLootRefs(LootIdSet* ref_set) const
 {
     for (LootStoreItemList::const_iterator ieItr=ExplicitlyChanced.begin(); ieItr != ExplicitlyChanced.end(); ++ieItr)
     {
@@ -910,7 +911,7 @@ void LootTemplate::Process(Loot& loot, LootStore const& store, uint8 groupId) co
     }
 
     // Rolling non-grouped items
-    for (LootStoreItemList::const_iterator i = Entries.begin() ; i != Entries.end() ; i++ )
+    for (LootStoreItemList::const_iterator i = Entries.begin() ; i != Entries.end() ; ++i )
     {
         if ( !i->Roll() )
             continue;                                       // Bad luck for the entry
@@ -930,7 +931,7 @@ void LootTemplate::Process(Loot& loot, LootStore const& store, uint8 groupId) co
     }
 
     // Now processing groups
-    for (LootGroups::const_iterator i = Groups.begin( ) ; i != Groups.end( ) ; i++ )
+    for (LootGroups::const_iterator i = Groups.begin( ) ; i != Groups.end( ) ; ++i )
         i->Process(loot);
 }
 
@@ -959,7 +960,7 @@ bool LootTemplate::HasQuestDrop(LootTemplateMap const& store, uint8 groupId) con
     }
 
     // Now processing groups
-    for (LootGroups::const_iterator i = Groups.begin() ; i != Groups.end() ; i++ )
+    for (LootGroups::const_iterator i = Groups.begin() ; i != Groups.end() ; ++i )
         if (i->HasQuestDrop())
             return true;
 
@@ -977,7 +978,7 @@ bool LootTemplate::HasQuestDropForPlayer(LootTemplateMap const& store, Player co
     }
 
     // Checking non-grouped entries
-    for (LootStoreItemList::const_iterator i = Entries.begin() ; i != Entries.end() ; i++ )
+    for (LootStoreItemList::const_iterator i = Entries.begin() ; i != Entries.end() ; ++i )
     {
         if (i->mincountOrRef < 0)                           // References processing
         {
@@ -1009,7 +1010,7 @@ void LootTemplate::Verify(LootStore const& lootstore, uint32 id) const
     // TODO: References validity checks
 }
 
-void LootTemplate::CheckLootRefs(LootTemplateMap const& store, LootIdSet* ref_set) const
+void LootTemplate::CheckLootRefs(LootIdSet* ref_set) const
 {
     for(LootStoreItemList::const_iterator ieItr = Entries.begin(); ieItr != Entries.end(); ++ieItr)
     {
@@ -1023,7 +1024,7 @@ void LootTemplate::CheckLootRefs(LootTemplateMap const& store, LootIdSet* ref_se
     }
 
     for(LootGroups::const_iterator grItr = Groups.begin(); grItr != Groups.end(); ++grItr)
-        grItr->CheckLootRefs(store,ref_set);
+        grItr->CheckLootRefs(ref_set);
 }
 
 void LoadLootTemplates_Creature()
@@ -1135,6 +1136,21 @@ void LoadLootTemplates_Item()
     LootTemplates_Item.ReportUnusedIds(ids_set);
 }
 
+void LoadLootTemplates_Milling()
+{
+    LootIdSet ids_set;
+    LootTemplates_Milling.LoadAndCollectLootIds(ids_set);
+
+    // remove real entries and check existence loot
+    for(uint32 i = 1; i < sItemStorage.MaxEntry; ++i )
+        if(ItemPrototype const* proto = sItemStorage.LookupEntry<ItemPrototype>(i))
+            if(ids_set.count(proto->ItemId))
+                ids_set.erase(proto->ItemId);
+
+    // output error for any still listed (not referenced from appropriate table) ids
+    LootTemplates_Milling.ReportUnusedIds(ids_set);
+}
+
 void LoadLootTemplates_Pickpocketing()
 {
     LootIdSet ids_set, ids_setUsed;
@@ -1227,6 +1243,7 @@ void LoadLootTemplates_Reference()
     LootTemplates_Fishing.CheckLootRefs(&ids_set);
     LootTemplates_Gameobject.CheckLootRefs(&ids_set);
     LootTemplates_Item.CheckLootRefs(&ids_set);
+    LootTemplates_Milling.CheckLootRefs(&ids_set);
     LootTemplates_Pickpocketing.CheckLootRefs(&ids_set);
     LootTemplates_Skinning.CheckLootRefs(&ids_set);
     LootTemplates_Disenchant.CheckLootRefs(&ids_set);

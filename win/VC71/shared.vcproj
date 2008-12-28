@@ -192,6 +192,9 @@
 			<File
 				RelativePath="..\..\src\shared\Database\SQLStorage.h">
 			</File>
+			<File
+				RelativePath="..\..\src\shared\Database\SQLStorageImpl.h">
+			</File>
 			<Filter
 				Name="DataStores">
 				<File
@@ -446,6 +449,9 @@
 					AdditionalDependencies="$(SolutionDir)../.svn/entries;$(SolutionDir)../_svn/entries;$(SolutionDir)../.git/FETCH_HEAD"
 					Outputs="revision.h"/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\..\src\shared\revision_nr.h">
 		</File>
 		<File
 			RelativePath="..\..\src\shared\ServiceWin32.cpp">

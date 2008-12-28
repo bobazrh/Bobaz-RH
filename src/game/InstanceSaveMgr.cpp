@@ -222,7 +222,7 @@ void InstanceSaveManager::_DelHelper(DatabaseType &db, const char *fields, const
     va_list ap;
     char szQueryTail [MAX_QUERY_LEN];
     va_start(ap, queryTail);
-    int res = vsnprintf( szQueryTail, MAX_QUERY_LEN, queryTail, ap );
+    vsnprintf( szQueryTail, MAX_QUERY_LEN, queryTail, ap );
     va_end(ap);
 
     QueryResult *result = db.PQuery("SELECT %s FROM %s %s", fields, table, szQueryTail);
@@ -246,8 +246,6 @@ void InstanceSaveManager::_DelHelper(DatabaseType &db, const char *fields, const
 
 void InstanceSaveManager::CleanupInstances()
 {
-    uint64 now = (uint64)time(NULL);
-
     barGoLink bar(2);
     bar.step();
 
@@ -341,7 +339,7 @@ void InstanceSaveManager::PackInstances()
 
     uint32 InstanceNumber = 1;
     // we do assume std::set is sorted properly on integer value
-    for (std::set< uint32 >::iterator i = InstanceSet.begin(); i != InstanceSet.end(); i++)
+    for (std::set< uint32 >::iterator i = InstanceSet.begin(); i != InstanceSet.end(); ++i)
     {
         if (*i != InstanceNumber)
         {

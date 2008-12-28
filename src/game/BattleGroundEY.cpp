@@ -54,9 +54,18 @@ void BattleGroundEY::Update(time_t diff)
         {
             m_Events |= 0x01;
 
+            // setup here, only when at least one player has ported to the map
+            if(!SetupBattleGround())
+            {
+                EndNow();
+                return;
+            }
+
             SpawnBGObject(BG_EY_OBJECT_DOOR_A, RESPAWN_IMMEDIATELY);
             SpawnBGObject(BG_EY_OBJECT_DOOR_H, RESPAWN_IMMEDIATELY);
 
+//            SpawnBGCreature(EY_SPIRIT_MAIN_ALLIANCE, RESPAWN_IMMEDIATELY);
+//            SpawnBGCreature(EY_SPIRIT_MAIN_HORDE, RESPAWN_IMMEDIATELY);
             for(uint32 i = BG_EY_OBJECT_A_BANNER_FEL_REALVER_CENTER; i < BG_EY_OBJECT_MAX; ++i)
                 SpawnBGObject(i, RESPAWN_ONE_DAY);
 
@@ -133,10 +142,10 @@ void BattleGroundEY::Update(time_t diff)
             /*I used this order of calls, because although we will check if one player is in gameobject's distance 2 times
               but we can count of players on current point in CheckSomeoneLeftPoint
             */
-            this->CheckSomeoneJoinedPoint();
+            CheckSomeoneJoinedPoint();
             //check if player left point
-            this->CheckSomeoneLeftPoint();
-            this->UpdatePointStatuses();
+            CheckSomeoneLeftPoint();
+            UpdatePointStatuses();
             m_TowerCapCheckTimer = BG_EY_FPOINTS_TICK_TIME;
         }
     }
@@ -173,7 +182,7 @@ void BattleGroundEY::CheckSomeoneJoinedPoint()
                     ++j;
                     continue;
                 }
-                if (plr->isAlive() && plr->IsWithinDistInMap(obj, BG_EY_POINT_RADIUS))
+                if (plr->isAllowUseBattleGroundObject() && plr->IsWithinDistInMap(obj, BG_EY_POINT_RADIUS))
                 {
                     //player joined point!
                     //show progress bar
@@ -216,12 +225,12 @@ void BattleGroundEY::CheckSomeoneLeftPoint()
                     ++j;
                     continue;
                 }
-                if (!plr->isAlive() || !plr->IsWithinDistInMap(obj, BG_EY_POINT_RADIUS))
+                if (!plr->isAllowUseBattleGroundObject() || !plr->IsWithinDistInMap(obj, BG_EY_POINT_RADIUS))
                     //move player out of point (add him to players that are out of points
                 {
                     m_PlayersNearPoint[EY_POINTS_MAX].push_back(m_PlayersNearPoint[i][j]);
                     m_PlayersNearPoint[i].erase(m_PlayersNearPoint[i].begin() + j);
-                    this->UpdateWorldStateForPlayer(PROGRESS_BAR_SHOW, BG_EY_PROGRESS_BAR_DONT_SHOW, plr);
+                    UpdateWorldStateForPlayer(PROGRESS_BAR_SHOW, BG_EY_PROGRESS_BAR_DONT_SHOW, plr);
                 }
                 else
                 {
@@ -264,17 +273,17 @@ void BattleGroundEY::UpdatePointStatuses()
             Player *plr = objmgr.GetPlayer(m_PlayersNearPoint[point][i]);
             if (plr)
             {
-                this->UpdateWorldStateForPlayer(PROGRESS_BAR_STATUS, m_PointBarStatus[point], plr);
+                UpdateWorldStateForPlayer(PROGRESS_BAR_STATUS, m_PointBarStatus[point], plr);
                                                             //if point owner changed we must evoke event!
                 if (pointOwnerTeamId != m_PointOwnedByTeam[point])
                 {
                     //point was uncontrolled and player is from team which captured point
                     if (m_PointState[point] == EY_POINT_STATE_UNCONTROLLED && plr->GetTeam() == pointOwnerTeamId)
-                        this->EventTeamCapturedPoint(plr, point);
+                        EventTeamCapturedPoint(plr, point);
 
                     //point was under control and player isn't from team which controlled it
                     if (m_PointState[point] == EY_POINT_UNDER_CONTROL && plr->GetTeam() != m_PointOwnedByTeam[point])
-                        this->EventTeamLostPoint(plr, point);
+                        EventTeamLostPoint(plr, point);
                 }
             }
         }
@@ -350,7 +359,7 @@ void BattleGroundEY::RemovePlayer(Player *plr, uint64 guid)
         if(m_FlagKeeper == guid)
         {
             if(plr)
-                this->EventPlayerDroppedFlag(plr);
+                EventPlayerDroppedFlag(plr);
             else
             {
                 SetFlagPicker(0);
@@ -572,7 +581,17 @@ void BattleGroundEY::HandleKillPlayer(Player *player, Player *killer)
 
 void BattleGroundEY::EventPlayerDroppedFlag(Player *Source)
 {
-    // Drop allowed in any BG state
+    if(GetStatus() != STATUS_IN_PROGRESS)
+    {
+        // if not running, do not cast things at the dropper player, neither send unnecessary messages
+        // just take off the aura
+        if(IsFlagPickedup() && GetFlagPickerGUID() == Source->GetGUID())
+        {
+            SetFlagPicker(0);
+            Source->RemoveAurasDueToSpell(BG_EY_NETHERSTORM_FLAG_SPELL);
+        }
+        return;
+    }
 
     if(!IsFlagPickedup())
         return;
@@ -610,7 +629,7 @@ void BattleGroundEY::EventPlayerDroppedFlag(Player *Source)
 
 void BattleGroundEY::EventPlayerClickedOnFlag(Player *Source, GameObject* target_obj)
 {
-    if(GetStatus() != STATUS_IN_PROGRESS || this->IsFlagPickedup() || !Source->IsWithinDistInMap(target_obj, 10))
+    if(GetStatus() != STATUS_IN_PROGRESS || IsFlagPickedup() || !Source->IsWithinDistInMap(target_obj, 10))
         return;
 
     const char *message;
@@ -744,13 +763,15 @@ void BattleGroundEY::EventTeamCapturedPoint(Player *Source, uint32 Point)
         sLog.outError("BatteGroundEY: Failed to spawn spirit guide! point: %u, team: %u, graveyard_id: %u",
             Point, Team, m_CapturingPointTypes[Point].GraveYardId);
 
+//    SpawnBGCreature(Point,RESPAWN_IMMEDIATELY);
+
     UpdatePointsIcons(Team, Point);
     UpdatePointsCount(Team);
 }
 
 void BattleGroundEY::EventPlayerCapturedFlag(Player *Source, uint32 BgObjectType)
 {
-    if(GetStatus() != STATUS_IN_PROGRESS || this->GetFlagPickerGUID() != Source->GetGUID())
+    if(GetStatus() != STATUS_IN_PROGRESS || GetFlagPickerGUID() != Source->GetGUID())
         return;
 
     uint8 type = 0;

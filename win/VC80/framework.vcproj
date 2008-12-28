@@ -418,11 +418,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\framework\Utilities\HashMap.h"
+				RelativePath="..\..\src\framework\Utilities\UnorderedMap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\game\LinkedList.h"
+				RelativePath="..\..\src\framework\Utilities\LinkedList.h"
 				>
 			</File>
 			<File

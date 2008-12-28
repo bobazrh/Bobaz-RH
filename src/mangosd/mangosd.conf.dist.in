@@ -252,13 +252,20 @@ AddonChannel = 1
 #                 1 - include dumping chars to log
 #
 #    GmLogFile
-#        Log file of gm commands
+#        GM Log file of gm commands
 #        Default: "" (Disable)
 #
 #    GmLogTimestamp
-#        Logfile with timestamp of server start in name
+#        GM Logfile with timestamp of server start in name
 #        Default: 0 - no timestamp in name
 #                 1 - add timestamp in name in form Logname_YYYY-MM-DD_HH-MM-SS.Ext for Logname.Ext
+#
+#    GmLogPerAccount
+#        GM Logfiles with GM account id (Note: logs not created if GmLogFile not set)
+#        Default: 0 - add gm log data to single log file
+#                 1 - add gm log data to account specific log files with name
+#                     in form Logname_#ID_YYYY-MM-DD_HH-MM-SS.Ext
+#                     or form Logname_#ID.Ext
 #
 #    RaLogFile
 #        Log file of RA commands
@@ -291,6 +298,7 @@ CharLogTimestamp = 0
 CharLogDump = 0
 GmLogFile = ""
 GmLogTimestamp = 0
+GmLogPerAccount = 0
 RaLogFile = ""
 LogColors = ""
 
@@ -400,6 +408,18 @@ LogColors = ""
 #        Default: 10 (client limitation)
 #                The number must be between 1 and 10
 #
+#    HeroicCharactersPerRealm
+#        Limit numbers of heroic class characters for account at realm
+#        Default: 1
+#                The number must be between 0 (not allowed) and 10
+#
+#    MinLevelForHeroicCharacterCreating
+#        Limit creating heroic characters only for account with another character of specific level (ignored for GM accounts)
+#                 0  - not require any existed chaarcter
+#                 1  - require at least any character existed
+#        Default: 55 - default requirement
+#
+#
 #    SkipCinematics
 #        Disable in-game script movie at first character's login(allows to prevent buggy intro in case of custom start location coordinates)
 #        Default: 0 - show intro for each new characrer
@@ -407,21 +427,56 @@ LogColors = ""
 #                 2 - disable intro show in all cases
 #
 #    MaxPlayerLevel
-#        Max level that can be reached by player for experience (in range from 1 to 255).
+#        Max level that can be reached by player for experience (in range from 1 to 100).
 #        Change not recommended
-#        Default: 70
+#        Default: 80
+#
+#    StartPlayerLevel
+#        Staring level that have character at creating (in range 1 to MaxPlayerLevel)
+#        Default: 1
+#
+#    StartHeroicPlayerLevel
+#        Staring level that have character of heroic class at creating (in range 1 to MaxPlayerLevel)
+#        Default: 55
+#
+#    StartPlayerMoney
+#        Amount of money that new players will start with.
+#        If you want to start with silver, use for example 100 (100 copper = 1 silver)
+#        Default: 0
 #
 #    MaxHonorPoints
 #        Max honor points that player can have.
 #        Default: 75000
 #
+#    StartHonorPoints
+#        Amount of honor that new players will start with
+#        Default: 0
+#
 #    MaxArenaPoints
 #        Max arena points that player can have.
 #        Default: 5000
 #
-#    StartPlayerLevel
-#        Staring level that have character at creating (in range 1 to MaxPlayerLevel)
-#        Default: 1
+#    StartArenaPoints
+#        Amount of arena points that new players will start with
+#        Default: 0
+#
+#    InstantLogout
+#        Enable or disable instant logout for security level (0..4) or high (NOT in combat/while dueling/while falling)
+#        Default: 1 (Mods/GMs/Admins)
+#
+#    DisableWaterBreath
+#        Disable/enable waterbreathing for security level (0..4) or high
+#        Default: 4 (None)
+#
+#    AllFlightPaths
+#        Players will start with all flight paths (Note: ALL flight paths, not only player's team)
+#        Default: 0 (true)
+#                 1 (false)
+#
+#    AlwaysMaxSkillForLevel
+#        Players will automatically gain max level dependent (weapon/defense) skill when logging in, leveling up etc.
+#        Default: 0 (false)
+#                 1 (true)
 #
 #    ActivateWeather
 #        Activate weather system
@@ -435,11 +490,15 @@ LogColors = ""
 #
 #    Battleground.QueueAnnouncer.Enable
 #        Enable queue announcer posting to chat
-#        Default: 1 (true)
-#                 0 (false)
+#        Default: 0 (false)
+#                 1 (true)
 #
 #    Battleground.QueueAnnouncer.PlayerOnly
 #        Enable queue announcer posting to chat
+#        Default: 0 (false)
+#                 1 (true)
+#
+#    Arena.QueueAnnouncer.Enable: Enable queue announcer posting to chat
 #        Default: 0 (false)
 #                 1 (true)
 #
@@ -497,7 +556,12 @@ LogColors = ""
 #        Default: 3600 sec (1 hour)
 #
 #    SkillChance.Prospecting
-#        For prospecting skillup not possible by default, but can be allowed as custom setting
+#        For prospecting skillup impossible by default, but can be allowed as custom setting
+#        Default: 0 - no skilups
+#                 1 - skilups possible
+#
+#    SkillChance.Milling
+#        For milling skillup impossible by default, but can be allowed as custom setting
 #        Default: 0 - no skilups
 #                 1 - skilups possible
 #
@@ -517,7 +581,7 @@ LogColors = ""
 
 GameType = 1
 RealmZone = 1
-Expansion = 1
+Expansion = 2
 DBC.Locale = 255
 DeclinedNames = 0
 StrictPlayerNames = 0
@@ -526,15 +590,26 @@ StrictPetNames = 0
 CharactersCreatingDisabled = 0
 CharactersPerAccount = 50
 CharactersPerRealm = 10
+HeroicCharactersPerRealm = 1
+MinLevelForHeroicCharacterCreating = 55
 SkipCinematics = 0
-MaxPlayerLevel = 70
-MaxHonorPoints = 75000
-MaxArenaPoints = 5000
+MaxPlayerLevel = 80
 StartPlayerLevel = 1
+StartHeroicPlayerLevel = 55
+StartPlayerMoney = 0
+MaxHonorPoints = 75000
+StartHonorPoints = 0
+MaxArenaPoints = 5000
+StartArenaPoints = 0
+InstantLogout = 1
+DisableWaterBreath = 4
+AllFlightPaths = 0
+AlwaysMaxSkillForLevel = 0
 ActivateWeather = 1
 Battleground.CastDeserter = 1
-Battleground.QueueAnnouncer.Enable = 1
+Battleground.QueueAnnouncer.Enable = 0
 Battleground.QueueAnnouncer.PlayerOnly = 0
+Arena.QueueAnnouncer.Enable = 0
 CastUnstuck = 1
 Instance.IgnoreLevel = 0
 Instance.IgnoreRaid = 0
@@ -547,6 +622,7 @@ MinPetitionSigns = 9
 MaxGroupXPDistance = 74
 MailDeliveryDelay = 3600
 SkillChance.Prospecting = 0
+SkillChance.Milling = 0
 Event.Announce = 0
 BeepAtStart = 1
 Motd = "Welcome to the Massive Network Game Object Server."
@@ -613,10 +689,14 @@ TalentsInspecting = 1
 #                 1.5 - 150%
 #                 0   - off (0%)
 #
-#    CreatureFamilyAssistenceRadius
-#        Creature family assistence radius
+#    CreatureFamilyAssistanceRadius
+#        Creature family assistance radius
 #        Default: 10
 #                 0   - off
+#
+#    CreatureFamilyAssistanceDelay
+#        Reaction time for creature assistance call
+#        Default: 1500 (1.5s)
 #
 #    WorldBossLevelDiff
 #        Difference for boss dynamic level with target
@@ -674,7 +754,8 @@ TalentsInspecting = 1
 
 ThreatRadius = 100
 Rate.Creature.Aggro = 1
-CreatureFamilyAssistenceRadius = 10
+CreatureFamilyAssistanceRadius = 10
+CreatureFamilyAssistanceDelay = 1500
 WorldBossLevelDiff = 3
 Corpse.Decay.NORMAL = 60
 Corpse.Decay.RARE = 300
@@ -785,15 +866,20 @@ Channel.SilentlyGMJoin = 0
 #        Default: 1 (include)
 #                 0 (not include)
 #
+#    GM.StartLevel
+#        GM starting level (1-100)
+#        Default: 1
+#
 ###################################################################################################################
 
 GM.LoginState     = 2
 GM.AcceptTickets  = 2
 GM.Chat           = 2
 GM.WhisperingTo   = 2
-GM.InGMList = 0
-GM.InWhoList = 0
-GM.LogTrade = 1
+GM.InGMList       = 0
+GM.InWhoList      = 0
+GM.LogTrade       = 1
+GM.StartLevel     = 1
 
 ###################################################################################################################
 # VISIBILITY AND RADIUSES
@@ -807,9 +893,9 @@ GM.LogTrade = 1
 #    Visibility.Distance.Creature
 #    Visibility.Distance.Player
 #        Visibility distance for different in game object
-#        Max limited by active player zone: ~ 166
+#        Max limited by active player zone: ~ 333
 #        Min limit dependent from objects
-#        Default: 66 (cell size)
+#        Default: 132 (cell size)
 #        Min limit is max aggro radius (45) * Rate.Creature.Aggro
 #
 #    Visibility.Distance.Object
@@ -835,10 +921,10 @@ GM.LogTrade = 1
 ###################################################################################################################
 
 Visibility.GroupMode = 0
-Visibility.Distance.Creature      = 66
-Visibility.Distance.Player        = 66
-Visibility.Distance.Object        = 66
-Visibility.Distance.InFlight      = 66
+Visibility.Distance.Creature      = 132
+Visibility.Distance.Player        = 132
+Visibility.Distance.Object        = 132
+Visibility.Distance.InFlight      = 132
 Visibility.Distance.Grey.Unit   = 1
 Visibility.Distance.Grey.Object = 10
 
@@ -849,8 +935,9 @@ Visibility.Distance.Grey.Object = 10
 #    Rate.Mana
 #    Rate.Rage.Income
 #    Rate.Rage.Loss
+#    Rate.RunicPower.Income
+#    Rate.RunicPower.Loss
 #    Rate.Focus
-#    Rate.Loyalty
 #        Health and power regeneration and rage income from damage.
 #        Default: 1
 #
@@ -971,8 +1058,9 @@ Rate.Health = 1
 Rate.Mana = 1
 Rate.Rage.Income = 1
 Rate.Rage.Loss = 1
+Rate.RunicPower.Income = 1
+Rate.RunicPower.Loss = 1
 Rate.Focus = 1
-Rate.Loyalty = 1
 Rate.Skill.Discovery = 1
 Rate.Drop.Item.Poor = 1
 Rate.Drop.Item.Normal = 1
@@ -1017,6 +1105,48 @@ DurabilityLossChance.Block  = 0.05
 Death.SicknessLevel = 11
 Death.CorpseReclaimDelay.PvP = 1
 Death.CorpseReclaimDelay.PvE = 1
+
+###################################################################################################################
+#
+# Rated arena matches config
+#
+# MaxRatingDifference: the maximum rating difference between two groups in rated matches
+#             Default: 0 (disable, rating difference is discarded)
+#
+# RatingDiscardTimer: after the specified milliseconds has passed,
+#                     rating information will be discarded when selecting teams for matches
+#                     also initiates an update by this timer
+#             Default: 60000
+#
+# AutoDistributePoints: set if arena points should be distributed automatically, or by GM command
+#             Default: 0 (disable) (recommended): use gm command or sql query to distribute the points
+#                      1 (enable): arena points are distributed automatically
+#
+# AutoDistributeInterval: how often should the distribution take place
+#                         if automatic distribution is enabled
+#                         in days
+#             Default: 7 (weekly)
+#
+###################################################################################################################
+
+Arena.MaxRatingDifference = 0
+Arena.RatingDiscardTimer = 60000
+Arena.AutoDistributePoints = 0
+Arena.AutoDistributeInterval = 7
+
+###################################################################################################################
+#
+# Battleground config
+#
+# PrematureFinishTimer: the time to end the bg if there are less than minplayersperteam on one side
+#                       in milliseconds
+#              Default: 300000
+#                       0 - disable
+#
+###################################################################################################################
+
+BattleGround.PrematureFinishTimer = 300000
+
 
 ###################################################################################################################
 #

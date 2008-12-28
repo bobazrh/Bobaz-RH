@@ -749,7 +749,7 @@ bool ChatHandler::HandleModifyRepCommand(const char * args)
     return true;
 }
 
-bool ChatHandler::HandleNameCommand(const char* args)
+bool ChatHandler::HandleNameCommand(const char* /*args*/)
 {
     /* Temp. disabled
         if(!*args)
@@ -949,7 +949,7 @@ bool ChatHandler::HandleNpcDeleteCommand(const char* args)
     else
         unit = getSelectedCreature();
 
-    if(!unit || unit->isPet() || unit->isTotem())
+    if(!unit || unit->isPet() || unit->isTotem() || unit->isVehicle())
     {
         SendSysMessage(LANG_SELECT_CREATURE);
         SetSentErrorMessage(true);
@@ -1056,14 +1056,14 @@ bool ChatHandler::HandleTurnObjectCommand(const char* args)
     float rot2 = sin(o/2);
     float rot3 = cos(o/2);
 
-    Map* map = MapManager::Instance().GetMap(obj->GetMapId(),obj);
+    Map* map = obj->GetMap();
     map->Remove(obj,false);
 
     obj->Relocate(obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ(), o);
 
     obj->SetFloatValue(GAMEOBJECT_FACING, o);
-    obj->SetFloatValue(GAMEOBJECT_ROTATION+2, rot2);
-    obj->SetFloatValue(GAMEOBJECT_ROTATION+3, rot3);
+    obj->SetFloatValue(GAMEOBJECT_PARENTROTATION+2, rot2);
+    obj->SetFloatValue(GAMEOBJECT_PARENTROTATION+3, rot3);
 
     map->Add(obj);
 
@@ -1140,7 +1140,7 @@ bool ChatHandler::HandleNpcMoveCommand(const char* args)
             const_cast<CreatureData*>(data)->posZ = z;
             const_cast<CreatureData*>(data)->orientation = o;
         }
-        MapManager::Instance().GetMap(pCreature->GetMapId(),pCreature)->CreatureRelocation(pCreature,x, y, z,o);
+        pCreature->GetMap()->CreatureRelocation(pCreature,x, y, z,o);
         pCreature->GetMotionMaster()->Initialize();
         if(pCreature->isAlive())                            // dead creature will reset movement generator at respawn
         {
@@ -1187,7 +1187,7 @@ bool ChatHandler::HandleMoveObjectCommand(const char* args)
     {
         Player *chr = m_session->GetPlayer();
 
-        Map* map = MapManager::Instance().GetMap(obj->GetMapId(),obj);
+        Map* map = obj->GetMap();
         map->Remove(obj,false);
 
         obj->Relocate(chr->GetPositionX(), chr->GetPositionY(), chr->GetPositionZ(), obj->GetOrientation());
@@ -1213,7 +1213,7 @@ bool ChatHandler::HandleMoveObjectCommand(const char* args)
             return false;
         }
 
-        Map* map = MapManager::Instance().GetMap(obj->GetMapId(),obj);
+        Map* map = obj->GetMap();
         map->Remove(obj,false);
 
         obj->Relocate(x, y, z, obj->GetOrientation());
@@ -2359,8 +2359,8 @@ bool ChatHandler::HandleWpModifyCommand(const char* args)
     std::string show = show_str;
     // Check
     // Remember: "show" must also be the name of a column!
-    if( (show != "emote") && (show != "spell") && (show != "text1") && (show != "text2")
-        && (show != "text3") && (show != "text4") && (show != "text5")
+    if( (show != "emote") && (show != "spell") && (show != "textid1") && (show != "textid2")
+        && (show != "textid3") && (show != "textid4") && (show != "textid5")
         && (show != "waittime") && (show != "del") && (show != "move") && (show != "add")
         && (show != "model1") && (show != "model2") && (show != "orientation"))
     {
@@ -2675,7 +2675,7 @@ bool ChatHandler::HandleWpModifyCommand(const char* args)
                 // To call _LoadGoods(); _LoadQuests(); CreateTrainerSpells();
                 wpCreature2->LoadFromDB(wpCreature2->GetDBTableGUIDLow(), map);
                 map->Add(wpCreature2);
-                //MapManager::Instance().GetMap(npcCreature->GetMapId())->Add(wpCreature2);
+                //npcCreature->GetMap()->Add(wpCreature2);
             }
 
             WaypointMgr.SetNodePosition(lowguid, point, chr->GetPositionX(), chr->GetPositionY(), chr->GetPositionZ());
@@ -2700,6 +2700,13 @@ bool ChatHandler::HandleWpModifyCommand(const char* args)
     {
         PSendSysMessage(LANG_WAYPOINT_CREATNOTFOUND, lowguid);
         SetSentErrorMessage(true);
+        return false;
+    }
+
+    // set in game textids not supported
+    if( show == "textid1" || show == "textid2" || show == "textid3" ||
+        show == "textid4" || show == "textid5" )
+    {
         return false;
     }
 
@@ -2840,7 +2847,7 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
         //pCreature->GetPositionX();
 
         QueryResult *result =
-            WorldDatabase.PQuery( "SELECT id, point, waittime, emote, spell, text1, text2, text3, text4, text5, model1, model2 FROM creature_movement WHERE wpguid = %u",
+            WorldDatabase.PQuery( "SELECT id, point, waittime, emote, spell, textid1, textid2, textid3, textid4, textid5, model1, model2 FROM creature_movement WHERE wpguid = %u",
             target->GetGUIDLow() );
         if(!result)
         {
@@ -2852,7 +2859,7 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
             const char* maxDIFF = "0.01";
             PSendSysMessage(LANG_WAYPOINT_NOTFOUNDSEARCH, target->GetGUID());
 
-            result = WorldDatabase.PQuery( "SELECT id, point, waittime, emote, spell, text1, text2, text3, text4, text5, model1, model2 FROM creature_movement WHERE (abs(position_x - %f) <= %s ) and (abs(position_y - %f) <= %s ) and (abs(position_z - %f) <= %s )",
+            result = WorldDatabase.PQuery( "SELECT id, point, waittime, emote, spell, textid1, textid2, textid3, textid4, textid5, model1, model2 FROM creature_movement WHERE (abs(position_x - %f) <= %s ) and (abs(position_y - %f) <= %s ) and (abs(position_z - %f) <= %s )",
                 target->GetPositionX(), maxDIFF, target->GetPositionY(), maxDIFF, target->GetPositionZ(), maxDIFF);
             if(!result)
             {
@@ -2869,11 +2876,9 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
             int waittime            = fields[2].GetUInt32();
             uint32 emote            = fields[3].GetUInt32();
             uint32 spell            = fields[4].GetUInt32();
-            const char * text1      = fields[5].GetString();
-            const char * text2      = fields[6].GetString();
-            const char * text3      = fields[7].GetString();
-            const char * text4      = fields[8].GetString();
-            const char * text5      = fields[9].GetString();
+            uint32 textid[MAX_WAYPOINT_TEXT];
+            for(int i = 0;  i < MAX_WAYPOINT_TEXT; ++i)
+                textid[i]           = fields[5+i].GetUInt32();
             uint32 model1           = fields[10].GetUInt32();
             uint32 model2           = fields[11].GetUInt32();
 
@@ -2886,11 +2891,8 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
             PSendSysMessage(LANG_WAYPOINT_INFO_MODEL, 2, model2);
             PSendSysMessage(LANG_WAYPOINT_INFO_EMOTE, emote);
             PSendSysMessage(LANG_WAYPOINT_INFO_SPELL, spell);
-            PSendSysMessage(LANG_WAYPOINT_INFO_TEXT, 1, text1);
-            PSendSysMessage(LANG_WAYPOINT_INFO_TEXT, 2, text2);
-            PSendSysMessage(LANG_WAYPOINT_INFO_TEXT, 3, text3);
-            PSendSysMessage(LANG_WAYPOINT_INFO_TEXT, 4, text4);
-            PSendSysMessage(LANG_WAYPOINT_INFO_TEXT, 5, text5);
+            for(int i = 0;  i < MAX_WAYPOINT_TEXT; ++i)
+                PSendSysMessage(LANG_WAYPOINT_INFO_TEXT, i+1, textid[i], (textid[i] ? GetMangosString(textid[i]) : ""));
 
         }while( result->NextRow() );
         // Cleanup memory
@@ -2985,7 +2987,7 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
             // To call _LoadGoods(); _LoadQuests(); CreateTrainerSpells();
             wpCreature->LoadFromDB(wpCreature->GetDBTableGUIDLow(),map);
             map->Add(wpCreature);
-            //MapManager::Instance().GetMap(wpCreature->GetMapId())->Add(wpCreature);
+            //wpCreature->GetMap()->Add(wpCreature);
         }while( result->NextRow() );
 
         // Cleanup memory
@@ -3135,7 +3137,7 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
             }
         }while(result->NextRow());
         // set "wpguid" column to "empty" - no visual waypoint spawned
-        WorldDatabase.PExecuteLog("UPDATE creature_movement SET wpguid = '0'");
+        WorldDatabase.PExecuteLog("UPDATE creature_movement SET wpguid = '0' WHERE wpguid <> '0'");
 
         if( hasError )
         {
@@ -3211,8 +3213,8 @@ bool ChatHandler::HandleWpExportCommand(const char *args)
     PSendSysMessage("DEBUG: wp export, GUID: %u", lowguid);
 
     QueryResult *result = WorldDatabase.PQuery(
-    //          0      1           2           3           4            5       6       7         8      9      10     11     12     13     14     15
-        "SELECT point, position_x, position_y, position_z, orientation, model1, model2, waittime, emote, spell, text1, text2, text3, text4, text5, id FROM creature_movement WHERE id = '%u' ORDER BY point", lowguid );
+    //          0      1           2           3           4            5       6       7         8      9      10       11       12       13       14       15
+        "SELECT point, position_x, position_y, position_z, orientation, model1, model2, waittime, emote, spell, textid1, textid2, textid3, textid4, textid5, id FROM creature_movement WHERE id = '%u' ORDER BY point", lowguid );
 
     if (!result)
     {
@@ -3229,7 +3231,7 @@ bool ChatHandler::HandleWpExportCommand(const char *args)
         Field *fields = result->Fetch();
 
         outfile << "INSERT INTO creature_movement ";
-        outfile << "( id, point, position_x, position_y, position_z, orientation, model1, model2, waittime, emote, spell, text1, text2, text3, text4, text5 ) VALUES ";
+        outfile << "( id, point, position_x, position_y, position_z, orientation, model1, model2, waittime, emote, spell, textid1, textid2, textid3, textid4, textid5 ) VALUES ";
 
         outfile << "( ";
         outfile << fields[15].GetUInt32();                  // id
@@ -3254,65 +3256,15 @@ bool ChatHandler::HandleWpExportCommand(const char *args)
         outfile << ", ";
         outfile << fields[9].GetUInt32();                   // spell
         outfile << ", ";
-        const char *tmpChar = fields[10].GetString();
-        if( !tmpChar )
-        {
-            outfile << "NULL";                              // text1
-        }
-        else
-        {
-            outfile << "'";
-            outfile << tmpChar;                             // text1
-            outfile << "'";
-        }
+        outfile << fields[10].GetUInt32();                  // textid1
         outfile << ", ";
-        tmpChar = fields[11].GetString();
-        if( !tmpChar )
-        {
-            outfile << "NULL";                              // text2
-        }
-        else
-        {
-            outfile << "'";
-            outfile << tmpChar;                             // text2
-            outfile << "'";
-        }
+        outfile << fields[11].GetUInt32();                  // textid2
         outfile << ", ";
-        tmpChar = fields[12].GetString();
-        if( !tmpChar )
-        {
-            outfile << "NULL";                              // text3
-        }
-        else
-        {
-            outfile << "'";
-            outfile << tmpChar;                             // text3
-            outfile << "'";
-        }
+        outfile << fields[12].GetUInt32();                  // textid3
         outfile << ", ";
-        tmpChar = fields[13].GetString();
-        if( !tmpChar )
-        {
-            outfile << "NULL";                              // text4
-        }
-        else
-        {
-            outfile << "'";
-            outfile << tmpChar;                             // text4
-            outfile << "'";
-        }
+        outfile << fields[13].GetUInt32();                  // textid4
         outfile << ", ";
-        tmpChar = fields[14].GetString();
-        if( !tmpChar )
-        {
-            outfile << "NULL";                              // text5
-        }
-        else
-        {
-            outfile << "'";
-            outfile << tmpChar;                             // text5
-            outfile << "'";
-        }
+        outfile << fields[14].GetUInt32();                  // textid5
         outfile << ");\n ";
 
     } while( result->NextRow() );
@@ -3399,6 +3351,59 @@ bool ChatHandler::HandleRenameCommand(const char* args)
     {
         PSendSysMessage(LANG_RENAME_PLAYER_GUID, oldname.c_str(), GUID_LOPART(targetGUID));
         CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '1' WHERE guid = '%u'", GUID_LOPART(targetGUID));
+    }
+
+    return true;
+}
+
+// customize characters
+bool ChatHandler::HandleCustomizeCommand(const char* args)
+{
+    Player* target = NULL;
+    uint64 targetGUID = 0;
+    std::string oldname;
+
+    char* px = strtok((char*)args, " ");
+
+    if(px)
+    {
+        oldname = px;
+
+        if(!normalizePlayerName(oldname))
+        {
+            SendSysMessage(LANG_PLAYER_NOT_FOUND);
+            SetSentErrorMessage(true);
+            return false;
+        }
+
+        target = objmgr.GetPlayer(oldname.c_str());
+
+        if (!target)
+            targetGUID = objmgr.GetPlayerGUIDByName(oldname);
+    }
+
+    if(!target && !targetGUID)
+    {
+        target = getSelectedPlayer();
+    }
+
+    if(!target && !targetGUID)
+    {
+        SendSysMessage(LANG_PLAYER_NOT_FOUND);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if(target)
+    {
+        PSendSysMessage(LANG_CUSTOMIZE_PLAYER, target->GetName());
+        target->SetAtLoginFlag(AT_LOGIN_CUSTOMIZE);
+        CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '8' WHERE guid = '%u'", target->GetGUIDLow());
+    }
+    else
+    {
+        PSendSysMessage(LANG_CUSTOMIZE_PLAYER_GUID, oldname.c_str(), GUID_LOPART(targetGUID));
+        CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '8' WHERE guid = '%u'", GUID_LOPART(targetGUID));
     }
 
     return true;
@@ -3591,7 +3596,7 @@ bool ChatHandler::HandleLookupEventCommand(const char* args)
     return true;
 }
 
-bool ChatHandler::HandleEventActiveListCommand(const char* args)
+bool ChatHandler::HandleEventActiveListCommand(const char* /*args*/)
 {
     uint32 counter = 0;
 
@@ -3849,8 +3854,6 @@ bool ChatHandler::HandleLearnAllRecipesCommand(const char* args)
 
     if(!Utf8toWStr(args,wnamepart))
         return false;
-
-    uint32 counter = 0;                                     // Counter for figure out that we found smth.
 
     // converting string that we try to find to lower case
     wstrToLower( wnamepart );
@@ -4117,7 +4120,7 @@ bool ChatHandler::HandleNpcUnFollowCommand(const char* /*args*/)
     return true;
 }
 
-bool ChatHandler::HandleNpcTameCommand(const char* args)
+bool ChatHandler::HandleNpcTameCommand(const char* /*args*/)
 {
     Creature *creatureTarget = getSelectedCreature ();
     if (!creatureTarget || creatureTarget->isPet ())
@@ -4159,17 +4162,20 @@ bool ChatHandler::HandleNpcTameCommand(const char* args)
     player->GetClosePoint (x,y,z,creatureTarget->GetObjectSize (),CONTACT_DISTANCE);
     pet->Relocate (x,y,z,M_PI-player->GetOrientation ());
 
-    // set pet to defensive mode by default (some classes can't control contolled pets in fact).
+    // set pet to defensive mode by default (some classes can't control controlled pets in fact).
     pet->GetCharmInfo()->SetReactState(REACT_DEFENSIVE);
 
+    // calculate proper level
+    uint32 level = (creatureTarget->getLevel() < (player->getLevel() - 5)) ? (player->getLevel() - 5) : creatureTarget->getLevel();
+
     // prepare visual effect for levelup
-    pet->SetUInt32Value(UNIT_FIELD_LEVEL,creatureTarget->getLevel()-1);
+    pet->SetUInt32Value(UNIT_FIELD_LEVEL, level - 1);
 
     // add to world
-    MapManager::Instance().GetMap(pet->GetMapId(), pet)->Add((Creature*)pet);
+    pet->GetMap()->Add((Creature*)pet);
 
     // visual effect for levelup
-    pet->SetUInt32Value(UNIT_FIELD_LEVEL,creatureTarget->getLevel());
+    pet->SetUInt32Value(UNIT_FIELD_LEVEL, level);
 
     // caster have pet now
     player->SetPet(pet);

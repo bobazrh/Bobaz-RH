@@ -19,6 +19,7 @@
 #include "Common.h"
 #include "Database/DatabaseEnv.h"
 #include "Database/SQLStorage.h"
+#include "Database/SQLStorageImpl.h"
 
 #include "Log.h"
 #include "MapManager.h"
@@ -41,6 +42,7 @@
 #include "InstanceSaveMgr.h"
 #include "SpellAuras.h"
 #include "Util.h"
+#include "WaypointManager.h"
 
 INSTANTIATE_SINGLETON_1(ObjectMgr);
 
@@ -110,12 +112,17 @@ ObjectMgr::ObjectMgr()
     m_hiCharGuid        = 1;
     m_hiCreatureGuid    = 1;
     m_hiPetGuid         = 1;
+    m_hiVehicleGuid     = 1;
     m_hiItemGuid        = 1;
     m_hiGoGuid          = 1;
     m_hiDoGuid          = 1;
     m_hiCorpseGuid      = 1;
-
     m_hiPetNumber       = 1;
+    m_ItemTextId        = 1;
+    m_mailid            = 1;
+    m_auctionid         = 1;
+    m_guildId           = 1;
+    m_arenaTeamId       = 1;
 
     mGuildBankTabPrice.resize(GUILD_BANK_MAX_TABS);
     mGuildBankTabPrice[0] = 100;
@@ -131,13 +138,13 @@ ObjectMgr::ObjectMgr()
 
 ObjectMgr::~ObjectMgr()
 {
-    for( QuestMap::iterator i = mQuestTemplates.begin( ); i != mQuestTemplates.end( ); ++ i )
+    for( QuestMap::iterator i = mQuestTemplates.begin( ); i != mQuestTemplates.end( ); ++i )
     {
         delete i->second;
     }
     mQuestTemplates.clear( );
 
-    for( GossipTextMap::iterator i = mGossipText.begin( ); i != mGossipText.end( ); ++ i )
+    for( GossipTextMap::iterator i = mGossipText.begin( ); i != mGossipText.end( ); ++i )
     {
         delete i->second;
     }
@@ -145,7 +152,7 @@ ObjectMgr::~ObjectMgr()
 
     mAreaTriggers.clear();
 
-    for(PetLevelInfoMap::iterator i = petInfo.begin( ); i != petInfo.end( ); ++ i )
+    for(PetLevelInfoMap::iterator i = petInfo.begin( ); i != petInfo.end( ); ++i )
     {
         delete[] i->second;
     }
@@ -186,16 +193,16 @@ Group * ObjectMgr::GetGroupByLeader(const uint64 &guid) const
 
 Guild * ObjectMgr::GetGuildById(const uint32 GuildId) const
 {
-    for(GuildSet::const_iterator itr = mGuildSet.begin(); itr != mGuildSet.end(); itr++)
+    for(GuildSet::const_iterator itr = mGuildSet.begin(); itr != mGuildSet.end(); ++itr)
         if ((*itr)->GetId() == GuildId)
             return *itr;
 
     return NULL;
 }
 
-Guild * ObjectMgr::GetGuildByName(std::string guildname) const
+Guild * ObjectMgr::GetGuildByName(const std::string& guildname) const
 {
-    for(GuildSet::const_iterator itr = mGuildSet.begin(); itr != mGuildSet.end(); itr++)
+    for(GuildSet::const_iterator itr = mGuildSet.begin(); itr != mGuildSet.end(); ++itr)
         if ((*itr)->GetName() == guildname)
             return *itr;
 
@@ -204,7 +211,7 @@ Guild * ObjectMgr::GetGuildByName(std::string guildname) const
 
 std::string ObjectMgr::GetGuildNameById(const uint32 GuildId) const
 {
-    for(GuildSet::const_iterator itr = mGuildSet.begin(); itr != mGuildSet.end(); itr++)
+    for(GuildSet::const_iterator itr = mGuildSet.begin(); itr != mGuildSet.end(); ++itr)
         if ((*itr)->GetId() == GuildId)
             return (*itr)->GetName();
 
@@ -220,31 +227,41 @@ Guild* ObjectMgr::GetGuildByLeader(const uint64 &guid) const
     return NULL;
 }
 
-ArenaTeam* ObjectMgr::GetArenaTeamById(const uint32 ArenaTeamId) const
+ArenaTeam* ObjectMgr::GetArenaTeamById(const uint32 arenateamid) const
 {
-    for(ArenaTeamSet::const_iterator itr = mArenaTeamSet.begin(); itr != mArenaTeamSet.end(); itr++)
-        if ((*itr)->GetId() == ArenaTeamId)
-            return *itr;
+    ArenaTeamMap::const_iterator itr = mArenaTeamMap.find(arenateamid);
+    if (itr != mArenaTeamMap.end())
+        return itr->second;
 
     return NULL;
 }
 
-ArenaTeam* ObjectMgr::GetArenaTeamByName(std::string arenateamname) const
+ArenaTeam* ObjectMgr::GetArenaTeamByName(const std::string& arenateamname) const
 {
-    for(ArenaTeamSet::const_iterator itr = mArenaTeamSet.begin(); itr != mArenaTeamSet.end(); itr++)
-        if ((*itr)->GetName() == arenateamname)
-            return *itr;
+    for(ArenaTeamMap::const_iterator itr = mArenaTeamMap.begin(); itr != mArenaTeamMap.end(); ++itr)
+        if (itr->second->GetName() == arenateamname)
+            return itr->second;
 
     return NULL;
 }
 
-ArenaTeam* ObjectMgr::GetArenaTeamByCapitan(uint64 const& guid) const
+ArenaTeam* ObjectMgr::GetArenaTeamByCaptain(uint64 const& guid) const
 {
-    for(ArenaTeamSet::const_iterator itr = mArenaTeamSet.begin(); itr != mArenaTeamSet.end(); itr++)
-        if ((*itr)->GetCaptain() == guid)
-            return *itr;
+    for(ArenaTeamMap::const_iterator itr = mArenaTeamMap.begin(); itr != mArenaTeamMap.end(); ++itr)
+        if (itr->second->GetCaptain() == guid)
+            return itr->second;
 
     return NULL;
+}
+
+void ObjectMgr::AddArenaTeam(ArenaTeam* arenaTeam)
+{
+    mArenaTeamMap[arenaTeam->GetId()] = arenaTeam;
+}
+
+void ObjectMgr::RemoveArenaTeam(ArenaTeam* arenaTeam)
+{
+    mArenaTeamMap.erase( arenaTeam->GetId() );
 }
 
 AuctionHouseObject * ObjectMgr::GetAuctionsMap( uint32 location )
@@ -335,7 +352,7 @@ void ObjectMgr::SendAuctionWonMail( AuctionEntry *auction )
 
             uint32 owner_accid = GetPlayerAccountIdByGUID(auction->owner);
 
-            sLog.outCommand("GM %s (Account: %u) won item in auction: %s (Entry: %u Count: %u) and pay money: %u. Original owner %s (Account: %u)",
+            sLog.outCommand(bidder_accId,"GM %s (Account: %u) won item in auction: %s (Entry: %u Count: %u) and pay money: %u. Original owner %s (Account: %u)",
                 bidder_name.c_str(),bidder_accId,pItem->GetProto()->Name1,pItem->GetEntry(),pItem->GetCount(),auction->bid,owner_name.c_str(),owner_accid);
         }
     }
@@ -355,7 +372,7 @@ void ObjectMgr::SendAuctionWonMail( AuctionEntry *auction )
         sLog.outDebug( "AuctionWon body string : %s", msgAuctionWonBody.str().c_str() );
 
         //prepare mail data... :
-        uint32 itemTextId = this->CreateItemText( msgAuctionWonBody.str() );
+        uint32 itemTextId = CreateItemText( msgAuctionWonBody.str() );
 
         // set owner to bidder (to prevent delete item with sender char deleting)
         // owner in `data` will set at mail receive and item extracting
@@ -406,7 +423,7 @@ void ObjectMgr::SendAuctionSalePendingMail( AuctionEntry * auction )
 
         sLog.outDebug("AuctionSalePending body string : %s", msgAuctionSalePendingBody.str().c_str());
 
-        uint32 itemTextId = this->CreateItemText( msgAuctionSalePendingBody.str() );
+        uint32 itemTextId = CreateItemText( msgAuctionSalePendingBody.str() );
 
         WorldSession::SendMailTo(owner, MAIL_AUCTION, MAIL_STATIONERY_AUCTION, auction->location, auction->owner, msgAuctionSalePendingSubject.str(), itemTextId, NULL, 0, 0, MAIL_CHECK_MASK_AUCTION);
     }
@@ -438,7 +455,7 @@ void ObjectMgr::SendAuctionSuccessfulMail( AuctionEntry * auction )
 
         sLog.outDebug("AuctionSuccessful body string : %s", auctionSuccessfulBody.str().c_str());
 
-        uint32 itemTextId = this->CreateItemText( auctionSuccessfulBody.str() );
+        uint32 itemTextId = CreateItemText( auctionSuccessfulBody.str() );
 
         uint32 profit = auction->bid + auction->deposit - auctionCut;
 
@@ -563,6 +580,22 @@ void ObjectMgr::LoadCreatureLocales()
     sLog.outString( ">> Loaded %u creature locale strings", mCreatureLocaleMap.size() );
 }
 
+void ObjectMgr::LoadCompletedAchievements()
+{
+    QueryResult *result = CharacterDatabase.Query("SELECT achievement FROM character_achievement GROUP BY achievement");
+
+    if(!result)
+        return;
+
+    do
+    {
+        Field *fields = result->Fetch();
+        allCompletedAchievements.insert(fields[0].GetUInt32());
+    } while(result->NextRow());
+
+    delete result;
+}
+
 void ObjectMgr::LoadNpcOptionLocales()
 {
     mNpcOptionLocaleMap.clear();                              // need for reload case
@@ -631,9 +664,19 @@ void ObjectMgr::LoadNpcOptionLocales()
     sLog.outString( ">> Loaded %u npc_option locale strings", mNpcOptionLocaleMap.size() );
 }
 
+struct SQLCreatureLoader : public SQLStorageLoaderBase<SQLCreatureLoader>
+{
+    template<class D>
+    void convert_from_str(uint32 field_pos, char *src, D &dst)
+    {
+        dst = D(objmgr.GetScriptId(src));
+    }
+};
+
 void ObjectMgr::LoadCreatureTemplates()
 {
-    sCreatureStorage.Load();
+    SQLCreatureLoader loader;
+    loader.Load(sCreatureStorage);
 
     sLog.outString( ">> Loaded %u creature definitions", sCreatureStorage.RecordCount );
     sLog.outString();
@@ -815,7 +858,7 @@ void ObjectMgr::ConvertCreatureAddonAuras(CreatureDataAddon* addon, char const* 
         return;
     }
 
-    // replace by new strucutres array
+    // replace by new structures array
     const_cast<CreatureDataAddonAura*&>(addon->auras) = new CreatureDataAddonAura[val.size()/2+1];
 
     int i=0;
@@ -899,8 +942,47 @@ void ObjectMgr::LoadEquipmentTemplates()
 {
     sEquipmentStorage.Load();
 
+    for(uint32 i=0; i< sEquipmentStorage.MaxEntry; ++i)
+    {
+        EquipmentInfo const* eqInfo = sEquipmentStorage.LookupEntry<EquipmentInfo>(i);
+
+        if(!eqInfo)
+            continue;
+
+        for(uint8 j=0; j<3; j++)
+        {
+            if(!eqInfo->equipentry[j])
+               continue;
+
+            ItemEntry const *dbcitem = sItemStore.LookupEntry(eqInfo->equipentry[j]);
+
+            if(!dbcitem)
+            {
+                sLog.outErrorDb("Unknown item (entry=%u) in creature_equip_template.equipentry%u for entry = %u, forced to 0.", eqInfo->equipentry[j], j+1, i);
+                const_cast<EquipmentInfo*>(eqInfo)->equipentry[j] = 0;
+                continue;
+            }
+
+            if(dbcitem->InventoryType != INVTYPE_WEAPON &&
+                    dbcitem->InventoryType != INVTYPE_SHIELD &&
+                    dbcitem->InventoryType != INVTYPE_RANGED &&
+                    dbcitem->InventoryType != INVTYPE_2HWEAPON &&
+                    dbcitem->InventoryType != INVTYPE_WEAPONMAINHAND &&
+                    dbcitem->InventoryType != INVTYPE_WEAPONOFFHAND &&
+                    dbcitem->InventoryType != INVTYPE_HOLDABLE &&
+                    dbcitem->InventoryType != INVTYPE_THROWN &&
+                    dbcitem->InventoryType != INVTYPE_RANGEDRIGHT)
+            {
+                sLog.outErrorDb("Item (entry=%u) in creature_equip_template.equipentry%u for entry = %u is not equipable in a hand, forced to 0.", eqInfo->equipentry[j], j+1, i);
+                const_cast<EquipmentInfo*>(eqInfo)->equipentry[j] = 0;
+            }
+        }
+    }
     sLog.outString( ">> Loaded %u equipment template", sEquipmentStorage.RecordCount );
     sLog.outString();
+
+    // This DBC is currently only used for item templates and creature equipments checks.
+    sItemStore.Clear();
 }
 
 CreatureModelInfo const* ObjectMgr::GetCreatureModelInfo(uint32 modelid)
@@ -920,7 +1002,7 @@ uint32 ObjectMgr::ChooseDisplayId(uint32 team, const CreatureInfo *cinfo, const 
         else
             display_id = (cinfo->DisplayID_A2 != 0 && urand(0,1) == 0) ? cinfo->DisplayID_A2 : cinfo->DisplayID_A;
     }
-    else                                                    // overriden in creature data
+    else                                                    // overridden in creature data
         display_id = data->displayid;
 
     return display_id;
@@ -1364,7 +1446,7 @@ uint32 ObjectMgr::GetPlayerAccountIdByGUID(const uint64 &guid) const
     return 0;
 }
 
-uint32 ObjectMgr::GetPlayerAccountIdByPlayerName(std::string name) const
+uint32 ObjectMgr::GetPlayerAccountIdByPlayerName(const std::string& name) const
 {
     QueryResult *result = CharacterDatabase.PQuery("SELECT account FROM characters WHERE name = '%s'", name.c_str());
     if(result)
@@ -1418,7 +1500,7 @@ void ObjectMgr::LoadAuctions()
         aItem->deposit = fields[10].GetUInt32();
         aItem->location = fields[11].GetUInt8();
         //check if sold item exists
-        if ( this->GetAItem( aItem->item_guidlow ) )
+        if ( GetAItem( aItem->item_guidlow ) )
         {
             GetAuctionsMap( aItem->location )->AddAuction(aItem);
         }
@@ -1500,9 +1582,19 @@ void ObjectMgr::LoadItemLocales()
     sLog.outString( ">> Loaded %u Item locale strings", mItemLocaleMap.size() );
 }
 
+struct SQLItemLoader : public SQLStorageLoaderBase<SQLItemLoader>
+{
+    template<class D>
+    void convert_from_str(uint32 field_pos, char *src, D &dst)
+    {
+        dst = D(objmgr.GetScriptId(src));
+    }
+};
+
 void ObjectMgr::LoadItemPrototypes()
 {
-    sItemStorage.Load ();
+    SQLItemLoader loader;
+    loader.Load(sItemStorage);
     sLog.outString( ">> Loaded %u item prototypes", sItemStorage.RecordCount );
     sLog.outString();
 
@@ -1547,7 +1639,7 @@ void ObjectMgr::LoadItemPrototypes()
         if(proto->Class >= MAX_ITEM_CLASS)
         {
             sLog.outErrorDb("Item (Entry: %u) has wrong Class value (%u)",i,proto->Class);
-            const_cast<ItemPrototype*>(proto)->Class = ITEM_CLASS_JUNK;
+            const_cast<ItemPrototype*>(proto)->Class = ITEM_CLASS_MISC;
         }
 
         if(proto->SubClass >= MaxItemSubclassValues[proto->Class])
@@ -1644,7 +1736,7 @@ void ObjectMgr::LoadItemPrototypes()
         }
 
         // special format
-        if(proto->Spells[0].SpellId == SPELL_ID_GENERIC_LEARN)
+        if((proto->Spells[0].SpellId == SPELL_ID_GENERIC_LEARN) || (proto->Spells[0].SpellId == SPELL_ID_GENERIC_LEARN_PET))
         {
             // spell_1
             if(proto->Spells[0].SpellTrigger != ITEM_SPELLTRIGGER_ON_USE)
@@ -1681,7 +1773,7 @@ void ObjectMgr::LoadItemPrototypes()
                     const_cast<ItemPrototype*>(proto)->Spells[1].SpellTrigger = ITEM_SPELLTRIGGER_ON_USE;
                 }
                 // allowed only in special format
-                else if(proto->Spells[1].SpellId==SPELL_ID_GENERIC_LEARN)
+                else if((proto->Spells[1].SpellId==SPELL_ID_GENERIC_LEARN) || (proto->Spells[1].SpellId==SPELL_ID_GENERIC_LEARN_PET))
                 {
                     sLog.outErrorDb("Item (Entry: %u) has broken spell in spellid_%d (%u)",i,1+1,proto->Spells[1].SpellId);
                     const_cast<ItemPrototype*>(proto)->Spells[0].SpellId = 0;
@@ -1727,7 +1819,7 @@ void ObjectMgr::LoadItemPrototypes()
                         const_cast<ItemPrototype*>(proto)->Spells[j].SpellId = 0;
                     }
                     // allowed only in special format
-                    else if(proto->Spells[j].SpellId==SPELL_ID_GENERIC_LEARN)
+                    else if((proto->Spells[j].SpellId==SPELL_ID_GENERIC_LEARN) || (proto->Spells[j].SpellId==SPELL_ID_GENERIC_LEARN_PET))
                     {
                         sLog.outErrorDb("Item (Entry: %u) has broken spell in spellid_%d (%u)",i,j+1,proto->Spells[j].SpellId);
                         const_cast<ItemPrototype*>(proto)->Spells[j].SpellId = 0;
@@ -1796,14 +1888,12 @@ void ObjectMgr::LoadItemPrototypes()
             const_cast<ItemPrototype*>(proto)->FoodType = 0;
         }
     }
-
-    // this DBC used currently only for check item templates in DB.
-    sItemStore.Clear();
 }
 
 void ObjectMgr::LoadAuctionItems()
 {
-    QueryResult *result = CharacterDatabase.Query( "SELECT itemguid,item_template FROM auctionhouse" );
+    // data needs to be at first place for Item::LoadFromDB
+    QueryResult *result = CharacterDatabase.Query( "SELECT data,itemguid,item_template FROM auctionhouse JOIN item_instance ON itemguid = guid" );
 
     if( !result )
         return;
@@ -1818,8 +1908,8 @@ void ObjectMgr::LoadAuctionItems()
         bar.step();
 
         fields = result->Fetch();
-        uint32 item_guid        = fields[0].GetUInt32();
-        uint32 item_template    = fields[1].GetUInt32();
+        uint32 item_guid        = fields[1].GetUInt32();
+        uint32 item_template    = fields[2].GetUInt32();
 
         ItemPrototype const *proto = GetItemPrototype(item_template);
 
@@ -1831,7 +1921,7 @@ void ObjectMgr::LoadAuctionItems()
 
         Item *item = NewItemOrBag(proto);
 
-        if(!item->LoadFromDB(item_guid,0))
+        if(!item->LoadFromDB(item_guid,0, result))
         {
             delete item;
             continue;
@@ -1883,8 +1973,8 @@ void ObjectMgr::LoadPetLevelInfo()
             uint32 current_level = fields[1].GetUInt32();
             if(current_level > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
             {
-                if(current_level > 255)                     // hardcoded level maximum
-                    sLog.outErrorDb("Wrong (> 255) level %u in `pet_levelstats` table, ignoring.",current_level);
+                if(current_level > STRONG_MAX_LEVEL)        // hardcoded level maximum
+                    sLog.outErrorDb("Wrong (> %u) level %u in `pet_levelstats` table, ignoring.",STRONG_MAX_LEVEL,current_level);
                 else
                     sLog.outDetail("Unused (> MaxPlayerLevel in mangosd.conf) level %u in `pet_levelstats` table, ignoring.",current_level);
                 continue;
@@ -2063,9 +2153,10 @@ void ObjectMgr::LoadPlayerInfo()
         {
             barGoLink bar( 1 );
 
+            bar.step();
+
             sLog.outString();
-            sLog.outString( ">> Loaded %u player create items", count );
-            sLog.outErrorDb( "Error loading `playercreateinfo_item` table or empty table.");
+            sLog.outString( ">> Loaded %u custom player create items", count );
         }
         else
         {
@@ -2117,7 +2208,7 @@ void ObjectMgr::LoadPlayerInfo()
             delete result;
 
             sLog.outString();
-            sLog.outString( ">> Loaded %u player create items", count );
+            sLog.outString( ">> Loaded %u custom player create items", count );
         }
     }
 
@@ -2261,8 +2352,8 @@ void ObjectMgr::LoadPlayerInfo()
             uint32 current_level = fields[1].GetUInt32();
             if(current_level > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
             {
-                if(current_level > 255)                     // hardcoded level maximum
-                    sLog.outErrorDb("Wrong (> 255) level %u in `player_classlevelstats` table, ignoring.",current_level);
+                if(current_level > STRONG_MAX_LEVEL)        // hardcoded level maximum
+                    sLog.outErrorDb("Wrong (> %u) level %u in `player_classlevelstats` table, ignoring.",STRONG_MAX_LEVEL,current_level);
                 else
                     sLog.outDetail("Unused (> MaxPlayerLevel in mangosd.conf) level %u in `player_classlevelstats` table, ignoring.",current_level);
                 continue;
@@ -2356,8 +2447,8 @@ void ObjectMgr::LoadPlayerInfo()
             uint32 current_level = fields[2].GetUInt32();
             if(current_level > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
             {
-                if(current_level > 255)                     // hardcoded level maximum
-                    sLog.outErrorDb("Wrong (> 255) level %u in `player_levelstats` table, ignoring.",current_level);
+                if(current_level > STRONG_MAX_LEVEL)        // hardcoded level maximum
+                    sLog.outErrorDb("Wrong (> %u) level %u in `player_levelstats` table, ignoring.",STRONG_MAX_LEVEL,current_level);
                 else
                     sLog.outDetail("Unused (> MaxPlayerLevel in mangosd.conf) level %u in `player_levelstats` table, ignoring.",current_level);
                 continue;
@@ -2783,31 +2874,31 @@ void ObjectMgr::LoadQuests()
     QueryResult *result = WorldDatabase.Query("SELECT entry, Method, ZoneOrSort, SkillOrClass, MinLevel, QuestLevel, Type, RequiredRaces, RequiredSkillValue,"
     //   9                    10                 11                     12                   13                     14                   15                16
         "RepObjectiveFaction, RepObjectiveValue, RequiredMinRepFaction, RequiredMinRepValue, RequiredMaxRepFaction, RequiredMaxRepValue, SuggestedPlayers, LimitTime,"
-    //   17          18            19           20           21           22              23                24         25            26
-        "QuestFlags, SpecialFlags, CharTitleId, PrevQuestId, NextQuestId, ExclusiveGroup, NextQuestInChain, SrcItemId, SrcItemCount, SrcSpell,"
-    //   27     28       29          30               31                32       33              34              35              36
+    //   17          18            19           20            21            22           23           24              25                26         27            28
+        "QuestFlags, SpecialFlags, CharTitleId, PlayersSlain, BonusTalents, PrevQuestId, NextQuestId, ExclusiveGroup, NextQuestInChain, SrcItemId, SrcItemCount, SrcSpell,"
+    //   29     30       31          32               33                34       35              36              37              38
         "Title, Details, Objectives, OfferRewardText, RequestItemsText, EndText, ObjectiveText1, ObjectiveText2, ObjectiveText3, ObjectiveText4,"
-    //   37          38          39          40          41             42             43             44
+    //   39          40          41          42          43             44             45             46
         "ReqItemId1, ReqItemId2, ReqItemId3, ReqItemId4, ReqItemCount1, ReqItemCount2, ReqItemCount3, ReqItemCount4,"
-    //   45            46            47            48            49               50               51               52               53             54             54             55
+    //   47            48            49            50            51               52               53               54               55             56             57             58
         "ReqSourceId1, ReqSourceId2, ReqSourceId3, ReqSourceId4, ReqSourceCount1, ReqSourceCount2, ReqSourceCount3, ReqSourceCount4, ReqSourceRef1, ReqSourceRef2, ReqSourceRef3, ReqSourceRef4,"
-    //   57                  58                  59                  60                  61                     62                     63                     64
+    //   59                  60                  61                  62                  63                     64                     65                     66
         "ReqCreatureOrGOId1, ReqCreatureOrGOId2, ReqCreatureOrGOId3, ReqCreatureOrGOId4, ReqCreatureOrGOCount1, ReqCreatureOrGOCount2, ReqCreatureOrGOCount3, ReqCreatureOrGOCount4,"
-    //   65             66             67             68
+    //   67             68             69             70
         "ReqSpellCast1, ReqSpellCast2, ReqSpellCast3, ReqSpellCast4,"
-    //   69                70                71                72                73                74
+    //   71                72                73                74                75                76
         "RewChoiceItemId1, RewChoiceItemId2, RewChoiceItemId3, RewChoiceItemId4, RewChoiceItemId5, RewChoiceItemId6,"
-    //   75                   76                   77                   78                   79                   80
+    //   77                   78                   79                   80                   81                   82
         "RewChoiceItemCount1, RewChoiceItemCount2, RewChoiceItemCount3, RewChoiceItemCount4, RewChoiceItemCount5, RewChoiceItemCount6,"
-    //   81          82          83          84          85             86             87             88
+    //   83          84          85          86          87             88             89             90
         "RewItemId1, RewItemId2, RewItemId3, RewItemId4, RewItemCount1, RewItemCount2, RewItemCount3, RewItemCount4,"
-    //   89              90              91              92              93              94            95            96            97            98
+    //   91              92              93              94              95              96            97            98            99            100
         "RewRepFaction1, RewRepFaction2, RewRepFaction3, RewRepFaction4, RewRepFaction5, RewRepValue1, RewRepValue2, RewRepValue3, RewRepValue4, RewRepValue5,"
-    //   99                 100            101               102       103           104                105               106         107     108    109
+    //   101                102            103               104       105           106                107               108         109     110     111
         "RewHonorableKills, RewOrReqMoney, RewMoneyMaxLevel, RewSpell, RewSpellCast, RewMailTemplateId, RewMailDelaySecs, PointMapId, PointX, PointY, PointOpt,"
-    //   110            111            112           113              114            115                116                117                118             119
+    //   112            113            114            115           116              117            118                119                120                121
         "DetailsEmote1, DetailsEmote2, DetailsEmote3, DetailsEmote4,IncompleteEmote, CompleteEmote, OfferRewardEmote1, OfferRewardEmote2, OfferRewardEmote3, OfferRewardEmote4,"
-    //   120          121
+    //   122          123
         "StartScript, CompleteScript"
         " FROM quest_template");
     if(result == NULL)
@@ -2837,7 +2928,7 @@ void ObjectMgr::LoadQuests()
     delete result;
 
     // Post processing
-    for (QuestMap::iterator iter = mQuestTemplates.begin(); iter != mQuestTemplates.end(); iter++)
+    for (QuestMap::iterator iter = mQuestTemplates.begin(); iter != mQuestTemplates.end(); ++iter)
     {
         Quest * qinfo = iter->second;
 
@@ -3034,7 +3125,7 @@ void ObjectMgr::LoadQuests()
             {
                 sLog.outErrorDb("Quest %u has `SrcItemId` = %u but `SrcItemCount` = 0, set to 1 but need fix in DB.",
                     qinfo->GetQuestId(),qinfo->SrcItemId);
-                qinfo->SrcItemCount = 1;                    // update to 1 for allow quest work for backward comptibility with DB
+                qinfo->SrcItemCount = 1;                    // update to 1 for allow quest work for backward compatibility with DB
             }
         }
         else if(qinfo->SrcItemCount>0)
@@ -3437,7 +3528,7 @@ void ObjectMgr::LoadQuests()
 
             Quest const* quest = GetQuestTemplate(quest_id);
 
-            // some quest referenced in spells not exist (outdataed spells)
+            // some quest referenced in spells not exist (outdated spells)
             if(!quest)
                 continue;
 
@@ -3651,7 +3742,7 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
 
     scripts.clear();                                        // need for reload support
 
-    QueryResult *result = WorldDatabase.PQuery( "SELECT id,delay,command,datalong,datalong2,datatext, x, y, z, o FROM %s", tablename );
+    QueryResult *result = WorldDatabase.PQuery( "SELECT id,delay,command,datalong,datalong2,dataint, x, y, z, o FROM %s", tablename );
 
     uint32 count = 0;
 
@@ -3673,16 +3764,16 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
 
         Field *fields = result->Fetch();
         ScriptInfo tmp;
-        tmp.id = fields[0].GetUInt32();
-        tmp.delay = fields[1].GetUInt32();
-        tmp.command = fields[2].GetUInt32();
-        tmp.datalong = fields[3].GetUInt32();
+        tmp.id        = fields[0].GetUInt32();
+        tmp.delay     = fields[1].GetUInt32();
+        tmp.command   = fields[2].GetUInt32();
+        tmp.datalong  = fields[3].GetUInt32();
         tmp.datalong2 = fields[4].GetUInt32();
-        tmp.datatext = fields[5].GetCppString();
-        tmp.x = fields[6].GetFloat();
-        tmp.y = fields[7].GetFloat();
-        tmp.z = fields[8].GetFloat();
-        tmp.o = fields[9].GetFloat();
+        tmp.dataint   = fields[5].GetInt32();
+        tmp.x         = fields[6].GetFloat();
+        tmp.y         = fields[7].GetFloat();
+        tmp.z         = fields[8].GetFloat();
+        tmp.o         = fields[9].GetFloat();
 
         // generic command args check
         switch(tmp.command)
@@ -3694,6 +3785,18 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
                     sLog.outErrorDb("Table `%s` has invalid talk type (datalong = %u) in SCRIPT_COMMAND_TALK for script id %u",tablename,tmp.datalong,tmp.id);
                     continue;
                 }
+                if(tmp.dataint==0)
+                {
+                    sLog.outErrorDb("Table `%s` has invalid talk text id (dataint = %i) in SCRIPT_COMMAND_TALK for script id %u",tablename,tmp.dataint,tmp.id);
+                    continue;
+                }
+                if(tmp.dataint < MIN_DB_SCRIPT_STRING_ID || tmp.dataint >= MAX_DB_SCRIPT_STRING_ID)
+                {
+                    sLog.outErrorDb("Table `%s` has out of range text id (dataint = %i expected %u-%u) in SCRIPT_COMMAND_TALK for script id %u",tablename,tmp.dataint,MIN_DB_SCRIPT_STRING_ID,MAX_DB_SCRIPT_STRING_ID,tmp.id);
+                    continue;
+                }
+
+                // if(!objmgr.GetMangosStringLocale(tmp.dataint)) will checked after db_script_string loading
                 break;
             }
 
@@ -3797,7 +3900,7 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
                     // this will prevent quest completing without objective
                     const_cast<Quest*>(quest)->SetFlag(QUEST_MANGOS_FLAGS_EXPLORATION_OR_EVENT);
 
-                    // continue; - quest objective requiremet set and command can be allowed
+                    // continue; - quest objective requirement set and command can be allowed
                 }
 
                 if(float(tmp.datalong2) > DEFAULT_VISIBILITY_DISTANCE)
@@ -3971,7 +4074,7 @@ void ObjectMgr::LoadEventScripts()
     {
         std::set<uint32>::const_iterator itr2 = evt_scripts.find(itr->first);
         if (itr2 == evt_scripts.end())
-            sLog.outErrorDb("Table `event_scripts` has script (Id: %u) not refering to any gameobject_template type 10 data2 field or type 3 data6 field or any spell effect %u", itr->first, SPELL_EFFECT_SEND_EVENT);
+            sLog.outErrorDb("Table `event_scripts` has script (Id: %u) not referring to any gameobject_template type 10 data2 field or type 3 data6 field or any spell effect %u", itr->first, SPELL_EFFECT_SEND_EVENT);
     }
 }
 
@@ -4044,7 +4147,7 @@ void ObjectMgr::LoadPageTexts()
             {
                 std::ostringstream ss;
                 ss<< "The text page(s) ";
-                for (std::set<uint32>::iterator itr= checkedPages.begin();itr!=checkedPages.end(); itr++)
+                for (std::set<uint32>::iterator itr= checkedPages.begin();itr!=checkedPages.end(); ++itr)
                     ss << *itr << " ";
                 ss << "create(s) a circular reference, which can cause the server to freeze. Changing Next_Page of page "
                     << pageItr->Page_ID <<" to 0";
@@ -4108,9 +4211,19 @@ void ObjectMgr::LoadPageTextLocales()
     sLog.outString( ">> Loaded %u PageText locale strings", mPageTextLocaleMap.size() );
 }
 
+struct SQLInstanceLoader : public SQLStorageLoaderBase<SQLInstanceLoader>
+{
+    template<class D>
+    void convert_from_str(uint32 field_pos, char *src, D &dst)
+    {
+        dst = D(objmgr.GetScriptId(src));
+    }
+};
+
 void ObjectMgr::LoadInstanceTemplate()
 {
-    sInstanceTemplate.Load();
+    SQLInstanceLoader loader;
+    loader.Load(sInstanceTemplate);
 
     for(uint32 i = 0; i < sInstanceTemplate.MaxEntry; i++)
     {
@@ -4138,7 +4251,7 @@ void ObjectMgr::LoadInstanceTemplate()
             }
         }
 
-        // the reset_delay must be atleast one day
+        // the reset_delay must be at least one day
         temp->reset_delay = std::max((uint32)1, (uint32)(temp->reset_delay * sWorld.getRate(RATE_INSTANCE_RESET_TIME)));
     }
 
@@ -4156,7 +4269,7 @@ void ObjectMgr::AddGossipText(GossipText *pGText)
 GossipText *ObjectMgr::GetGossipText(uint32 Text_ID)
 {
     GossipTextMap::const_iterator itr;
-    for (itr = mGossipText.begin(); itr != mGossipText.end(); itr++)
+    for (itr = mGossipText.begin(); itr != mGossipText.end(); ++itr)
     {
         if(itr->second->Text_ID == Text_ID)
             return itr->second;
@@ -4439,7 +4552,7 @@ void ObjectMgr::LoadQuestAreaTriggers()
             // this will prevent quest completing without objective
             const_cast<Quest*>(quest)->SetFlag(QUEST_MANGOS_FLAGS_EXPLORATION_OR_EVENT);
 
-            // continue; - quest modified to required obkective and trigger can be allowed.
+            // continue; - quest modified to required objective and trigger can be allowed.
         }
 
         mQuestAreaTriggerMap[trigger_ID] = quest_ID;
@@ -4524,7 +4637,7 @@ void ObjectMgr::LoadAreaTriggerScripts()
         Field *fields = result->Fetch();
 
         uint32 Trigger_ID      = fields[0].GetUInt32();
-        std::string scriptName = fields[1].GetCppString();
+        const char *scriptName = fields[1].GetString();
 
         AreaTriggerEntry const* atEntry = sAreaTriggerStore.LookupEntry(Trigger_ID);
         if(!atEntry)
@@ -4532,7 +4645,7 @@ void ObjectMgr::LoadAreaTriggerScripts()
             sLog.outErrorDb("Area trigger (ID:%u) does not exist in `AreaTrigger.dbc`.",Trigger_ID);
             continue;
         }
-        mAreaTriggerScripts[Trigger_ID] = scriptName;
+        mAreaTriggerScripts[Trigger_ID] = GetScriptId(scriptName);
     } while( result->NextRow() );
 
     delete result;
@@ -4607,14 +4720,14 @@ uint16 ObjectMgr::GetTaxiMount( uint32 id, uint32 team )
     {
         if (team == ALLIANCE)
         {
-            mount_entry = node->alliance_mount_type;
+            mount_entry = node->MountCreatureID[1];
             CreatureInfo const *ci = GetCreatureTemplate(mount_entry);
             if(ci)
                 mount_id = ci->DisplayID_A;
         }
         if (team == HORDE)
         {
-            mount_entry = node->horde_mount_type;
+            mount_entry = node->MountCreatureID[0];
             CreatureInfo const *ci = GetCreatureTemplate(mount_entry);
             if(ci)
                 mount_id = ci->DisplayID_H;
@@ -4732,14 +4845,8 @@ void ObjectMgr::LoadGraveyardZones()
             continue;
         }
 
-        if(entry->map_id != areaEntry->mapid && team != 0)
-        {
-            sLog.outErrorDb("Table `game_graveyard_zone` has record for ghost zone (%u) at map %u and graveyard (%u) at map %u for team %u, but in case maps are different, player faction setting is ignored. Use faction 0 instead.",zoneId,areaEntry->mapid, safeLocId, entry->map_id, team);
-            team = 0;
-        }
-
         if(!AddGraveYardLink(safeLocId,zoneId,team,false))
-            sLog.outErrorDb("Table `game_graveyard_zone` has a duplicate record for Garveyard (ID: %u) and Zone (ID: %u), skipped.",safeLocId,zoneId);
+            sLog.outErrorDb("Table `game_graveyard_zone` has a duplicate record for Graveyard (ID: %u) and Zone (ID: %u), skipped.",safeLocId,zoneId);
     } while( result->NextRow() );
 
     delete result;
@@ -4759,7 +4866,7 @@ WorldSafeLocsEntry const *ObjectMgr::GetClosestGraveYard(float x, float y, float
     //   if mapId == graveyard.mapId (ghost in plain zone or city or battleground) and search graveyard at same map
     //     then check faction
     //   if mapId != graveyard.mapId (ghost in instance) and search any graveyard associated
-    //     then skip check faction
+    //     then check faction
     GraveYardMap::const_iterator graveLow  = mGraveYardMap.lower_bound(zoneId);
     GraveYardMap::const_iterator graveUp   = mGraveYardMap.upper_bound(zoneId);
     if(graveLow==graveUp)
@@ -4768,10 +4875,20 @@ WorldSafeLocsEntry const *ObjectMgr::GetClosestGraveYard(float x, float y, float
         return NULL;
     }
 
+    // at corpse map
     bool foundNear = false;
     float distNear;
     WorldSafeLocsEntry const* entryNear = NULL;
+
+    // at entrance map for corpse map
+    bool foundEntr = false;
+    float distEntr;
+    WorldSafeLocsEntry const* entryEntr = NULL;
+
+    // some where other
     WorldSafeLocsEntry const* entryFar = NULL;
+
+    MapEntry const* mapEntry = sMapStore.LookupEntry(MapId);
 
     for(GraveYardMap::const_iterator itr = graveLow; itr != graveUp; ++itr)
     {
@@ -4784,39 +4901,67 @@ WorldSafeLocsEntry const *ObjectMgr::GetClosestGraveYard(float x, float y, float
             continue;
         }
 
-        // remember first graveyard at another map and ignore other
-        if(MapId != entry->map_id)
-        {
-            if(!entryFar)
-                entryFar = entry;
-            continue;
-        }
-
-        // skip enemy faction graveyard at same map (normal area, city, or battleground)
+        // skip enemy faction graveyard
         // team == 0 case can be at call from .neargrave
         if(data.team != 0 && team != 0 && data.team != team)
             continue;
 
-        // find now nearest graveyard at same map
-        float dist2 = (entry->x - x)*(entry->x - x)+(entry->y - y)*(entry->y - y)+(entry->z - z)*(entry->z - z);
-        if(foundNear)
+        // find now nearest graveyard at other map
+        if(MapId != entry->map_id)
         {
-            if(dist2 < distNear)
+            // if find graveyard at different map from where entrance placed (or no entrance data), use any first
+            if (!mapEntry || mapEntry->entrance_map < 0 || mapEntry->entrance_map != entry->map_id ||
+                mapEntry->entrance_x == 0 && mapEntry->entrance_y == 0)
             {
+                // not have any corrdinates for check distance anyway
+                entryFar = entry;
+                continue;
+            }
+
+            // at entrance map calculate distance (2D);
+            float dist2 = (entry->x - mapEntry->entrance_x)*(entry->x - mapEntry->entrance_x)
+                +(entry->y - mapEntry->entrance_y)*(entry->y - mapEntry->entrance_y);
+            if(foundEntr)
+            {
+                if(dist2 < distEntr)
+                {
+                    distEntr = dist2;
+                    entryEntr = entry;
+                }
+            }
+            else
+            {
+                foundEntr = true;
+                distEntr = dist2;
+                entryEntr = entry;
+            }
+        }
+        // find now nearest graveyard at same map
+        else
+        {
+            float dist2 = (entry->x - x)*(entry->x - x)+(entry->y - y)*(entry->y - y)+(entry->z - z)*(entry->z - z);
+            if(foundNear)
+            {
+                if(dist2 < distNear)
+                {
+                    distNear = dist2;
+                    entryNear = entry;
+                }
+            }
+            else
+            {
+                foundNear = true;
                 distNear = dist2;
                 entryNear = entry;
             }
-        }
-        else
-        {
-            foundNear = true;
-            distNear = dist2;
-            entryNear = entry;
         }
     }
 
     if(entryNear)
         return entryNear;
+
+    if(entryEntr)
+        return entryEntr;
 
     return entryFar;
 }
@@ -4986,9 +5131,9 @@ AreaTrigger const* ObjectMgr::GetGoBackTrigger(uint32 Map) const
 {
     const MapEntry *mapEntry = sMapStore.LookupEntry(Map);
     if(!mapEntry) return NULL;
-    for (AreaTriggerMap::const_iterator itr = mAreaTriggers.begin(); itr != mAreaTriggers.end(); itr++)
+    for (AreaTriggerMap::const_iterator itr = mAreaTriggers.begin(); itr != mAreaTriggers.end(); ++itr)
     {
-        if(itr->second.target_mapId == mapEntry->parent_map)
+        if(itr->second.target_mapId == mapEntry->entrance_map)
         {
             AreaTriggerEntry const* atEntry = sAreaTriggerStore.LookupEntry(itr->first);
             if(atEntry && atEntry->mapid == Map)
@@ -5004,7 +5149,6 @@ void ObjectMgr::SetHighestGuids()
     if( result )
     {
         m_hiCharGuid = (*result)[0].GetUInt32()+1;
-
         delete result;
     }
 
@@ -5012,23 +5156,18 @@ void ObjectMgr::SetHighestGuids()
     if( result )
     {
         m_hiCreatureGuid = (*result)[0].GetUInt32()+1;
-
         delete result;
     }
 
-    result = CharacterDatabase.Query( "SELECT MAX(id) FROM character_pet" );
-    if( result )
-    {
-        m_hiPetGuid = (*result)[0].GetUInt32()+1;
-
-        delete result;
-    }
+    // pet guids are not saved to DB, set to 0 (pet guid != pet id)
+    m_hiPetGuid = 0;
+    // same for vehicles
+    m_hiVehicleGuid = 0;
 
     result = CharacterDatabase.Query( "SELECT MAX(guid) FROM item_instance" );
     if( result )
     {
         m_hiItemGuid = (*result)[0].GetUInt32()+1;
-
         delete result;
     }
 
@@ -5042,7 +5181,6 @@ void ObjectMgr::SetHighestGuids()
     if( result )
     {
         m_hiGoGuid = (*result)[0].GetUInt32()+1;
-
         delete result;
     }
 
@@ -5050,74 +5188,93 @@ void ObjectMgr::SetHighestGuids()
     if( result )
     {
         m_auctionid = (*result)[0].GetUInt32()+1;
-
         delete result;
     }
-    else
-    {
-        m_auctionid = 0;
-    }
+
     result = CharacterDatabase.Query( "SELECT MAX(id) FROM mail" );
     if( result )
     {
         m_mailid = (*result)[0].GetUInt32()+1;
-
         delete result;
     }
-    else
-    {
-        m_mailid = 0;
-    }
+
     result = CharacterDatabase.Query( "SELECT MAX(id) FROM item_text" );
     if( result )
     {
-        m_ItemTextId = (*result)[0].GetUInt32();
-
+        m_ItemTextId = (*result)[0].GetUInt32()+1;
         delete result;
     }
-    else
-        m_ItemTextId = 0;
 
     result = CharacterDatabase.Query( "SELECT MAX(guid) FROM corpse" );
     if( result )
     {
         m_hiCorpseGuid = (*result)[0].GetUInt32()+1;
+        delete result;
+    }
 
+    result = CharacterDatabase.Query("SELECT MAX(arenateamid) FROM arena_team");
+    if (result)
+    {
+        m_arenaTeamId = (*result)[0].GetUInt32()+1;
+        delete result;
+    }
+
+    result = CharacterDatabase.Query( "SELECT MAX(guildid) FROM guild" );
+    if (result)
+    {
+        m_guildId = (*result)[0].GetUInt32()+1;
         delete result;
     }
 }
 
+uint32 ObjectMgr::GenerateArenaTeamId()
+{
+    if(m_arenaTeamId>=0xFFFFFFFE)
+    {
+        sLog.outError("Arena team ids overflow!! Can't continue, shutting down server. ");
+        World::StopNow(ERROR_EXIT_CODE);
+    }
+    return m_arenaTeamId++;
+}
+
+uint32 ObjectMgr::GenerateGuildId()
+{
+    if(m_guildId>=0xFFFFFFFE)
+    {
+        sLog.outError("Guild ids overflow!! Can't continue, shutting down server. ");
+        World::StopNow(ERROR_EXIT_CODE);
+    }
+    return m_guildId++;
+}
+
 uint32 ObjectMgr::GenerateAuctionID()
 {
-    ++m_auctionid;
-    if(m_auctionid>=0xFFFFFFFF)
+    if(m_auctionid>=0xFFFFFFFE)
     {
-        sLog.outError("Auctions ids overflow!! Can't continue, shuting down server. ");
-        sWorld.m_stopEvent = true;
+        sLog.outError("Auctions ids overflow!! Can't continue, shutting down server. ");
+        World::StopNow(ERROR_EXIT_CODE);
     }
-    return m_auctionid;
+    return m_auctionid++;
 }
 
 uint32 ObjectMgr::GenerateMailID()
 {
-    ++m_mailid;
-    if(m_mailid>=0xFFFFFFFF)
+    if(m_mailid>=0xFFFFFFFE)
     {
-        sLog.outError("Mail ids overflow!! Can't continue, shuting down server. ");
-        sWorld.m_stopEvent = true;
+        sLog.outError("Mail ids overflow!! Can't continue, shutting down server. ");
+        World::StopNow(ERROR_EXIT_CODE);
     }
-    return m_mailid;
+    return m_mailid++;
 }
 
 uint32 ObjectMgr::GenerateItemTextID()
 {
-    ++m_ItemTextId;
-    if(m_ItemTextId>=0xFFFFFFFF)
+    if(m_ItemTextId>=0xFFFFFFFE)
     {
-        sLog.outError("Item text ids overflow!! Can't continue, shuting down server. ");
-        sWorld.m_stopEvent = true;
+        sLog.outError("Item text ids overflow!! Can't continue, shutting down server. ");
+        World::StopNow(ERROR_EXIT_CODE);
     }
-    return m_ItemTextId;
+    return m_ItemTextId++;
 }
 
 uint32 ObjectMgr::CreateItemText(std::string text)
@@ -5139,61 +5296,62 @@ uint32 ObjectMgr::GenerateLowGuid(HighGuid guidhigh)
     switch(guidhigh)
     {
         case HIGHGUID_ITEM:
-            ++m_hiItemGuid;
-            if(m_hiItemGuid>=0xFFFFFFFF)
+            if(m_hiItemGuid>=0xFFFFFFFE)
             {
-                sLog.outError("Item guid overflow!! Can't continue, shuting down server. ");
-                sWorld.m_stopEvent = true;
+                sLog.outError("Item guid overflow!! Can't continue, shutting down server. ");
+                World::StopNow(ERROR_EXIT_CODE);
             }
-            return m_hiItemGuid;
+            return m_hiItemGuid++;
         case HIGHGUID_UNIT:
-            ++m_hiCreatureGuid;
-            if(m_hiCreatureGuid>=0x00FFFFFF)
+            if(m_hiCreatureGuid>=0x00FFFFFE)
             {
-                sLog.outError("Creature guid overflow!! Can't continue, shuting down server. ");
-                sWorld.m_stopEvent = true;
+                sLog.outError("Creature guid overflow!! Can't continue, shutting down server. ");
+                World::StopNow(ERROR_EXIT_CODE);
             }
-            return m_hiCreatureGuid;
+            return m_hiCreatureGuid++;
         case HIGHGUID_PET:
-            ++m_hiPetGuid;
-            if(m_hiPetGuid>=0x00FFFFFF)
+            if(m_hiPetGuid>=0x00FFFFFE)
             {
-                sLog.outError("Pet guid overflow!! Can't continue, shuting down server. ");
-                sWorld.m_stopEvent = true;
+                sLog.outError("Pet guid overflow!! Can't continue, shutting down server. ");
+                World::StopNow(ERROR_EXIT_CODE);
             }
-            return m_hiPetGuid;
+            return m_hiPetGuid++;
+        case HIGHGUID_VEHICLE:
+            ++m_hiVehicleGuid;
+            if(m_hiVehicleGuid>=0x00FFFFFF)
+            {
+                sLog.outError("Vehicle guid overflow!! Can't continue, shutting down server. ");
+                World::StopNow(ERROR_EXIT_CODE);
+            }
+            return m_hiVehicleGuid++;
         case HIGHGUID_PLAYER:
-            ++m_hiCharGuid;
-            if(m_hiCharGuid>=0xFFFFFFFF)
+            if(m_hiCharGuid>=0xFFFFFFFE)
             {
-                sLog.outError("Players guid overflow!! Can't continue, shuting down server. ");
-                sWorld.m_stopEvent = true;
+                sLog.outError("Players guid overflow!! Can't continue, shutting down server. ");
+                World::StopNow(ERROR_EXIT_CODE);
             }
-            return m_hiCharGuid;
+            return m_hiCharGuid++;
         case HIGHGUID_GAMEOBJECT:
-            ++m_hiGoGuid;
-            if(m_hiGoGuid>=0x00FFFFFF)
+            if(m_hiGoGuid>=0x00FFFFFE)
             {
-                sLog.outError("Gameobject guid overflow!! Can't continue, shuting down server. ");
-                sWorld.m_stopEvent = true;
+                sLog.outError("Gameobject guid overflow!! Can't continue, shutting down server. ");
+                World::StopNow(ERROR_EXIT_CODE);
             }
-            return m_hiGoGuid;
+            return m_hiGoGuid++;
         case HIGHGUID_CORPSE:
-            ++m_hiCorpseGuid;
-            if(m_hiCorpseGuid>=0xFFFFFFFF)
+            if(m_hiCorpseGuid>=0xFFFFFFFE)
             {
-                sLog.outError("Corpse guid overflow!! Can't continue, shuting down server. ");
-                sWorld.m_stopEvent = true;
+                sLog.outError("Corpse guid overflow!! Can't continue, shutting down server. ");
+                World::StopNow(ERROR_EXIT_CODE);
             }
-            return m_hiCorpseGuid;
+            return m_hiCorpseGuid++;
         case HIGHGUID_DYNAMICOBJECT:
-            ++m_hiDoGuid;
-            if(m_hiDoGuid>=0xFFFFFFFF)
+            if(m_hiDoGuid>=0xFFFFFFFE)
             {
-                sLog.outError("DynamicObject guid overflow!! Can't continue, shuting down server. ");
-                sWorld.m_stopEvent = true;
+                sLog.outError("DynamicObject guid overflow!! Can't continue, shutting down server. ");
+                World::StopNow(ERROR_EXIT_CODE);
             }
-            return m_hiDoGuid;
+            return m_hiDoGuid++;
         default:
             ASSERT(0);
     }
@@ -5273,9 +5431,19 @@ void ObjectMgr::LoadGameObjectLocales()
     sLog.outString( ">> Loaded %u gameobject locale strings", mGameObjectLocaleMap.size() );
 }
 
+struct SQLGameObjectLoader : public SQLStorageLoaderBase<SQLGameObjectLoader>
+{
+    template<class D>
+    void convert_from_str(uint32 field_pos, char *src, D &dst)
+    {
+        dst = D(objmgr.GetScriptId(src));
+    }
+};
+
 void ObjectMgr::LoadGameobjectInfo()
 {
-    sGOStorage.Load();
+    SQLGameObjectLoader loader;
+    loader.Load(sGOStorage);
 
     // some checks
     for(uint32 id = 1; id < sGOStorage.MaxEntry; id++)
@@ -6034,7 +6202,7 @@ bool isValidString(std::wstring wstr, uint32 strictMask, bool numericOrSpace, bo
                 return true;
     }
 
-    if(strictMask & 0x1)                                    // basic latin
+    if(strictMask & 0x1)                                    // basic Latin
     {
         if(isBasicLatinString(wstr,numericOrSpace))
             return true;
@@ -6043,7 +6211,7 @@ bool isValidString(std::wstring wstr, uint32 strictMask, bool numericOrSpace, bo
     return false;
 }
 
-bool ObjectMgr::IsValidName( std::string name, bool create )
+bool ObjectMgr::IsValidName( const std::string& name, bool create )
 {
     std::wstring wname;
     if(!Utf8toWStr(name,wname))
@@ -6057,7 +6225,7 @@ bool ObjectMgr::IsValidName( std::string name, bool create )
     return isValidString(wname,strictMask,false,create);
 }
 
-bool ObjectMgr::IsValidCharterName( std::string name )
+bool ObjectMgr::IsValidCharterName( const std::string& name )
 {
     std::wstring wname;
     if(!Utf8toWStr(name,wname))
@@ -6071,7 +6239,7 @@ bool ObjectMgr::IsValidCharterName( std::string name )
     return isValidString(wname,strictMask,true);
 }
 
-bool ObjectMgr::IsValidPetName( std::string name )
+bool ObjectMgr::IsValidPetName( const std::string& name )
 {
     std::wstring wname;
     if(!Utf8toWStr(name,wname))
@@ -6116,6 +6284,23 @@ int ObjectMgr::GetOrNewIndexForLocale( LocaleConstant loc )
 
     m_LocalForIndex.push_back(loc);
     return m_LocalForIndex.size()-1;
+}
+
+AchievementCriteriaEntryList const& ObjectMgr::GetAchievementCriteriaByType(AchievementCriteriaTypes type)
+{
+    return m_AchievementCriteriasByType[type];
+}
+
+void ObjectMgr::LoadAchievementCriteriaList()
+{
+    for (uint32 entryId = 0; entryId<sAchievementCriteriaStore.GetNumRows(); entryId++)
+    {
+        AchievementCriteriaEntry const* criteria = sAchievementCriteriaStore.LookupEntry(entryId);
+        if(!criteria)
+            continue;
+
+        m_AchievementCriteriasByType[criteria->requiredType].push_back(criteria);
+    }
 }
 
 void ObjectMgr::LoadBattleMastersEntry()
@@ -6228,7 +6413,7 @@ bool ObjectMgr::LoadMangosStrings(DatabaseType& db, char const* table, int32 min
         bar.step();
 
         sLog.outString("");
-        if(min_value > 0)                                   // error only in case internal strings
+        if(min_value == MIN_MANGOS_STRING_ID)               // error only in case internal strings
             sLog.outErrorDb(">> Loaded 0 mangos strings. DB table `%s` is empty. Cannot continue.",table);
         else
             sLog.outString(">> Loaded 0 string templates. DB table `%s` is empty.",table);
@@ -6294,7 +6479,7 @@ bool ObjectMgr::LoadMangosStrings(DatabaseType& db, char const* table, int32 min
     delete result;
 
     sLog.outString();
-    if(min_value > 0)                                       // internal mangos strings
+    if(min_value == MIN_MANGOS_STRING_ID)               // error only in case internal strings
         sLog.outString( ">> Loaded %u MaNGOS strings from table %s", count,table);
     else
         sLog.outString( ">> Loaded %u string templates from %s", count,table);
@@ -6323,7 +6508,7 @@ const char *ObjectMgr::GetMangosString(int32 entry, int locale_idx) const
 
 void ObjectMgr::LoadFishingBaseSkillLevel()
 {
-    mFishingBaseForArea.clear();                            // for relaod case
+    mFishingBaseForArea.clear();                            // for reload case
 
     uint32 count = 0;
     QueryResult *result = WorldDatabase.Query("SELECT entry,skill FROM skill_fishing_base_level");
@@ -6403,12 +6588,12 @@ bool ObjectMgr::CheckDeclinedNames( std::wstring mainpart, DeclinedName const& n
     return true;
 }
 
-const char* ObjectMgr::GetAreaTriggerScriptName(uint32 id)
+uint32 ObjectMgr::GetAreaTriggerScriptId(uint32 trigger_id)
 {
-    AreaTriggerScriptMap::const_iterator i = mAreaTriggerScripts.find(id);
+    AreaTriggerScriptMap::const_iterator i = mAreaTriggerScripts.find(trigger_id);
     if(i!= mAreaTriggerScripts.end())
-        return i->second.c_str();
-    return "";
+        return i->second;
+    return 0;
 }
 
 // Checks if player meets the condition
@@ -6449,7 +6634,7 @@ bool PlayerCondition::Meets(Player const * player) const
         {
             Unit::AuraMap const& auras = player->GetAuras();
             for(Unit::AuraMap::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
-                if((itr->second->GetSpellProto()->Attributes & 0x1000010) && itr->second->GetSpellProto()->SpellVisual==3580)
+                if((itr->second->GetSpellProto()->Attributes & 0x1000010) && itr->second->GetSpellProto()->SpellVisual[0]==3580)
                     return true;
             return false;
         }
@@ -6617,7 +6802,7 @@ SkillRangeType GetSkillRangeType(SkillLineEntry const *pSkill, bool racial)
                 return SKILL_RANGE_MONO;
         case SKILL_CATEGORY_ARMOR:
         case SKILL_CATEGORY_CLASS:
-            if(pSkill->id != SKILL_POISONS && pSkill->id != SKILL_LOCKPICKING)
+            if(pSkill->id != SKILL_LOCKPICKING)
                 return SKILL_RANGE_MONO;
             else
                 return SKILL_RANGE_LEVEL;
@@ -6632,14 +6817,14 @@ SkillRangeType GetSkillRangeType(SkillLineEntry const *pSkill, bool racial)
                 return SKILL_RANGE_MONO;
         default:
         case SKILL_CATEGORY_ATTRIBUTES:                     //not found in dbc
-        case SKILL_CATEGORY_NOT_DISPLAYED:                  //only GENEREC(DND)
+        case SKILL_CATEGORY_GENERIC:                        //only GENERIC(DND)
             return SKILL_RANGE_NONE;
     }
 }
 
 void ObjectMgr::LoadGameTele()
 {
-    m_GameTeleMap.clear();                                  // for relaod case
+    m_GameTeleMap.clear();                                  // for reload case
 
     uint32 count = 0;
     QueryResult *result = WorldDatabase.Query("SELECT id, position_x, position_y, position_z, orientation, map, name FROM game_tele");
@@ -6700,7 +6885,7 @@ void ObjectMgr::LoadGameTele()
     sLog.outString( ">> Loaded %u game tele's", count );
 }
 
-GameTele const* ObjectMgr::GetGameTele(std::string name) const
+GameTele const* ObjectMgr::GetGameTele(const std::string& name) const
 {
     // explicit name case
     std::wstring wname;
@@ -6743,7 +6928,7 @@ bool ObjectMgr::AddGameTele(GameTele& tele)
         new_id,tele.position_x,tele.position_y,tele.position_z,tele.orientation,tele.mapId,tele.name.c_str());
 }
 
-bool ObjectMgr::DeleteGameTele(std::string name)
+bool ObjectMgr::DeleteGameTele(const std::string& name)
 {
     // explicit name case
     std::wstring wname;
@@ -7119,10 +7304,86 @@ bool ObjectMgr::IsVendorItemValid( uint32 vendor_entry, uint32 item_id, uint32 m
     return true;
 }
 
-// Functions for scripting access
-const char* GetAreaTriggerScriptNameById(uint32 id)
+void ObjectMgr::LoadScriptNames()
 {
-    return objmgr.GetAreaTriggerScriptName(id);
+    m_scriptNames.push_back("");
+    QueryResult *result = WorldDatabase.Query(
+      "SELECT DISTINCT(ScriptName) FROM creature_template WHERE ScriptName <> '' "
+      "UNION "
+      "SELECT DISTINCT(ScriptName) FROM gameobject_template WHERE ScriptName <> '' "
+      "UNION "
+      "SELECT DISTINCT(ScriptName) FROM item_template WHERE ScriptName <> '' "
+      "UNION "
+      "SELECT DISTINCT(ScriptName) FROM areatrigger_scripts WHERE ScriptName <> '' "
+      "UNION "
+      "SELECT DISTINCT(script) FROM instance_template WHERE script <> ''");
+    if(result)
+    {
+        do
+        {
+            m_scriptNames.push_back((*result)[0].GetString());
+        } while (result->NextRow());
+        delete result;
+    }
+
+    std::sort(m_scriptNames.begin(), m_scriptNames.end());
+}
+
+uint32 ObjectMgr::GetScriptId(const char *name)
+{
+    // use binary search to find the script name in the sorted vector
+    // assume "" is the first element
+    if(!name) return 0;
+    ScriptNameMap::const_iterator itr =
+        std::lower_bound(m_scriptNames.begin(), m_scriptNames.end(), name);
+    if(itr == m_scriptNames.end() || *itr != name) return 0;
+    return itr - m_scriptNames.begin();
+}
+
+void ObjectMgr::CheckScripts(ScriptMapMap const& scripts,std::set<int32>& ids)
+{
+    for(ScriptMapMap::const_iterator itrMM = scripts.begin(); itrMM != scripts.end(); ++itrMM)
+    {
+        for(ScriptMap::const_iterator itrM = itrMM->second.begin(); itrM != itrMM->second.end(); ++itrM)
+        {
+            if(itrM->second.dataint)
+            {
+                if(!GetMangosStringLocale (itrM->second.dataint))
+                    sLog.outErrorDb( "Table `db_script_string` has not existed string id  %u", itrM->first);
+
+                if(ids.count(itrM->second.dataint))
+                    ids.erase(itrM->second.dataint);
+            }
+        }
+    }
+}
+
+void ObjectMgr::LoadDbScriptStrings()
+{
+    LoadMangosStrings(WorldDatabase,"db_script_string",MIN_DB_SCRIPT_STRING_ID,MAX_DB_SCRIPT_STRING_ID);
+
+    std::set<int32> ids;
+
+    for(int32 i = MIN_DB_SCRIPT_STRING_ID; i < MAX_DB_SCRIPT_STRING_ID; ++i)
+        if(GetMangosStringLocale(i))
+            ids.insert(i);
+
+    CheckScripts(sQuestEndScripts,ids);
+    CheckScripts(sQuestStartScripts,ids);
+    CheckScripts(sSpellScripts,ids);
+    CheckScripts(sGameObjectScripts,ids);
+    CheckScripts(sEventScripts,ids);
+
+    WaypointMgr.CheckTextsExistance(ids);
+
+    for(std::set<int32>::const_iterator itr = ids.begin(); itr != ids.end(); ++itr)
+        sLog.outErrorDb( "Table `db_script_string` has unused string id  %u", *itr);
+}
+
+// Functions for scripting access
+uint32 GetAreaTriggerScriptId(uint32 trigger_id)
+{
+    return objmgr.GetAreaTriggerScriptId(trigger_id);
 }
 
 bool LoadMangosStrings(DatabaseType& db, char const* table,int32 start_value, int32 end_value)
@@ -7136,4 +7397,14 @@ bool LoadMangosStrings(DatabaseType& db, char const* table,int32 start_value, in
 
     // for scripting localized strings allowed use _only_ negative entries
     return objmgr.LoadMangosStrings(db,table,end_value,start_value);
+}
+
+uint32 MANGOS_DLL_SPEC GetScriptId(const char *name)
+{
+    return objmgr.GetScriptId(name);
+}
+
+ObjectMgr::ScriptNameMap & GetScriptNames()
+{
+    return objmgr.GetScriptNames();
 }

@@ -20,10 +20,11 @@
 #define MANGOS_OBJECTREGISTRY_H
 
 #include "Platform/Define.h"
-#include "Utilities/HashMap.h"
+#include "Utilities/UnorderedMap.h"
 #include "Policies/Singleton.h"
 
 #include <string>
+#include <vector>
 #include <map>
 
 /** ObjectRegistry holds all registry item of the same type

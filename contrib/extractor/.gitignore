@@ -12,7 +12,9 @@
 
 *.bsc
 *.ncb
+*.pdb
 *.suo
 debug
 release
 *.user
+*.ilk

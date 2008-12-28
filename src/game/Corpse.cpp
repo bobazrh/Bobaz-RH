@@ -34,7 +34,7 @@ Corpse::Corpse(CorpseType type) : WorldObject()
     m_objectType |= TYPEMASK_CORPSE;
     m_objectTypeId = TYPEID_CORPSE;
                                                             // 2.3.2 - 0x58
-    m_updateFlag = (UPDATEFLAG_LOWGUID | UPDATEFLAG_HIGHGUID | UPDATEFLAG_HASPOSITION);
+    m_updateFlag = (UPDATEFLAG_LOWGUID | UPDATEFLAG_HIGHGUID | UPDATEFLAG_HAS_POSITION);
 
     m_valuesCount = CORPSE_END;
 
@@ -137,7 +137,7 @@ void Corpse::DeleteFromDB()
         CharacterDatabase.PExecute("DELETE FROM corpse WHERE player = '%d' AND corpse_type <> '0'",  GUID_LOPART(GetOwnerGUID()));
 }
 
-bool Corpse::LoadFromDB(uint32 guid, QueryResult *result, uint32 InstanceId)
+bool Corpse::LoadFromDB(uint32 guid, QueryResult *result)
 {
     bool external = (result != NULL);
     if (!external)
@@ -209,5 +209,5 @@ bool Corpse::LoadFromDB(uint32 guid, Field *fields)
 
 bool Corpse::isVisibleForInState(Player const* u, bool inVisibleList) const
 {
-    return IsInWorld() && u->IsInWorld() && IsWithinDistInMap(u,World::GetMaxVisibleDistanceForObject()+(inVisibleList ? World::GetVisibleObjectGreyDistance() : 0.0f));
+    return IsInWorld() && u->IsInWorld() && IsWithinDistInMap(u,World::GetMaxVisibleDistanceForObject()+(inVisibleList ? World::GetVisibleObjectGreyDistance() : 0.0f), false);
 }

@@ -50,14 +50,14 @@ ObjectGridRespawnMover::Visit(CreatureMapType &m)
 {
     // creature in unloading grid can have respawn point in another grid
     // if it will be unloaded then it will not respawn in original grid until unload/load original grid
-    // move to respwn point to prevent this case. For player view in respawn grid this wll be normal respawn.
+    // move to respawn point to prevent this case. For player view in respawn grid this will be normal respawn.
     for(CreatureMapType::iterator iter=m.begin(), next; iter != m.end(); iter = next)
     {
         next = iter; ++next;
 
         Creature * c = iter->getSource();
 
-        assert(!c->isPet() && "ObjectGridRespawnMover don't must be called for pets");
+        assert((!c->isPet() || !c->isVehicle()) && "ObjectGridRespawnMover don't must be called for pets");
 
         Cell const& cur_cell  = c->GetCurrentCell();
 
@@ -68,7 +68,7 @@ ObjectGridRespawnMover::Visit(CreatureMapType &m)
 
         if(cur_cell.DiffGrid(resp_cell))
         {
-            MapManager::Instance().GetMap(c->GetMapId(), c)->CreatureRespawnRelocation(c);
+            c->GetMap()->CreatureRespawnRelocation(c);
             // false result ignored: will be unload with other creatures at grid
         }
     }

@@ -32,8 +32,8 @@ class MANGOS_DLL_DECL MapManager : public MaNGOS::Singleton<MapManager, MaNGOS::
 {
 
     friend class MaNGOS::OperatorNew<MapManager>;
-    typedef HM_NAMESPACE::hash_map<uint32, Map*> MapMapType;
-    typedef std::pair<HM_NAMESPACE::hash_map<uint32, Map*>::iterator, bool>  MapMapPair;
+    typedef UNORDERED_MAP<uint32, Map*> MapMapType;
+    typedef std::pair<UNORDERED_MAP<uint32, Map*>::iterator, bool>  MapMapPair;
 
     public:
 
@@ -43,7 +43,7 @@ class MANGOS_DLL_DECL MapManager : public MaNGOS::Singleton<MapManager, MaNGOS::
 
         // only const version for outer users
         Map const* GetBaseMap(uint32 id) const { return const_cast<MapManager*>(this)->_GetBaseMap(id); }
-        void DeleteInstance(uint32 mapid, uint32 instanceId, uint8 mode);
+        void DeleteInstance(uint32 mapid, uint32 instanceId);
 
         inline uint16 GetAreaFlag(uint32 mapid, float x, float y) const
         {

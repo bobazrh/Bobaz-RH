@@ -31,7 +31,7 @@ class GMTicket
         {
         }
 
-        GMTicket(uint32 guid, std::string text, time_t update) : m_guid(guid), m_text(text), m_lastUpdate(update)
+        GMTicket(uint32 guid, const std::string& text, time_t update) : m_guid(guid), m_text(text), m_lastUpdate(update)
         {
 
         }
@@ -50,7 +50,10 @@ class GMTicket
         {
             m_text = text ? text : "";
             m_lastUpdate = time(NULL);
-            CharacterDatabase.PExecute("UPDATE character_ticket SET ticket_text = '%s' WHERE guid = '%u'", m_text.c_str(), m_guid);
+
+            std::string escapedString = m_text;
+            CharacterDatabase.escape_string(escapedString);
+            CharacterDatabase.PExecute("UPDATE character_ticket SET ticket_text = '%s' WHERE guid = '%u'", escapedString.c_str(), m_guid);
         }
 
         void DeleteFromDB() const
@@ -62,7 +65,11 @@ class GMTicket
         {
             CharacterDatabase.BeginTransaction();
             DeleteFromDB();
-            CharacterDatabase.PExecute("INSERT INTO character_ticket (guid, ticket_text) VALUES ('%u', '%s')", m_guid, GetText());
+
+            std::string escapedString = m_text;
+            CharacterDatabase.escape_string(escapedString);
+
+            CharacterDatabase.PExecute("INSERT INTO character_ticket (guid, ticket_text) VALUES ('%u', '%s')", m_guid, escapedString.c_str());
             CharacterDatabase.CommitTransaction();
         }
     private:

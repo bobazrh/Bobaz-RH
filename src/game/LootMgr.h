@@ -120,7 +120,7 @@ class LootTemplate;
 typedef std::vector<QuestItem> QuestItemList;
 typedef std::map<uint32, QuestItemList *> QuestItemMap;
 typedef std::vector<LootStoreItem> LootStoreItemList;
-typedef HM_NAMESPACE::hash_map<uint32, LootTemplate*> LootTemplateMap;
+typedef UNORDERED_MAP<uint32, LootTemplate*> LootTemplateMap;
 
 typedef std::set<uint32> LootIdSet;
 
@@ -172,7 +172,7 @@ class LootTemplate
 
         // Checks integrity of the template
         void Verify(LootStore const& store, uint32 Id) const;
-        void CheckLootRefs(LootTemplateMap const& store, LootIdSet* ref_set) const;
+        void CheckLootRefs(LootIdSet* ref_set) const;
     private:
         LootStoreItemList Entries;                          // not grouped only
         LootGroups        Groups;                           // groups have own (optimised) processing, grouped entries go there
@@ -295,6 +295,7 @@ extern LootStore LootTemplates_Creature;
 extern LootStore LootTemplates_Fishing;
 extern LootStore LootTemplates_Gameobject;
 extern LootStore LootTemplates_Item;
+extern LootStore LootTemplates_Milling;
 extern LootStore LootTemplates_Pickpocketing;
 extern LootStore LootTemplates_Skinning;
 extern LootStore LootTemplates_Disenchant;
@@ -305,6 +306,7 @@ void LoadLootTemplates_Creature();
 void LoadLootTemplates_Fishing();
 void LoadLootTemplates_Gameobject();
 void LoadLootTemplates_Item();
+void LoadLootTemplates_Milling();
 void LoadLootTemplates_Pickpocketing();
 void LoadLootTemplates_Skinning();
 void LoadLootTemplates_Disenchant();
@@ -318,6 +320,7 @@ inline void LoadLootTables()
     LoadLootTemplates_Fishing();
     LoadLootTemplates_Gameobject();
     LoadLootTemplates_Item();
+    LoadLootTemplates_Milling();
     LoadLootTemplates_Pickpocketing();
     LoadLootTemplates_Skinning();
     LoadLootTemplates_Disenchant();

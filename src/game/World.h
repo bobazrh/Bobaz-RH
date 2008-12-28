@@ -49,6 +49,13 @@ enum ShutdownMask
     SHUTDOWN_MASK_IDLE    = 2,
 };
 
+enum ShutdownExitCode
+{
+    SHUTDOWN_EXIT_CODE = 0,
+    ERROR_EXIT_CODE    = 1,
+    RESTART_EXIT_CODE  = 2,
+};
+
 /// Timers for different object refresh rates
 enum WorldTimers
 {
@@ -93,11 +100,17 @@ enum WorldConfigs
     CONFIG_CHARACTERS_CREATING_DISABLED,
     CONFIG_CHARACTERS_PER_ACCOUNT,
     CONFIG_CHARACTERS_PER_REALM,
+    CONFIG_HEROIC_CHARACTERS_PER_REALM,
+    CONFIG_MIN_LEVEL_FOR_HEROIC_CHARACTER_CREATING,
     CONFIG_SKIP_CINEMATICS,
     CONFIG_MAX_PLAYER_LEVEL,
     CONFIG_START_PLAYER_LEVEL,
+    CONFIG_START_HEROIC_PLAYER_LEVEL,
+    CONFIG_START_PLAYER_MONEY,
     CONFIG_MAX_HONOR_POINTS,
+    CONFIG_START_HONOR_POINTS,
     CONFIG_MAX_ARENA_POINTS,
+    CONFIG_START_ARENA_POINTS,
     CONFIG_INSTANCE_IGNORE_LEVEL,
     CONFIG_INSTANCE_IGNORE_RAID,
     CONFIG_BATTLEGROUND_CAST_DESERTER,
@@ -115,6 +128,7 @@ enum WorldConfigs
     CONFIG_GM_IN_GM_LIST,
     CONFIG_GM_IN_WHO_LIST,
     CONFIG_GM_LOG_TRADE,
+    CONFIG_START_GM_LEVEL,
     CONFIG_GROUP_VISIBILITY,
     CONFIG_MAIL_DELIVERY_DELAY,
     CONFIG_UPTIME_UPDATE,
@@ -131,13 +145,15 @@ enum WorldConfigs
     CONFIG_SKILL_GAIN_WEAPON,
     CONFIG_MAX_OVERSPEED_PINGS,
     CONFIG_SAVE_RESPAWN_TIME_IMMEDIATLY,
+    CONFIG_ALWAYS_MAX_SKILL_FOR_LEVEL,
     CONFIG_WEATHER,
     CONFIG_EXPANSION,
     CONFIG_CHATFLOOD_MESSAGE_COUNT,
     CONFIG_CHATFLOOD_MESSAGE_DELAY,
     CONFIG_CHATFLOOD_MUTE_TIME,
     CONFIG_EVENT_ANNOUNCE,
-    CONFIG_CREATURE_FAMILY_ASSISTEMCE_RADIUS,
+    CONFIG_CREATURE_FAMILY_ASSISTANCE_RADIUS,
+    CONFIG_CREATURE_FAMILY_ASSISTANCE_DELAY,
     CONFIG_WORLD_BOSS_LEVEL_DIFF,
     CONFIG_QUEST_LOW_LEVEL_HIDE_DIFF,
     CONFIG_QUEST_HIGH_LEVEL_HIDE_DIFF,
@@ -156,10 +172,20 @@ enum WorldConfigs
     CONFIG_DEATH_CORPSE_RECLAIM_DELAY_PVP,
     CONFIG_DEATH_CORPSE_RECLAIM_DELAY_PVE,
     CONFIG_THREAT_RADIUS,
+    CONFIG_INSTANT_LOGOUT,
+    CONFIG_DISABLE_BREATHING,
+    CONFIG_ALL_TAXI_PATHS,
     CONFIG_DECLINED_NAMES_USED,
     CONFIG_LISTEN_RANGE_SAY,
     CONFIG_LISTEN_RANGE_TEXTEMOTE,
     CONFIG_LISTEN_RANGE_YELL,
+    CONFIG_ARENA_MAX_RATING_DIFFERENCE,
+    CONFIG_ARENA_RATING_DISCARD_TIMER,
+    CONFIG_ARENA_AUTO_DISTRIBUTE_POINTS,
+    CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS,
+    CONFIG_ARENA_QUEUE_ANNOUNCER_ENABLE,
+    CONFIG_BATTLEGROUND_PREMATURE_FINISH_TIMER,
+    CONFIG_SKILL_MILLING,
     CONFIG_VALUE_COUNT
 };
 
@@ -170,6 +196,8 @@ enum Rates
     RATE_POWER_MANA,
     RATE_POWER_RAGE_INCOME,
     RATE_POWER_RAGE_LOSS,
+    RATE_POWER_RUNICPOWER_INCOME,
+    RATE_POWER_RUNICPOWER_LOSS,
     RATE_POWER_FOCUS,
     RATE_SKILL_DISCOVERY,
     RATE_DROP_ITEM_POOR,
@@ -213,7 +241,6 @@ enum Rates
     RATE_MINING_AMOUNT,
     RATE_MINING_NEXT,
     RATE_TALENT,
-    RATE_LOYALTY,
     RATE_CORPSE_DECAY_LOOTED,
     RATE_INSTANCE_RESET_TIME,
     RATE_TARGET_POS_RECALCULATION_RANGE,
@@ -310,7 +337,6 @@ struct CliCommandHolder
 class World
 {
     public:
-        static volatile bool m_stopEvent;
         static volatile uint32 m_worldLoopCounter;
 
         World();
@@ -343,7 +369,7 @@ class World
         //player Queue
         typedef std::list<WorldSession*> Queue;
         void AddQueuedPlayer(WorldSession*);
-        void RemoveQueuedPlayer(WorldSession*);
+        bool RemoveQueuedPlayer(WorldSession* session);
         int32 GetQueuePos(WorldSession*);
         uint32 GetQueueSize() const { return m_QueuedPlayer.size(); }
 
@@ -381,17 +407,20 @@ class World
         void LoadConfigSettings(bool reload = false);
 
         void SendWorldText(int32 string_id, ...);
+        void SendGlobalText(const char* text, WorldSession *self);
         void SendGlobalMessage(WorldPacket *packet, WorldSession *self = 0, uint32 team = 0);
         void SendZoneMessage(uint32 zone, WorldPacket *packet, WorldSession *self = 0, uint32 team = 0);
         void SendZoneText(uint32 zone, const char *text, WorldSession *self = 0, uint32 team = 0);
         void SendServerMessage(uint32 type, const char *text = "", Player* player = NULL);
 
         /// Are we in the middle of a shutdown?
-        uint32 GetShutdownMask() const { return m_ShutdownMask; }
         bool IsShutdowning() const { return m_ShutdownTimer > 0; }
-        void ShutdownServ(uint32 time, uint32 options = 0);
+        void ShutdownServ(uint32 time, uint32 options, uint8 exitcode);
         void ShutdownCancel();
         void ShutdownMsg(bool show = false, Player* player = NULL);
+        static uint8 GetExitCode() { return m_ExitCode; }
+        static void StopNow(uint8 exitcode) { m_stopEvent = true; m_ExitCode = exitcode; }
+        static bool IsStopped() { return m_stopEvent; }
 
         void Update(time_t diff);
 
@@ -421,10 +450,9 @@ class World
         bool IsPvPRealm() { return (getConfig(CONFIG_GAME_TYPE) == REALM_TYPE_PVP || getConfig(CONFIG_GAME_TYPE) == REALM_TYPE_RPPVP || getConfig(CONFIG_GAME_TYPE) == REALM_TYPE_FFA_PVP); }
         bool IsFFAPvPRealm() { return getConfig(CONFIG_GAME_TYPE) == REALM_TYPE_FFA_PVP; }
 
-        bool KickPlayer(std::string playerName);
+        bool KickPlayer(const std::string& playerName);
         void KickAll();
         void KickAllLess(AccountTypes sec);
-        void KickAllQueued();
         BanReturn BanAccount(BanMode mode, std::string nameOrIP, std::string duration, std::string reason, std::string author);
         bool RemoveBanAccount(BanMode mode, std::string nameOrIP);
 
@@ -467,17 +495,21 @@ class World
         void InitDailyQuestResetTime();
         void ResetDailyQuests();
     private:
+        static volatile bool m_stopEvent;
+        static uint8 m_ExitCode;
+        uint32 m_ShutdownTimer;
+        uint32 m_ShutdownMask;
+
         time_t m_startTime;
         time_t m_gameTime;
         IntervalTimer m_timers[WUPDATE_COUNT];
         uint32 mail_timer;
         uint32 mail_timer_expires;
 
-        typedef HM_NAMESPACE::hash_map<uint32, Weather*> WeatherMap;
+        typedef UNORDERED_MAP<uint32, Weather*> WeatherMap;
         WeatherMap m_weathers;
-        typedef HM_NAMESPACE::hash_map<uint32, WorldSession*> SessionMap;
+        typedef UNORDERED_MAP<uint32, WorldSession*> SessionMap;
         SessionMap m_sessions;
-        std::set<WorldSession*> m_kicked_sessions;
         uint32 m_maxActiveSessionCount;
         uint32 m_maxQueuedSessionCount;
 
@@ -492,9 +524,6 @@ class World
         bool m_allowMovement;
         std::string m_motd;
         std::string m_dataPath;
-
-        uint32 m_ShutdownTimer;
-        uint32 m_ShutdownMask;
 
         // for max speed access
         static float m_MaxVisibleDistanceForCreature;

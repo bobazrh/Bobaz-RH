@@ -6,6 +6,7 @@
 	ProjectGUID="{1DC6C4DA-A028-41F3-877D-D5400C594F88}"
 	RootNamespace="game"
 	Keyword="Win32Proj"
+	TargetFrameworkVersion="0"
 	>
 	<Platforms>
 		<Platform
@@ -125,7 +126,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
+				AdditionalOptions="/MP /bigobj"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\dep\include;..\..\src\framework;..\..\src\shared;..\..\src\shared\vmap;..\..\dep\ACE_wrappers"
 				PreprocessorDefinitions="WIN32;_DEBUG;MANGOS_DEBUG;_LIB;"
@@ -286,7 +287,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
+				AdditionalOptions="/MP /bigobj"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\dep\include;..\..\src\framework;..\..\src\shared;..\..\src\shared\vmap;..\..\dep\ACE_wrappers"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;"
@@ -353,6 +354,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\AccountMgr.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\AchievementMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\AchievementMgr.h"
 				>
 			</File>
 			<File
@@ -453,6 +462,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\BattleGroundWS.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\CalendarHandler.cpp"
 				>
 			</File>
 			<File
@@ -836,6 +849,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\Calendar.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\Calendar.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\ConfusedMovementGenerator.cpp"
 				>
 			</File>
@@ -949,10 +970,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\Guild.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\game\HateMatrix.h"
 				>
 			</File>
 			<File
@@ -1184,6 +1201,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\Vehicle.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\Vehicle.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\WaypointMovementGenerator.cpp"
 				>
 			</File>
@@ -1287,14 +1312,6 @@
 				RelativePath="..\..\src\game\PlayerDump.h"
 				>
 			</File>
-			<File
-				RelativePath="..\..\src\game\tools.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\game\Tools.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="References"
@@ -1329,6 +1346,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\HostilRefManager.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\MapReference.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\MapRefManager.h"
 				>
 			</File>
 			<File

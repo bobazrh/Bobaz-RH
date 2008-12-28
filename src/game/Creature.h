@@ -27,6 +27,8 @@
 #include "Database/DatabaseEnv.h"
 #include "Cell.h"
 
+#include <list>
+
 struct SpellEntry;
 
 class CreatureAI;
@@ -201,7 +203,7 @@ struct CreatureInfo
     uint32  equipmentId;
     uint32  MechanicImmuneMask;
     uint32  flags_extra;
-    char const* ScriptName;
+    uint32  ScriptID;
 
     // helpers
     SkillType GetRequiredLootSkill() const
@@ -216,7 +218,7 @@ struct CreatureInfo
 
     bool isTameable() const
     {
-        return type == CREATURE_TYPE_BEAST && family != 0 && (type_flags & CREATURE_TYPEFLAGS_TAMEBLE);
+        return type == CREATURE_TYPE_BEAST && family != 0 && (type_flags & CREATURE_TYPEFLAGS_TAMEABLE);
     }
 };
 
@@ -235,9 +237,7 @@ struct NpcOptionLocale
 struct EquipmentInfo
 {
     uint32  entry;
-    uint32  equipmodel[3];
-    uint32  equipinfo[3];
-    uint32  equipslot[3];
+    uint32  equipentry[3];
 };
 
 // from `creature` table
@@ -412,6 +412,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         uint32 GetEquipmentId() const { return m_equipmentId; }
 
         bool isPet() const { return m_isPet; }
+        bool isVehicle() const { return m_isVehicle; }
         void SetCorpseDelay(uint32 delay) { m_corpseDelay = delay; }
         bool isTotem() const { return m_isTotem; }
         bool isRacialLeader() const { return GetCreatureInfo()->RacialLeader; }
@@ -490,7 +491,9 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         CreatureInfo const *GetCreatureInfo() const { return m_creatureInfo; }
         CreatureDataAddon const* GetCreatureAddon() const;
-        char const* GetScriptName() const;
+
+        std::string GetScriptName();
+        uint32 GetScriptId();
 
         void prepareGossipMenu( Player *pPlayer, uint32 gossipid = 0 );
         void sendPreparedGossip( Player* player );
@@ -513,7 +516,11 @@ class MANGOS_DLL_SPEC Creature : public Unit
         void TextEmote(int32 textId, uint64 TargetGuid, bool IsBossEmote = false) { MonsterTextEmote(textId,TargetGuid,IsBossEmote); }
         void Whisper(int32 textId, uint64 receiver, bool IsBossWhisper = false) { MonsterWhisper(textId,receiver,IsBossWhisper); }
 
+        // overwrite WorldObject function for proper name localization
+        const char* GetNameForLocaleIdx(int32 locale_idx) const;
+
         void setDeathState(DeathState s);                   // overwrite virtual Unit::setDeathState
+        bool FallGround();
 
         bool LoadFromDB(uint32 guid, Map *map);
         void SaveToDB();
@@ -540,8 +547,9 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         float GetAttackDistance(Unit const* pl) const;
 
-        void CallAssistence();
-        void SetNoCallAssistence(bool val) { m_AlreadyCallAssistence = val; }
+        void CallAssistance();
+        void SetNoCallAssistance(bool val) { m_AlreadyCallAssistance = val; }
+        bool CanAssistTo(const Unit* u, const Unit* enemy) const;
 
         MovementGeneratorType GetDefaultMovementType() const { return m_defaultMovementType; }
         void SetDefaultMovementType(MovementGeneratorType mgt) { m_defaultMovementType = mgt; }
@@ -617,16 +625,16 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         uint8 m_emoteState;
         bool m_isPet;                                       // set only in Pet::Pet
+        bool m_isVehicle;                                   // set only in Vehicle::Vehicle
         bool m_isTotem;                                     // set only in Totem::Totem
         void RegenerateMana();
         void RegenerateHealth();
-        uint32 m_regenTimer;
         MovementGeneratorType m_defaultMovementType;
         Cell m_currentCell;                                 // store current cell where creature listed
         uint32 m_DBTableGuid;                               ///< For new or temporary creatures is 0 for saved it is lowguid
         uint32 m_equipmentId;
 
-        bool m_AlreadyCallAssistence;
+        bool m_AlreadyCallAssistance;
         bool m_regenHealth;
         bool m_AI_locked;
         bool m_isDeadByDefault;
@@ -641,4 +649,20 @@ class MANGOS_DLL_SPEC Creature : public Unit
         GridReference<Creature> m_gridRef;
         CreatureInfo const* m_creatureInfo;                 // in heroic mode can different from ObjMgr::GetCreatureTemplate(GetEntry())
 };
+
+class AssistDelayEvent : public BasicEvent
+{
+    public:
+        AssistDelayEvent(const uint64& victim, Unit& owner) : BasicEvent(), m_victim(victim), m_owner(owner) { }
+
+        bool Execute(uint64 e_time, uint32 p_time);
+        void AddAssistant(const uint64& guid) { m_assistants.push_back(guid); }
+    private:
+        AssistDelayEvent();
+
+        uint64            m_victim;
+        std::list<uint64> m_assistants;
+        Unit&             m_owner;
+};
+
 #endif
