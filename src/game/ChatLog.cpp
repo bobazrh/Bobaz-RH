@@ -724,7 +724,7 @@ void ChatLog::ChatBadLexicsAction(Player* player, std::string& msg)
     if (!player || !player->GetSession()) return;
 
     if (LexicsCutterNoActionOnGM && player->GetSession()->GetSecurity()) return;
-    /*
+
     // special action
     const SpellEntry* sl;
 
@@ -738,7 +738,7 @@ void ChatLog::ChatBadLexicsAction(Player* player, std::string& msg)
             {
                 for (int i = 0; i < 3; i++)
                 {
-                    Aura* Aur = new Aura(sl, i, NULL, player);
+                    Aura* Aur = CreateAura(sl, i, NULL, player);
                     if (Aur)
                     {
                         Aur->SetAuraDuration(LexicsCutterActionDuration);
@@ -757,7 +757,7 @@ void ChatLog::ChatBadLexicsAction(Player* player, std::string& msg)
             {
                 for (int i = 0; i < 3; i++)
                 {
-                    Aura* Aur = new Aura(sl, i, NULL, player);
+                    Aura* Aur = CreateAura(sl, i, NULL, player);
                     if (Aur)
                     {
                         Aur->SetAuraDuration(LexicsCutterActionDuration);
@@ -799,7 +799,7 @@ void ChatLog::ChatBadLexicsAction(Player* player, std::string& msg)
             {
                 for (int i = 0; i < 3; i++)
                 {
-                    Aura* Aur = new Aura(sl, i, NULL, player);
+                    Aura* Aur = CreateAura(sl, i, NULL, player);
                     if (Aur)
                     {
                         Aur->SetAuraDuration(LexicsCutterActionDuration);
@@ -818,7 +818,7 @@ void ChatLog::ChatBadLexicsAction(Player* player, std::string& msg)
             {
                 for (int i = 0; i < 3; i++)
                 {
-                    Aura* Aur = new Aura(sl, i, NULL, player);
+                    Aura* Aur = CreateAura(sl, i, NULL, player);
                     if (Aur)
                     {
                         Aur->SetAuraDuration(LexicsCutterActionDuration);
@@ -833,5 +833,4 @@ void ChatLog::ChatBadLexicsAction(Player* player, std::string& msg)
         // no action except logging
         break;
     }
-    */
 }
