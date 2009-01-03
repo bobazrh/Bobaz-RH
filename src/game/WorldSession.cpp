@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -306,6 +306,10 @@ void WorldSession::LogoutPlayer(bool Save)
         ///- Remove player from battleground (teleport to entrance)
         if(_player->InBattleGround())
             _player->LeaveBattleground();
+
+        ///- Teleport to home if the player is in an invalid instance
+        if(!_player->m_InstanceValid && !_player->isGameMaster())
+            _player->TeleportTo(_player->m_homebindMapId, _player->m_homebindX, _player->m_homebindY, _player->m_homebindZ, _player->GetOrientation());
 
         for (int i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; i++)
         {

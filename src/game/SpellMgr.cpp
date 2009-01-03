@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -176,15 +176,15 @@ SpellSpecific GetSpellSpecific(uint32 spellId)
             if (IsSealSpell(spellInfo))
                 return SPELL_SEAL;
 
-            if (spellInfo->SpellFamilyFlags & 0x10000100LL)
+            if (spellInfo->SpellFamilyFlags & 0x0000000011010002LL)
                 return SPELL_BLESSING;
 
             if ((spellInfo->SpellFamilyFlags & 0x00000820180400LL) && (spellInfo->AttributesEx3 & 0x200))
                 return SPELL_JUDGEMENT;
 
-            for (int i = 0; i < 3; i++)                     // TODO: fix it for WotLK!!!
+            for (int i = 0; i < 3; i++)
             {
-                // only paladin auras have this
+                // only paladin auras have this (for palaldin class family)
                 if (spellInfo->Effect[i] == SPELL_EFFECT_APPLY_AREA_AURA_RAID)
                     return SPELL_AURA;
             }
@@ -200,6 +200,11 @@ SpellSpecific GetSpellSpecific(uint32 spellId)
 
         case SPELLFAMILY_POTION:
             return spellmgr.GetSpellElixirSpecific(spellInfo->Id);
+
+        case SPELLFAMILY_DEATHKNIGHT:
+            if ((spellInfo->Attributes & 0x10) && (spellInfo->AttributesEx2 & 0x10) && (spellInfo->AttributesEx4 & 0x200000))
+                return SPELL_PRESENCE;
+            break;
     }
 
     // only warlock armor/skin have this (in additional to family cases)
@@ -245,6 +250,7 @@ bool IsSingleFromSpellSpecificPerCaster(uint32 spellSpec1,uint32 spellSpec2)
         case SPELL_MAGE_POLYMORPH:
         case SPELL_POSITIVE_SHOUT:
         case SPELL_JUDGEMENT:
+        case SPELL_PRESENCE:
             return spellSpec1==spellSpec2;
         case SPELL_BATTLE_ELIXIR:
             return spellSpec2==SPELL_BATTLE_ELIXIR
@@ -891,7 +897,7 @@ bool SpellMgr::IsSpellProcEventCanTriggeredBy(SpellProcEventEntry const * spellP
         return false;
 
     // Always trigger for this
-    if (EventProcFlag & (PROC_FLAG_KILLED | PROC_FLAG_KILL_AND_GET_XP))
+    if (EventProcFlag & (PROC_FLAG_KILLED | PROC_FLAG_KILL))
         return true;
 
     if (spellProcEvent)     // Exist event data
@@ -1131,7 +1137,7 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 case SPELLFAMILY_ROGUE:
                 {
                     // Garrote-Silence -> Garrote (multi-family check)
-                    if( spellInfo_1->SpellIconID == 498 && spellInfo_1->SpellVisual == 0 && spellInfo_2->SpellIconID == 498  )
+                    if( spellInfo_1->SpellIconID == 498 && spellInfo_1->SpellVisual[0] == 0 && spellInfo_2->SpellIconID == 498  )
                         return false;
 
                     break;
@@ -1194,7 +1200,7 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 //Corruption & Seed of corruption
                 if( spellInfo_1->SpellIconID == 313 && spellInfo_2->SpellIconID == 1932 ||
                     spellInfo_2->SpellIconID == 313 && spellInfo_1->SpellIconID == 1932 )
-                    if(spellInfo_1->SpellVisual != 0 && spellInfo_2->SpellVisual != 0)
+                    if(spellInfo_1->SpellVisual[0] != 0 && spellInfo_2->SpellVisual[0] != 0)
                         return true;                        // can't be stacked
 
                 // Corruption and Unstable Affliction
@@ -2251,11 +2257,24 @@ bool SpellMgr::IsSpellValid(SpellEntry const* spellInfo, Player* pl, bool msg)
     return true;
 }
 
-bool IsSpellAllowedInLocation(SpellEntry const *spellInfo,uint32 map_id,uint32 zone_id,uint32 area_id)
+uint8 GetSpellAllowedInLocationError(SpellEntry const *spellInfo,uint32 map_id,uint32 zone_id,uint32 area_id)
 {
     // normal case
-    if( spellInfo->AreaId > 0 && spellInfo->AreaId != zone_id && spellInfo->AreaId != area_id )
-        return false;
+    if( spellInfo->AreaGroupId > 0)
+    {
+        bool found = false;
+
+        AreaGroupEntry const* groupEntry = sAreaGroupStore.LookupEntry(spellInfo->AreaGroupId);
+        if(groupEntry)
+        {
+            for (uint8 i=0; i<7; i++)
+                if( groupEntry->AreaId[i] == zone_id || groupEntry->AreaId[i] == area_id )
+                    found = true;
+        }
+
+        if(!found)
+            return SPELL_FAILED_INCORRECT_AREA;
+    }
 
     // elixirs (all area dependent elixirs have family SPELLFAMILY_POTION, use this for speedup)
     if(spellInfo->SpellFamilyName==SPELLFAMILY_POTION)
@@ -2265,24 +2284,24 @@ bool IsSpellAllowedInLocation(SpellEntry const *spellInfo,uint32 map_id,uint32 z
             if(mask & ELIXIR_BATTLE_MASK)
             {
                 if(spellInfo->Id==45373)                    // Bloodberry Elixir
-                    return zone_id==4075;
+                    return zone_id==4075 ? 0 : SPELL_FAILED_REQUIRES_AREA;
             }
             if(mask & ELIXIR_UNSTABLE_MASK)
             {
                 // in the Blade's Edge Mountains Plateaus and Gruul's Lair.
-                return zone_id ==3522 || map_id==565;
+                return zone_id ==3522 || map_id==565 ? 0 : SPELL_FAILED_INCORRECT_AREA;
             }
             if(mask & ELIXIR_SHATTRATH_MASK)
             {
                 // in Tempest Keep, Serpentshrine Cavern, Caverns of Time: Mount Hyjal, Black Temple, Sunwell Plateau
                 if(zone_id ==3607 || map_id==534 || map_id==564 || zone_id==4075)
-                    return true;
+                    return 0;
 
                 MapEntry const* mapEntry = sMapStore.LookupEntry(map_id);
                 if(!mapEntry)
-                    return false;
+                    return SPELL_FAILED_INCORRECT_AREA;
 
-                return mapEntry->multimap_id==206;
+                return mapEntry->multimap_id==206 ? 0 : SPELL_FAILED_INCORRECT_AREA;
             }
 
             // elixirs not have another limitations
@@ -2298,25 +2317,28 @@ bool IsSpellAllowedInLocation(SpellEntry const *spellInfo,uint32 map_id,uint32 z
         {
             MapEntry const* mapEntry = sMapStore.LookupEntry(map_id);
             if(!mapEntry)
-                return false;
+                return SPELL_FAILED_INCORRECT_AREA;
 
-            return mapEntry->multimap_id==206;
+            return mapEntry->multimap_id==206 ? 0 : SPELL_FAILED_REQUIRES_AREA;
         }
         case 41617:                                         // Cenarion Mana Salve
         case 41619:                                         // Cenarion Healing Salve
         {
             MapEntry const* mapEntry = sMapStore.LookupEntry(map_id);
             if(!mapEntry)
-                return false;
+                return SPELL_FAILED_INCORRECT_AREA;
 
-            return mapEntry->multimap_id==207;
+            return mapEntry->multimap_id==207 ? 0 : SPELL_FAILED_REQUIRES_AREA;
         }
         case 40216:                                         // Dragonmaw Illusion
         case 42016:                                         // Dragonmaw Illusion
-            return area_id == 3759 || area_id == 3966 || area_id == 3939;
+            return area_id == 3759 || area_id == 3966 || area_id == 3939 ? 0 : SPELL_FAILED_INCORRECT_AREA;
+        case 51721:                                         // Dominion Over Acherus
+        case 54055:                                         // Dominion Over Acherus
+            return area_id == 4281 || area_id == 4342 ? 0 : SPELL_FAILED_INCORRECT_AREA;
     }
 
-    return true;
+    return 0;
 }
 
 void SpellMgr::LoadSkillLineAbilityMap()

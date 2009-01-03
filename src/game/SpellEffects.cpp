@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -395,6 +395,13 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                     if(unitTarget->HasAuraState(AURA_STATE_IMMOLATE))
                         damage += int32(damage*0.25f);
                 }
+                break;
+            }
+            case SPELLFAMILY_PRIEST:
+            {
+                // Shadow Word: Death - deals damage equal to damage done to caster
+                if (m_spellInfo->SpellFamilyFlags & 0x0000000200000000LL)
+                    m_caster->CastCustomSpell(m_caster, 32409, &damage, 0, 0, true);
                 break;
             }
             case SPELLFAMILY_DRUID:
@@ -1289,38 +1296,55 @@ void Spell::EffectDummy(uint32 i)
             }
             break;
         case SPELLFAMILY_WARLOCK:
-            //Life Tap (only it have this with dummy effect)
-            if (m_spellInfo->SpellFamilyFlags == 0x40000)
+            // Life Tap
+            if (m_spellInfo->SpellFamilyFlags & 0x0000000000040000LL)
             {
-                float cost = m_currentBasePoints[0]+1;
-
-                if(Player* modOwner = m_caster->GetSpellModOwner())
-                    modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_COST, cost,this);
-
-                int32 dmg = m_caster->SpellDamageBonus(m_caster, m_spellInfo,uint32(cost > 0 ? cost : 0), SPELL_DIRECT_DAMAGE);
-
-                if(int32(m_caster->GetHealth()) > dmg)
+                // In 303 exist spirit depend
+                uint32 spirit = m_caster->GetStat(STAT_SPIRIT);
+                switch (m_spellInfo->Id)
+                {
+                    case  1454: damage+=spirit; break;
+                    case  1455: damage+=spirit*15/10; break;
+                    case  1456: damage+=spirit*2; break;
+                    case 11687: damage+=spirit*25/10; break;
+                    case 11688:
+                    case 11689:
+                    case 27222:
+                    case 57946: damage+=spirit*3; break;
+                    default:
+                        sLog.outError("Spell::EffectDummy: %u Life Tap need set spirit multipler", m_spellInfo->Id);
+                        return;
+                }
+//              Think its not need (also need remove Life Tap from SpellDamageBonus or add new value)
+//              damage = m_caster->SpellDamageBonus(m_caster, m_spellInfo,uint32(damage > 0 ? damage : 0), SPELL_DIRECT_DAMAGE);
+                if(int32(unitTarget->GetHealth()) > damage)
                 {
                     // Shouldn't Appear in Combat Log
-                    m_caster->ModifyHealth(-dmg);
+                    unitTarget->ModifyHealth(-damage);
 
-                    int32 mana = dmg;
-
+                    int32 mana = damage;
+                    // Improved Life Tap mod
                     Unit::AuraList const& auraDummy = m_caster->GetAurasByType(SPELL_AURA_DUMMY);
                     for(Unit::AuraList::const_iterator itr = auraDummy.begin(); itr != auraDummy.end(); ++itr)
                     {
-                        // only Imp. Life Tap have this in combination with dummy aura
                         if((*itr)->GetSpellProto()->SpellFamilyName==SPELLFAMILY_WARLOCK && (*itr)->GetSpellProto()->SpellIconID == 208)
                             mana = ((*itr)->GetModifier()->m_amount + 100)* mana / 100;
                     }
-
-                    m_caster->CastCustomSpell(m_caster,31818,&mana,NULL,NULL,true,NULL);
+                    m_caster->CastCustomSpell(unitTarget, 31818, &mana, NULL, NULL, true);
 
                     // Mana Feed
-                    int32 manaFeedVal = m_caster->CalculateSpellDamage(m_spellInfo,1, m_spellInfo->EffectBasePoints[1],m_caster);
-                    manaFeedVal = manaFeedVal * mana / 100;
+                    int32 manaFeedVal = 0;
+                    Unit::AuraList const& mod = m_caster->GetAurasByType(SPELL_AURA_ADD_FLAT_MODIFIER);
+                    for(Unit::AuraList::const_iterator itr = mod.begin(); itr != mod.end(); ++itr)
+                    {
+                        if((*itr)->GetSpellProto()->SpellFamilyName==SPELLFAMILY_WARLOCK && (*itr)->GetSpellProto()->SpellIconID == 1982)
+                            manaFeedVal+= (*itr)->GetModifier()->m_amount;
+                    }
                     if(manaFeedVal > 0)
-                        m_caster->CastCustomSpell(m_caster,32553,&manaFeedVal,NULL,NULL,true,NULL);
+                    {
+                        manaFeedVal = manaFeedVal * mana / 100;
+                        m_caster->CastCustomSpell(m_caster, 32553, &manaFeedVal, NULL, NULL, true, NULL);
+                    }
                 }
                 else
                     SendCastResult(SPELL_FAILED_FIZZLE);
@@ -1433,32 +1457,6 @@ void Spell::EffectDummy(uint32 i)
 
                 if(found)
                     m_damage+= damage;
-                return;
-            }
-            // Kill command
-            if(m_spellInfo->SpellFamilyFlags & 0x00080000000000LL)
-            {
-                if(m_caster->getClass()!=CLASS_HUNTER)
-                    return;
-
-                // clear hunter crit aura state
-                m_caster->ModifyAuraState(AURA_STATE_HUNTER_CRIT_STRIKE,false);
-
-                // additional damage from pet to pet target
-                Pet* pet = m_caster->GetPet();
-                if(!pet || !pet->getVictim())
-                    return;
-
-                uint32 spell_id = 0;
-                switch (m_spellInfo->Id)
-                {
-                case 34026: spell_id = 34027; break;        // rank 1
-                default:
-                    sLog.outError("Spell::EffectDummy: Spell %u not handled in KC",m_spellInfo->Id);
-                    return;
-                }
-
-                pet->CastSpell(pet->getVictim(), spell_id, true);
                 return;
             }
 
@@ -2201,13 +2199,7 @@ void Spell::EffectApplyAura(uint32 i)
     if(unitTarget->GetTypeId()==TYPEID_PLAYER)              // Negative buff should only be applied on players
     {
         uint32 spellId = 0;
-        if(m_spellInfo->CasterAuraStateNot==AURA_STATE_WEAKENED_SOUL || m_spellInfo->TargetAuraStateNot==AURA_STATE_WEAKENED_SOUL)
-            spellId = 6788;                                 // Weakened Soul
-        else if(m_spellInfo->CasterAuraStateNot==AURA_STATE_FORBEARANCE || m_spellInfo->TargetAuraStateNot==AURA_STATE_FORBEARANCE)
-            spellId = 25771;                                // Forbearance
-        else if(m_spellInfo->CasterAuraStateNot==AURA_STATE_HYPOTHERMIA)
-            spellId = 41425;                                // Hypothermia
-        else if (m_spellInfo->Mechanic == MECHANIC_BANDAGE) // Bandages
+        if (m_spellInfo->Mechanic == MECHANIC_BANDAGE)      // Bandages
             spellId = 11196;                                // Recently Bandaged
         else if( (m_spellInfo->AttributesEx & 0x20) && (m_spellInfo->AttributesEx2 & 0x20000) )
             spellId = 23230;                                // Blood Fury - Healing Reduction
@@ -2572,8 +2564,8 @@ void Spell::DoCreateItem(uint32 i, uint32 itemtype)
 
     if (num_to_add < 1)
         num_to_add = 1;
-    if (num_to_add > pProto->Stackable)
-        num_to_add = pProto->Stackable;
+    if (num_to_add > pProto->GetMaxStackSize())
+        num_to_add = pProto->GetMaxStackSize();
 
     // init items_count to 1, since 1 item will be created regardless of specialization
     int items_count=1;
@@ -2696,6 +2688,8 @@ void Spell::EffectEnergize(uint32 i)
     if(m_spellInfo->EffectMiscValue[i] < 0 || m_spellInfo->EffectMiscValue[i] >= MAX_POWERS)
         return;
 
+    Powers power = Powers(m_spellInfo->EffectMiscValue[i]);
+
     // Some level depends spells
     int multiplier = 0;
     int level_diff = 0;
@@ -2725,8 +2719,6 @@ void Spell::EffectEnergize(uint32 i)
 
     if(damage < 0)
         return;
-
-    Powers power = Powers(m_spellInfo->EffectMiscValue[i]);
 
     if(unitTarget->GetMaxPower(power) == 0)
         return;
@@ -3163,6 +3155,7 @@ void Spell::EffectSummonType(uint32 i)
         case SUMMON_TYPE_GUARDIAN:
         case SUMMON_TYPE_POSESSED:
         case SUMMON_TYPE_POSESSED2:
+        case SUMMON_TYPE_GUARDIAN2:
             EffectSummonGuardian(i);
             break;
         case SUMMON_TYPE_WILD:
@@ -5237,8 +5230,6 @@ void Spell::EffectApplyGlyph(uint32 i)
 
             player->CastSpell(m_caster, gp->SpellId, true);
             player->SetGlyph(m_glyphIndex, glyph);
-            if(m_CastItem)
-                player->DestroyItemCount(m_CastItem->GetEntry(), 1, true);
         }
     }
 }
@@ -5411,7 +5402,8 @@ void Spell::EffectFeedPet(uint32 i)
 
     Player *_player = (Player*)m_caster;
 
-    if(!itemTarget)
+    Item* foodItem = m_targets.getItemTarget();
+    if(!foodItem)
         return;
 
     Pet *pet = _player->GetPet();
@@ -5421,15 +5413,15 @@ void Spell::EffectFeedPet(uint32 i)
     if(!pet->isAlive())
         return;
 
-    int32 benefit = pet->GetCurrentFoodBenefitLevel(itemTarget->GetProto()->ItemLevel);
+    int32 benefit = pet->GetCurrentFoodBenefitLevel(foodItem->GetProto()->ItemLevel);
     if(benefit <= 0)
         return;
 
     uint32 count = 1;
-    _player->DestroyItemCount(itemTarget,count,true);
+    _player->DestroyItemCount(foodItem,count,true);
     // TODO: fix crash when a spell has two effects, both pointed at the same item target
 
-    m_caster->CastCustomSpell(m_caster,m_spellInfo->EffectTriggerSpell[i],&benefit,NULL,NULL,true);
+    m_caster->CastCustomSpell(pet,m_spellInfo->EffectTriggerSpell[i],&benefit,NULL,NULL,true);
 }
 
 void Spell::EffectDismissPet(uint32 /*i*/)
