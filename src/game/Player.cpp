@@ -247,6 +247,15 @@ uint32 PlayerTaxi::GetCurrentTaxiPath() const
     return path;
 }
 
+std::ostringstream& operator<< (std::ostringstream& ss, PlayerTaxi const& taxi)
+{
+    ss << "'";
+    for(int i = 0; i < TaxiMaskSize; ++i)
+        ss << taxi.m_taximask[i] << " ";
+    ss << "'";
+    return ss;
+}
+
 //== Player ====================================================
 
 const int32 Player::ReputationRank_Length[MAX_REPUTATION_RANK] = {36000, 3000, 3000, 3000, 6000, 12000, 21000, 1000};
@@ -594,13 +603,6 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
     SetUInt32Value( PLAYER_FIELD_TODAY_CONTRIBUTION, 0 );
     SetUInt32Value( PLAYER_FIELD_YESTERDAY_CONTRIBUTION, 0 );
 
-    for(uint32 i = 0; i < sGlyphSlotStore.GetNumRows(); ++i)
-    {
-        GlyphSlotEntry const * gs = sGlyphSlotStore.LookupEntry(i);
-        if(gs && gs->Order)
-            SetGlyphSlot(gs->Order - 1, gs->Id);
-    }
-
     // set starting level
     uint32 start_level = getClass() != CLASS_DEATH_KNIGHT
         ? sWorld.getConfig(CONFIG_START_PLAYER_LEVEL)
@@ -651,7 +653,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
     }
 
     // original spells
-    learnDefaultSpells(true);
+    learnDefaultSpells();
 
     // original action bar
     std::list<uint16>::const_iterator action_itr[4];
@@ -2526,13 +2528,13 @@ void Player::AddNewMailDeliverTime(time_t deliver_time)
     }
 }
 
-bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading, uint16 slot_id, bool disabled)
+bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool disabled)
 {
     SpellEntry const *spellInfo = sSpellStore.LookupEntry(spell_id);
     if (!spellInfo)
     {
         // do character spell book cleanup (all characters)
-        if(loading && !learning)                            // spell load case
+        if(!IsInWorld() && !learning)                       // spell load case
         {
             sLog.outError("Player::addSpell: Non-existed in SpellStore spell #%u request, deleting for all characters in `character_spell`.",spell_id);
             CharacterDatabase.PExecute("DELETE FROM character_spell WHERE spell = '%u'",spell_id);
@@ -2546,7 +2548,7 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
     if(!SpellMgr::IsSpellValid(spellInfo,this,false))
     {
         // do character spell book cleanup (all characters)
-        if(loading && !learning)                            // spell load case
+        if(!IsInWorld() && !learning)                       // spell load case
         {
             sLog.outError("Player::addSpell: Broken spell #%u learning not allowed, deleting for all characters in `character_spell`.",spell_id);
             CharacterDatabase.PExecute("DELETE FROM character_spell WHERE spell = '%u'",spell_id);
@@ -2570,8 +2572,8 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
         {
             itr->second->active = active;
 
-            // loading && !learning == explicitly load from DB and then exist in it already and set correctly
-            if(loading && !learning)
+            // !IsInWorld() && !learning == explicitly load from DB and then exist in it already and set correctly
+            if(!IsInWorld() && !learning)
                 itr->second->state = PLAYERSPELL_UNCHANGED;
             else if(itr->second->state != PLAYERSPELL_NEW)
                 itr->second->state = PLAYERSPELL_CHANGED;
@@ -2610,7 +2612,7 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
             default:                                        // known not saved yet spell (new or modified)
             {
                 // can be in case spell loading but learned at some previous spell loading
-                if(loading && !learning)
+                if(!IsInWorld() && !learning)
                     itr->second->state = PLAYERSPELL_UNCHANGED;
 
                 return false;
@@ -2643,8 +2645,8 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
         // non talent spell: learn low ranks (recursive call)
         else if(uint32 prev_spell = spellmgr.GetPrevSpellInChain(spell_id))
         {
-            if(loading)                                     // at spells loading, no output, but allow save
-                addSpell(prev_spell,active,true,loading,SPELL_WITHOUT_SLOT_ID,disabled);
+            if(!IsInWorld())                                // at spells loading, no output, but allow save
+                addSpell(prev_spell,active,true,disabled);
             else                                            // at normal learning
                 learnSpell(prev_spell);
         }
@@ -2669,7 +2671,7 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
                     {
                         if(spellmgr.IsHighRankOfSpell(spell_id,itr->first))
                         {
-                            if(!loading)                    // not send spell (re-/over-)learn packets at loading
+                            if(IsInWorld())                 // not send spell (re-/over-)learn packets at loading
                             {
                                 WorldPacket data(SMSG_SUPERCEDED_SPELL, (4));
                                 data << uint16(itr->first);
@@ -2684,7 +2686,7 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
                         }
                         else if(spellmgr.IsHighRankOfSpell(itr->first,spell_id))
                         {
-                            if(!loading)                    // not send spell (re-/over-)learn packets at loading
+                            if(IsInWorld())                 // not send spell (re-/over-)learn packets at loading
                             {
                                 WorldPacket data(SMSG_SUPERCEDED_SPELL, (4));
                                 data << uint16(spell_id);
@@ -2702,23 +2704,6 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
             }
         }
 
-        uint16 tmpslot=slot_id;
-
-        if (tmpslot == SPELL_WITHOUT_SLOT_ID)
-        {
-            uint16 maxid = 0;
-            PlayerSpellMap::iterator itr;
-            for (itr = m_spells.begin(); itr != m_spells.end(); ++itr)
-            {
-                if(itr->second->state == PLAYERSPELL_REMOVED)
-                    continue;
-                if (itr->second->slotId > maxid)
-                    maxid = itr->second->slotId;
-            }
-            tmpslot = maxid + 1;
-        }
-
-        newspell->slotId = tmpslot;
         m_spells[spell_id] = newspell;
 
         // return false if spell disabled
@@ -2738,23 +2723,27 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
     // also cast passive spells (including all talents without SPELL_EFFECT_LEARN_SPELL) with additional checks
     else if (IsPassiveSpell(spell_id))
     {
-        // if spell doesn't require a stance or the player is in the required stance
-        if( ( !spellInfo->Stances &&
-            spell_id != 5420 && spell_id != 5419 && spell_id != 7376 &&
-            spell_id != 7381 && spell_id != 21156 && spell_id != 21009 &&
-            spell_id != 21178 && spell_id != 33948 && spell_id != 40121 ) ||
-            m_form != 0 && (spellInfo->Stances & (1<<(m_form-1))) ||
-            (spell_id ==  5420 && m_form == FORM_TREE) ||
-            (spell_id ==  5419 && m_form == FORM_TRAVEL) ||
-            (spell_id ==  7376 && m_form == FORM_DEFENSIVESTANCE) ||
-            (spell_id ==  7381 && m_form == FORM_BERSERKERSTANCE) ||
-            (spell_id == 21156 && m_form == FORM_BATTLESTANCE)||
-            (spell_id == 21178 && (m_form == FORM_BEAR || m_form == FORM_DIREBEAR) ) ||
-            (spell_id == 33948 && m_form == FORM_FLIGHT) ||
-            (spell_id == 40121 && m_form == FORM_FLIGHT_EPIC) )
+        bool need_cast =  false;
+
+        switch(spell_id)
+        {
+            // some spells not have stance data expacted cast at form change or present
+            case  5420: need_cast = (m_form == FORM_TREE);            break;
+            case  5419: need_cast = (m_form == FORM_TRAVEL);          break;
+            case  7376: need_cast = (m_form == FORM_DEFENSIVESTANCE); break;
+            case  7381: need_cast = (m_form == FORM_BERSERKERSTANCE); break;
+            case 21156: need_cast = (m_form == FORM_BATTLESTANCE);    break;
+            case 21178: need_cast = (m_form == FORM_BEAR || m_form == FORM_DIREBEAR); break;
+            case 33948: need_cast = (m_form == FORM_FLIGHT);          break;
+            case 34764: need_cast = (m_form == FORM_FLIGHT);          break;
+            case 40121: need_cast = (m_form == FORM_FLIGHT_EPIC);     break;
+            case 40122: need_cast = (m_form == FORM_FLIGHT_EPIC);     break;
+            // another spells have proper stance data
+            default: need_cast = !spellInfo->Stances || m_form != 0 && (spellInfo->Stances & (1<<(m_form-1))); break;
+        }
                                                             //Check CasterAuraStates
-            if (!spellInfo->CasterAuraState || HasAuraState(AuraState(spellInfo->CasterAuraState)))
-                CastSpell(this, spell_id, true);
+        if (need_cast && (!spellInfo->CasterAuraState || HasAuraState(AuraState(spellInfo->CasterAuraState))))
+            CastSpell(this, spell_id, true);
     }
     else if( IsSpellHaveEffect(spellInfo,SPELL_EFFECT_SKILL_STEP) )
     {
@@ -2837,14 +2826,14 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
     {
         if(!itr->second.autoLearned)
         {
-            if(loading)                                     // at spells loading, no output, but allow save
-                addSpell(itr->second.spell,true,true,loading);
+            if(!IsInWorld() || !itr->second.active)         // at spells loading, no output, but allow save
+                addSpell(itr->second.spell,itr->second.active,true,false);
             else                                            // at normal learning
                 learnSpell(itr->second.spell);
         }
     }
 
-    if(!loading)
+    if(IsInWorld())
     {
         GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LEARN_SPELL);
         GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILLLINE_SPELLS);
@@ -2861,7 +2850,7 @@ void Player::learnSpell(uint32 spell_id)
     bool disabled = (itr != m_spells.end()) ? itr->second->disabled : false;
     bool active = disabled ? itr->second->active : true;
 
-    bool learning = addSpell(spell_id,active);
+    bool learning = addSpell(spell_id,active,true,false);
 
     // learn all disabled higher ranks (recursive)
     SpellChainMapNext const& nextMap = spellmgr.GetSpellChainNext();
@@ -2872,8 +2861,8 @@ void Player::learnSpell(uint32 spell_id)
             learnSpell(i->second);
     }
 
-    // prevent duplicated entires in spell book
-    if(!learning)
+    // prevent duplicated entires in spell book, also not send if not in world (loading)
+    if(!learning || !IsInWorld ())
         return;
 
     WorldPacket data(SMSG_LEARNED_SPELL, 4);
@@ -3462,22 +3451,22 @@ TrainerSpellState Player::GetTrainerSpellState(TrainerSpell const* trainer_spell
     if (!trainer_spell)
         return TRAINER_SPELL_RED;
 
-    if (!trainer_spell->spell)
+    if (!trainer_spell->learned_spell)
         return TRAINER_SPELL_RED;
 
     // known spell
-    if(HasSpell(trainer_spell->spell))
+    if(HasSpell(trainer_spell->learned_spell))
         return TRAINER_SPELL_GRAY;
 
     // check race/class requirement
-    if(!IsSpellFitByClassAndRace(trainer_spell->spell))
+    if(!IsSpellFitByClassAndRace(trainer_spell->learned_spell))
         return TRAINER_SPELL_RED;
 
     // check level requirement
     if(getLevel() < trainer_spell->reqlevel)
         return TRAINER_SPELL_RED;
 
-    if(SpellChainNode const* spell_chain = spellmgr.GetSpellChainNode(trainer_spell->spell))
+    if(SpellChainNode const* spell_chain = spellmgr.GetSpellChainNode(trainer_spell->learned_spell))
     {
         // check prev.rank requirement
         if(spell_chain->prev && !HasSpell(spell_chain->prev))
@@ -3493,7 +3482,7 @@ TrainerSpellState Player::GetTrainerSpellState(TrainerSpell const* trainer_spell
         return TRAINER_SPELL_RED;
 
     // exist, already checked at loading
-    SpellEntry const* spell = sSpellStore.LookupEntry(trainer_spell->spell);
+    SpellEntry const* spell = sSpellStore.LookupEntry(trainer_spell->learned_spell);
 
     // secondary prof. or not prof. spell
     uint32 skill = spell->EffectMiscValue[1];
@@ -4842,22 +4831,8 @@ void Player::UpdateWeaponSkill (WeaponAttackType attType)
     UpdateAllCritPercentages();
 }
 
-void Player::UpdateCombatSkills(Unit *pVictim, WeaponAttackType attType, MeleeHitOutcome outcome, bool defence)
+void Player::UpdateCombatSkills(Unit *pVictim, WeaponAttackType attType, bool defence)
 {
-/* Not need, this checked on call this func from trigger system
-    switch(outcome)
-    {
-        case MELEE_HIT_CRIT:
-        case MELEE_HIT_DODGE:
-        case MELEE_HIT_PARRY:
-        case MELEE_HIT_BLOCK:
-        case MELEE_HIT_BLOCK_CRIT:
-            return;
-
-        default:
-            break;
-    }
-*/
     uint32 plevel = getLevel();                             // if defense than pVictim == attacker
     uint32 greylevel = MaNGOS::XP::GetGrayLevel(plevel);
     uint32 moblevel = pVictim->getLevelForTarget(this);
@@ -7145,7 +7120,7 @@ void Player::RemovedInsignia(Player* looterPlr)
 
     // We have to convert player corpse to bones, not to be able to resurrect there
     // SpawnCorpseBones isn't handy, 'cos it saves player while he in BG
-    Corpse *bones = ObjectAccessor::Instance().ConvertCorpseForPlayer(GetGUID());
+    Corpse *bones = ObjectAccessor::Instance().ConvertCorpseForPlayer(GetGUID(),true);
     if (!bones)
         return;
 
@@ -7520,37 +7495,46 @@ void Player::SendInitWorldStates()
         case 1537:
         case 2257:
         case 2918:
-            NumberOfFields = 6;
+            NumberOfFields = 8;
+            break;
+        case 139:
+            NumberOfFields = 41;
+            break;
+        case 1377:
+            NumberOfFields = 15;
             break;
         case 2597:
-            NumberOfFields = 81;
+            NumberOfFields = 83;
             break;
         case 3277:
-            NumberOfFields = 14;
+            NumberOfFields = 16;
             break;
         case 3358:
         case 3820:
-            NumberOfFields = 38;
+            NumberOfFields = 40;
             break;
         case 3483:
-            NumberOfFields = 22;
+            NumberOfFields = 27;
+            break;
+        case 3518:
+            NumberOfFields = 39;
             break;
         case 3519:
-            NumberOfFields = 36;
+            NumberOfFields = 38;
             break;
         case 3521:
-            NumberOfFields = 35;
+            NumberOfFields = 37;
             break;
         case 3698:
         case 3702:
         case 3968:
-            NumberOfFields = 9;
+            NumberOfFields = 11;
             break;
         case 3703:
-            NumberOfFields = 9;
+            NumberOfFields = 11;
             break;
         default:
-            NumberOfFields = 10;
+            NumberOfFields = 12;
             break;
     }
 
@@ -7565,6 +7549,10 @@ void Player::SendInitWorldStates()
     data << uint32(0x8d5) << uint32(0x0);                   // 4
     data << uint32(0x8d4) << uint32(0x0);                   // 5
     data << uint32(0x8d3) << uint32(0x0);                   // 6
+                                                            // 7 1 - Arena season in progress, 0 - end of season
+    data << uint32(0xC77) << uint32(sWorld.getConfig(CONFIG_ARENA_SEASON_IN_PROGRESS));
+                                                            // 8 Arena season id
+    data << uint32(0xF3D) << uint32(sWorld.getConfig(CONFIG_ARENA_SEASON_ID));
     if(mapid == 530)                                        // Outland
     {
         data << uint32(0x9bf) << uint32(0x0);               // 7
@@ -14173,6 +14161,8 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     // after spell load
     InitTalentForLevel();
     learnSkillRewardedSpells();
+    learnDefaultSpells();
+
 
     // after spell load, learn rewarded spell if need also
     _LoadQuestStatus(holder->GetResult(PLAYER_LOGIN_QUERY_LOADQUESTSTATUS));
@@ -14415,7 +14405,7 @@ void Player::_LoadAuras(QueryResult *result, uint32 timediff)
                     remaincharges = spellproto->procCharges;
             }
             else
-                remaincharges = -1;
+                remaincharges = 0;
 
             //do not load single target auras (unless they were cast by the player)
             if (caster_guid != GetGUID() && IsSingleTargetSpell(spellproto))
@@ -14940,7 +14930,7 @@ void Player::_LoadSpells(QueryResult *result)
         delete itr->second;
     m_spells.clear();
 
-    //QueryResult *result = CharacterDatabase.PQuery("SELECT spell,slot,active FROM character_spell WHERE guid = '%u'",GetGUIDLow());
+    //QueryResult *result = CharacterDatabase.PQuery("SELECT spell,active,disabled FROM character_spell WHERE guid = '%u'",GetGUIDLow());
 
     if(result)
     {
@@ -14948,7 +14938,7 @@ void Player::_LoadSpells(QueryResult *result)
         {
             Field *fields = result->Fetch();
 
-            addSpell(fields[0].GetUInt16(), fields[2].GetBool(), false, true, fields[1].GetUInt16(), fields[3].GetBool());
+            addSpell(fields[0].GetUInt16(), fields[1].GetBool(), false, fields[2].GetBool());
         }
         while( result->NextRow() );
 
@@ -15341,12 +15331,11 @@ void Player::SaveToDB()
         ss << GetUInt32Value(i) << " ";
     }
 
-    ss << "', '";
-
-    for( i = 0; i < 8; i++ )
-        ss << m_taxi.GetTaximask(i) << " ";
-
     ss << "', ";
+
+    ss << m_taxi;                                           // string with TaxiMaskSize numbers
+
+    ss << ", ";
     ss << (inworld ? 1 : 0);
 
     ss << ", ";
@@ -15506,7 +15495,7 @@ void Player::_SaveAuras()
                     {
                         CharacterDatabase.PExecute("INSERT INTO character_aura (guid,caster_guid,spell,effect_index,stackcount,amount,maxduration,remaintime,remaincharges) "
                             "VALUES ('%u', '" I64FMTD "' ,'%u', '%u', '%u', '%d', '%d', '%d', '%d')",
-                            GetGUIDLow(), itr2->second->GetCasterGUID(), (uint32)itr2->second->GetId(), (uint32)itr2->second->GetEffIndex(), stackCounter, itr2->second->GetModifier()->m_amount,int(itr2->second->GetAuraMaxDuration()),int(itr2->second->GetAuraDuration()),int(itr2->second->m_procCharges));
+                            GetGUIDLow(), itr2->second->GetCasterGUID(), (uint32)itr2->second->GetId(), (uint32)itr2->second->GetEffIndex(), stackCounter, itr2->second->GetModifier()->m_amount,int(itr2->second->GetAuraMaxDuration()),int(itr2->second->GetAuraDuration()),int(itr2->second->GetAuraCharges()));
                     }
                 }
             }
@@ -15712,7 +15701,7 @@ void Player::_SaveSpells()
         if (itr->second->state == PLAYERSPELL_REMOVED || itr->second->state == PLAYERSPELL_CHANGED)
             CharacterDatabase.PExecute("DELETE FROM character_spell WHERE guid = '%u' and spell = '%u'", GetGUIDLow(), itr->first);
         if (itr->second->state == PLAYERSPELL_NEW || itr->second->state == PLAYERSPELL_CHANGED)
-            CharacterDatabase.PExecute("INSERT INTO character_spell (guid,spell,slot,active,disabled) VALUES ('%u', '%u', '%u','%u','%u')", GetGUIDLow(), itr->first, itr->second->slotId,itr->second->active ? 1 : 0,itr->second->disabled ? 1 : 0);
+            CharacterDatabase.PExecute("INSERT INTO character_spell (guid,spell,active,disabled) VALUES ('%u', '%u', '%u', '%u')", GetGUIDLow(), itr->first, itr->second->active ? 1 : 0,itr->second->disabled ? 1 : 0);
 
         if (itr->second->state == PLAYERSPELL_REMOVED)
             _removeSpell(itr->first);
@@ -17921,22 +17910,18 @@ void Player::resetSpells()
     learnQuestRewardedSpells();
 }
 
-void Player::learnDefaultSpells(bool loading)
+void Player::learnDefaultSpells()
 {
     // learn default race/class spells
     PlayerInfo const *info = objmgr.GetPlayerInfo(getRace(),getClass());
-    std::list<CreateSpellPair>::const_iterator spell_itr;
-    for (spell_itr = info->spell.begin(); spell_itr!=info->spell.end(); ++spell_itr)
+    for (PlayerCreateInfoSpells::const_iterator itr = info->spell.begin(); itr!=info->spell.end(); ++itr)
     {
-        uint16 tspell = spell_itr->first;
-        if (tspell)
-        {
-            sLog.outDebug("PLAYER: Adding initial spell, id = %u",tspell);
-            if(loading || !spell_itr->second)               // not care about passive spells or loading case
-                addSpell(tspell,spell_itr->second);
-            else                                            // but send in normal spell in game learn case
-                learnSpell(tspell);
-        }
+        uint32 tspell = *itr;
+        sLog.outDebug("PLAYER (Class: %u Race: %u): Adding initial spell, id = %u",uint32(getClass()),uint32(getRace()), tspell);
+        if(!IsInWorld())                                    // will send in INITIAL_SPELLS in list anyway at map add
+            addSpell(tspell,true,true,false);
+        else                                                // but send in normal spell in game learn case
+            learnSpell(tspell);
     }
 }
 
@@ -18091,7 +18076,7 @@ void Player::SendAurasForTarget(Unit *target)
                     // level
                     data << uint8(aura->GetAuraLevel());
                     // charges
-                    data << uint8(aura->m_procCharges >= 0 ? aura->m_procCharges : 0 );
+                    data << uint8(aura->GetAuraCharges());
 
                     if(!(auraFlags & AFLAG_NOT_CASTER))
                     {
@@ -18943,6 +18928,11 @@ uint32 Player::GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 n
 
 void Player::InitGlyphsForLevel()
 {
+    for(uint32 i = 0; i < sGlyphSlotStore.GetNumRows(); ++i)
+        if(GlyphSlotEntry const * gs = sGlyphSlotStore.LookupEntry(i))
+            if(gs->Order)
+                SetGlyphSlot(gs->Order - 1, gs->Id);
+
     uint32 level = getLevel();
     uint32 value = 0;
 
