@@ -303,20 +303,16 @@ void WorldSession::LogoutPlayer(bool Save)
             _player->RepopAtGraveyard();
         }
 
-        ///- Remove player from battleground (teleport to entrance)
-        if(_player->InBattleGround())
-            _player->LeaveBattleground();
-
         ///- Teleport to home if the player is in an invalid instance
         if(!_player->m_InstanceValid && !_player->isGameMaster())
             _player->TeleportTo(_player->m_homebindMapId, _player->m_homebindX, _player->m_homebindY, _player->m_homebindZ, _player->GetOrientation());
 
         for (int i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; i++)
         {
-            if(int32 bgTypeId = _player->GetBattleGroundQueueId(i))
+            if(BattleGroundQueueTypeId bgQueueTypeId = _player->GetBattleGroundQueueTypeId(i))
             {
-                _player->RemoveBattleGroundQueueId(bgTypeId);
-                sBattleGroundMgr.m_BattleGroundQueues[ bgTypeId ].RemovePlayer(_player->GetGUID(), true);
+                _player->RemoveBattleGroundQueueId(bgQueueTypeId);
+                sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(_player->GetGUID(), true);
             }
         }
 
@@ -468,6 +464,13 @@ void WorldSession::SendNotification(int32 string_id,...)
     }
 }
 
+void WorldSession::SendSetPhaseShift(uint32 PhaseShift)
+{
+    WorldPacket data(SMSG_SET_PHASE_SHIFT, 4);
+    data << uint32(PhaseShift);
+    SendPacket(&data);
+}
+
 const char * WorldSession::GetMangosString( int32 entry ) const
 {
     return objmgr.GetMangosString(entry,GetSessionDbLocaleIndex());
@@ -531,7 +534,7 @@ void WorldSession::LoadAccountData()
     if(!result)
         return;
 
-    do 
+    do
     {
         Field *fields = result->Fetch();
 

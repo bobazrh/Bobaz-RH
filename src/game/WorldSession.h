@@ -24,6 +24,7 @@
 #define __WORLDSESSION_H
 
 #include "Common.h"
+#include "SharedDefines.h"
 
 class MailItemsInfo;
 struct ItemPrototype;
@@ -49,7 +50,7 @@ class CharacterHandler;
 
 struct AccountData
 {
-    AccountData() : Time(NULL), Data("") {}
+    AccountData() : Time(0), Data("") {}
 
     time_t Time;
     std::string Data;
@@ -98,6 +99,7 @@ class MANGOS_DLL_SPEC WorldSession
         void SendLfgResult(uint32 type, uint32 entry, uint8 lfg_type);
         void SendPartyResult(PartyOperation operation, const std::string& member, PartyResult res);
         void SendAreaTriggerMessage(const char* Text, ...) ATTR_PRINTF(2,3);
+        void SendSetPhaseShift(uint32 phaseShift);
 
         uint32 GetSecurity() const { return _security; }
         uint32 GetAccountId() const { return _accountId; }
@@ -151,7 +153,7 @@ class MANGOS_DLL_SPEC WorldSession
 
         void SendAttackStop(Unit const* enemy);
 
-        void SendBattlegGroundList( uint64 guid, uint32 bgTypeId );
+        void SendBattlegGroundList( uint64 guid, BattleGroundTypeId bgTypeId );
 
         void SendTradeStatus(uint32 status);
         void SendCancelTrade();
@@ -179,7 +181,6 @@ class MANGOS_DLL_SPEC WorldSession
         void SendAuctionCommandResult( uint32 auctionId, uint32 Action, uint32 ErrorCode, uint32 bidError = 0);
         void SendAuctionBidderNotification( uint32 location, uint32 auctionId, uint64 bidder, uint32 bidSum, uint32 diff, uint32 item_template);
         void SendAuctionOwnerNotification( AuctionEntry * auction );
-        bool SendAuctionInfo(WorldPacket & data, AuctionEntry* auction);
         void SendAuctionOutbiddedMail( AuctionEntry * auction, uint32 newPrice );
         void SendAuctionCancelledToBidderMail( AuctionEntry* auction );
 

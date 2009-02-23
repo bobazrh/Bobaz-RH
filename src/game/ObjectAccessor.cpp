@@ -44,38 +44,6 @@
 INSTANTIATE_SINGLETON_2(ObjectAccessor, CLASS_LOCK);
 INSTANTIATE_CLASS_MUTEX(ObjectAccessor, ZThread::FastMutex);
 
-namespace MaNGOS
-{
-    struct MANGOS_DLL_DECL BuildUpdateForPlayer
-    {
-        Player &i_player;
-        UpdateDataMapType &i_updatePlayers;
-
-        BuildUpdateForPlayer(Player &player, UpdateDataMapType &data_map) : i_player(player), i_updatePlayers(data_map) {}
-
-        void Visit(PlayerMapType &m)
-        {
-            for(PlayerMapType::iterator iter=m.begin(); iter != m.end(); ++iter)
-            {
-                if( iter->getSource() == &i_player )
-                    continue;
-
-                UpdateDataMapType::iterator iter2 = i_updatePlayers.find(iter->getSource());
-                if( iter2 == i_updatePlayers.end() )
-                {
-                    std::pair<UpdateDataMapType::iterator, bool> p = i_updatePlayers.insert( ObjectAccessor::UpdateDataValueType(iter->getSource(), UpdateData()) );
-                    assert(p.second);
-                    iter2 = p.first;
-                }
-
-                i_player.BuildValuesUpdateBlockForPlayer(&iter2->second, iter2->first);
-            }
-        }
-
-        template<class SKIP> void Visit(GridRefManager<SKIP> &) {}
-    };
-}
-
 ObjectAccessor::ObjectAccessor() {}
 ObjectAccessor::~ObjectAccessor() {}
 
@@ -128,7 +96,7 @@ ObjectAccessor::GetNPCIfCanInteractWith(Player const &player, uint64 guid, uint3
 }
 
 Creature*
-ObjectAccessor::GetCreatureOrPet(WorldObject const &u, uint64 guid)
+ObjectAccessor::GetCreatureOrPetOrVehicle(WorldObject const &u, uint64 guid)
 {
     if(Creature *unit = GetPet(guid))
         return unit;
@@ -164,18 +132,23 @@ ObjectAccessor::GetUnit(WorldObject const &u, uint64 guid)
     if(IS_PLAYER_GUID(guid))
         return FindPlayer(guid);
 
-    return GetCreatureOrPet(u, guid);
+    return GetCreatureOrPetOrVehicle(u, guid);
 }
 
 Corpse*
 ObjectAccessor::GetCorpse(WorldObject const &u, uint64 guid)
 {
     Corpse * ret = GetObjectInWorld(guid, (Corpse*)NULL);
-    if(ret && ret->GetMapId() != u.GetMapId()) ret = NULL;
+    if(!ret)
+        return NULL;
+    if(ret->GetMapId() != u.GetMapId())
+        return NULL;
+    if(ret->GetInstanceId() != u.GetInstanceId())
+        return NULL;
     return ret;
 }
 
-Object* ObjectAccessor::GetObjectByTypeMask(Player const &p, uint64 guid, uint32 typemask)
+Object* ObjectAccessor::GetObjectByTypeMask(WorldObject const &p, uint64 guid, uint32 typemask)
 {
     Object *obj = NULL;
 
@@ -187,7 +160,7 @@ Object* ObjectAccessor::GetObjectByTypeMask(Player const &p, uint64 guid, uint32
 
     if(typemask & TYPEMASK_UNIT)
     {
-        obj = GetCreatureOrPet(p,guid);
+        obj = GetCreatureOrPetOrVehicle(p,guid);
         if(obj) return obj;
     }
 
@@ -203,9 +176,9 @@ Object* ObjectAccessor::GetObjectByTypeMask(Player const &p, uint64 guid, uint32
         if(obj) return obj;
     }
 
-    if(typemask & TYPEMASK_ITEM)
+    if(typemask & TYPEMASK_ITEM && p.GetTypeId() == TYPEID_PLAYER)
     {
-        obj = p.GetItemByGuid( guid );
+        obj = ((Player const &)p).GetItemByGuid( guid );
         if(obj) return obj;
     }
 
@@ -216,15 +189,25 @@ GameObject*
 ObjectAccessor::GetGameObject(WorldObject const &u, uint64 guid)
 {
     GameObject * ret = GetObjectInWorld(guid, (GameObject*)NULL);
-    if(ret && ret->GetMapId() != u.GetMapId()) ret = NULL;
+    if(!ret)
+        return NULL;
+    if(ret->GetMapId() != u.GetMapId())
+        return NULL;
+    if(ret->GetInstanceId() != u.GetInstanceId())
+        return NULL;
     return ret;
 }
 
 DynamicObject*
-ObjectAccessor::GetDynamicObject(Unit const &u, uint64 guid)
+ObjectAccessor::GetDynamicObject(WorldObject const &u, uint64 guid)
 {
     DynamicObject * ret = GetObjectInWorld(guid, (DynamicObject*)NULL);
-    if(ret && ret->GetMapId() != u.GetMapId()) ret = NULL;
+    if(!ret)
+        return NULL;
+    if(ret->GetMapId() != u.GetMapId())
+        return NULL;
+    if(ret->GetInstanceId() != u.GetInstanceId())
+        return NULL;
     return ret;
 }
 
@@ -272,22 +255,6 @@ ObjectAccessor::UpdateObject(Object* obj, Player* exceptPlayer)
         iter->first->GetSession()->SendPacket(&packet);
         packet.clear();
     }
-}
-
-void
-ObjectAccessor::AddUpdateObject(Object *obj)
-{
-    Guard guard(i_updateGuard);
-    i_objects.insert(obj);
-}
-
-void
-ObjectAccessor::RemoveUpdateObject(Object *obj)
-{
-    Guard guard(i_updateGuard);
-    std::set<Object *>::iterator iter = i_objects.find(obj);
-    if( iter != i_objects.end() )
-        i_objects.erase( iter );
 }
 
 void
@@ -476,6 +443,7 @@ ObjectAccessor::ConvertCorpseForPlayer(uint64 player_guid, bool insignia)
         bones->Relocate(corpse->GetPositionX(), corpse->GetPositionY(), corpse->GetPositionZ(), corpse->GetOrientation());
         bones->SetMapId(corpse->GetMapId());
         bones->SetInstanceId(corpse->GetInstanceId());
+        bones->SetPhaseMask(corpse->GetPhaseMask(),false);
 
         bones->SetUInt32Value(CORPSE_FIELD_FLAGS, CORPSE_FLAG_UNK2 | CORPSE_FLAG_BONES);
         bones->SetUInt64Value(CORPSE_FIELD_OWNER, 0);

@@ -521,6 +521,12 @@ bool ChatHandler::HandleGetItemState(const char* args)
     return true;
 }
 
+bool ChatHandler::HandleDebugBattlegroundCommand(const char * /*args*/)
+{
+    sBattleGroundMgr.ToggleTesting();
+    return true;
+}
+
 bool ChatHandler::HandleDebugArenaCommand(const char * /*args*/)
 {
     sBattleGroundMgr.ToggleArenaTesting();
@@ -584,5 +590,15 @@ bool ChatHandler::HandleSendLargePacketCommand(const char* args)
     while(strlen(ss.str().c_str()) < 128000)
         ss << stuffingString;
     SendSysMessage(ss.str().c_str());
+    return true;
+}
+
+bool ChatHandler::HandleSendSetPhaseShiftCommand(const char* args)
+{
+    if(!args)
+        return false;
+
+    uint32 PhaseShift = atoi(args);
+    m_session->SendSetPhaseShift(PhaseShift);
     return true;
 }

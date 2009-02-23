@@ -75,7 +75,7 @@ struct LootStoreItem
         group(_group), maxcount(_maxcount), conditionId(_conditionId),
         needs_quest(_chanceOrQuestChance < 0) {}
 
-    bool Roll() const;                                      // Checks if the entry takes it's chance (at loot generation)
+    bool Roll(bool rate) const;                             // Checks if the entry takes it's chance (at loot generation)
     bool IsValid(LootStore const& store, uint32 entry) const;
                                                             // Checks correctness of values
 };
@@ -127,7 +127,8 @@ typedef std::set<uint32> LootIdSet;
 class LootStore
 {
     public:
-        explicit LootStore(char const* name, char const* entryName) : m_name(name), m_entryName(entryName) {}
+        explicit LootStore(char const* name, char const* entryName, bool ratesAllowed)
+            : m_name(name), m_entryName(entryName), m_ratesAllowed(ratesAllowed) {}
         virtual ~LootStore() { Clear(); }
 
         void Verify() const;
@@ -145,6 +146,7 @@ class LootStore
 
         char const* GetName() const { return m_name; }
         char const* GetEntryName() const { return m_entryName; }
+        bool IsRatesAllowed() const { return m_ratesAllowed; }
     protected:
         void LoadLootTable();
         void Clear();
@@ -152,6 +154,7 @@ class LootStore
         LootTemplateMap m_LootTemplates;
         char const* m_name;
         char const* m_entryName;
+        bool m_ratesAllowed;
 };
 
 class LootTemplate
@@ -163,7 +166,7 @@ class LootTemplate
         // Adds an entry to the group (at loading stage)
         void AddEntry(LootStoreItem& item);
         // Rolls for every item in the template and adds the rolled items the the loot
-        void Process(Loot& loot, LootStore const& store, uint8 GroupId = 0) const;
+        void Process(Loot& loot, LootStore const& store, bool rate, uint8 GroupId = 0) const;
 
         // True if template includes at least 1 quest drop entry
         bool HasQuestDrop(LootTemplateMap const& store, uint8 GroupId = 0) const;
@@ -205,19 +208,20 @@ class LootValidatorRefManager : public RefManager<Loot, LootValidatorRef>
 };
 
 //=====================================================
+struct LootView;
+
+ByteBuffer& operator<<(ByteBuffer& b, LootItem const& li);
+ByteBuffer& operator<<(ByteBuffer& b, LootView const& lv);
 
 struct Loot
 {
+    friend ByteBuffer& operator<<(ByteBuffer& b, LootView const& lv);
+
     QuestItemMap const& GetPlayerQuestItems() const { return PlayerQuestItems; }
     QuestItemMap const& GetPlayerFFAItems() const { return PlayerFFAItems; }
     QuestItemMap const& GetPlayerNonQuestNonFFAConditionalItems() const { return PlayerNonQuestNonFFAConditionalItems; }
 
-    QuestItemList* FillFFALoot(Player* player);
-    QuestItemList* FillQuestLoot(Player* player);
-    QuestItemList* FillNonQuestNonFFAConditionalLoot(Player* player);
-
     std::vector<LootItem> items;
-    std::vector<LootItem> quest_items;
     uint32 gold;
     uint8 unlootedCount;
 
@@ -233,18 +237,19 @@ struct Loot
     // void clear();
     void clear()
     {
-        items.clear(); gold = 0; PlayersLooting.clear();
         for (QuestItemMap::iterator itr = PlayerQuestItems.begin(); itr != PlayerQuestItems.end(); ++itr)
             delete itr->second;
+        PlayerQuestItems.clear();
+
         for (QuestItemMap::iterator itr = PlayerFFAItems.begin(); itr != PlayerFFAItems.end(); ++itr)
             delete itr->second;
+        PlayerFFAItems.clear();
+
         for (QuestItemMap::iterator itr = PlayerNonQuestNonFFAConditionalItems.begin(); itr != PlayerNonQuestNonFFAConditionalItems.end(); ++itr)
             delete itr->second;
-
-        PlayerQuestItems.clear();
-        PlayerFFAItems.clear();
         PlayerNonQuestNonFFAConditionalItems.clear();
 
+        PlayersLooting.clear();
         items.clear();
         quest_items.clear();
         gold = 0;
@@ -262,13 +267,21 @@ struct Loot
     void RemoveLooter(uint64 GUID) { PlayersLooting.erase(GUID); }
 
     void generateMoneyLoot(uint32 minAmount, uint32 maxAmount);
-    void FillLoot(uint32 loot_id, LootStore const& store, Player* loot_owner);
+    void FillLoot(uint32 loot_id, LootStore const& store, Player* loot_owner, bool personal);
 
     // Inserts the item into the loot (called by LootTemplate processors)
     void AddItem(LootStoreItem const & item);
 
     LootItem* LootItemInSlot(uint32 lootslot, Player* player, QuestItem** qitem = NULL, QuestItem** ffaitem = NULL, QuestItem** conditem = NULL);
+    uint32 GetMaxSlotInLootFor(Player* player) const;
+
     private:
+        void FillNotNormalLootFor(Player* player);
+        QuestItemList* FillFFALoot(Player* player);
+        QuestItemList* FillQuestLoot(Player* player);
+        QuestItemList* FillNonQuestNonFFAConditionalLoot(Player* player);
+
+        std::vector<LootItem> quest_items;
         std::set<uint64> PlayersLooting;
         QuestItemMap PlayerQuestItems;
         QuestItemMap PlayerFFAItems;
@@ -276,19 +289,15 @@ struct Loot
 
         // All rolls are registered here. They need to know, when the loot is not valid anymore
         LootValidatorRefManager i_LootValidatorRefManager;
-
 };
 
 struct LootView
 {
     Loot &loot;
-    QuestItemList *qlist;
-    QuestItemList *ffalist;
-    QuestItemList *conditionallist;
     Player *viewer;
     PermissionTypes permission;
-    LootView(Loot &_loot, QuestItemList *_qlist, QuestItemList *_ffalist, QuestItemList *_conditionallist, Player *_viewer,PermissionTypes _permission = ALL_PERMISSION)
-        : loot(_loot), qlist(_qlist), ffalist(_ffalist), conditionallist(_conditionallist), viewer(_viewer), permission(_permission) {}
+    LootView(Loot &_loot, Player *_viewer,PermissionTypes _permission = ALL_PERMISSION)
+        : loot(_loot), viewer(_viewer), permission(_permission) {}
 };
 
 extern LootStore LootTemplates_Creature;
@@ -301,6 +310,7 @@ extern LootStore LootTemplates_Skinning;
 extern LootStore LootTemplates_Disenchant;
 extern LootStore LootTemplates_Prospecting;
 extern LootStore LootTemplates_QuestMail;
+extern LootStore LootTemplates_Spell;
 
 void LoadLootTemplates_Creature();
 void LoadLootTemplates_Fishing();
@@ -312,6 +322,8 @@ void LoadLootTemplates_Skinning();
 void LoadLootTemplates_Disenchant();
 void LoadLootTemplates_Prospecting();
 void LoadLootTemplates_QuestMail();
+
+void LoadLootTemplates_Spell();
 void LoadLootTemplates_Reference();
 
 inline void LoadLootTables()
@@ -326,9 +338,9 @@ inline void LoadLootTables()
     LoadLootTemplates_Disenchant();
     LoadLootTemplates_Prospecting();
     LoadLootTemplates_QuestMail();
+    LoadLootTemplates_Spell();
+
     LoadLootTemplates_Reference();
 }
 
-ByteBuffer& operator<<(ByteBuffer& b, LootItem const& li);
-ByteBuffer& operator<<(ByteBuffer& b, LootView const& lv);
 #endif

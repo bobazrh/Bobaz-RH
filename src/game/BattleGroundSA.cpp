@@ -18,6 +18,7 @@
 
 #include "BattleGround.h"
 #include "BattleGroundSA.h"
+#include "Player.h"
 
 BattleGroundSA::BattleGroundSA()
 {
@@ -29,7 +30,7 @@ BattleGroundSA::~BattleGroundSA()
 
 }
 
-void BattleGroundSA::Update(time_t diff)
+void BattleGroundSA::Update(uint32 diff)
 {
     BattleGround::Update(diff);
 }

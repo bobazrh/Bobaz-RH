@@ -74,6 +74,12 @@ enum ItemSpelltriggerType
     ITEM_SPELLTRIGGER_ON_EQUIP        = 1,
     ITEM_SPELLTRIGGER_CHANCE_ON_HIT   = 2,
     ITEM_SPELLTRIGGER_SOULSTONE       = 4,
+    /*
+     * ItemSpelltriggerType 5 might have changed on 2.4.3/3.0.3: Such auras
+     * will be applied on item pickup and removed on item loss - maybe on the
+     * other hand the item is destroyed if the aura is removed ("removed on
+     * death" of spell 57348 makes me think so)
+     */
     ITEM_SPELLTRIGGER_ON_NO_DELAY_USE = 5,                  // no equip cooldown
     ITEM_SPELLTRIGGER_LEARN_SPELL_ID  = 6                   // used in item_template.spell_2 with spell_id with SPELL_GENERIC_LEARN in spell_1
 };
@@ -102,6 +108,7 @@ enum ITEM_FLAGS
     ITEM_FLAGS_WRAPPER                        = 0x00000200, // used or not used wrapper
     ITEM_FLAGS_PARTY_LOOT                     = 0x00000800, // determines if item is party loot or not
     ITEM_FLAGS_CHARTER                        = 0x00002000, // arena/guild charter
+    ITEM_FLAGS_PROSPECTABLE                   = 0x00040000,
     ITEM_FLAGS_UNIQUE_EQUIPPED                = 0x00080000,
     ITEM_FLAGS_USEABLE_IN_ARENA               = 0x00200000,
     ITEM_FLAGS_THROWABLE                      = 0x00400000, // not used in game for check trow possibility, only for item in game tooltip
@@ -489,7 +496,7 @@ struct ItemPrototype
     uint32 ItemId;
     uint32 Class;                                           // id from ItemClass.dbc
     uint32 SubClass;                                        // id from ItemSubClass.dbc
-    uint32 Unk0;
+    int32  Unk0;
     char*  Name1;
     uint32 DisplayInfoID;                                   // id from ItemDisplayInfo.dbc
     uint32 Quality;
@@ -535,7 +542,7 @@ struct ItemPrototype
     uint32 PageMaterial;
     uint32 StartQuest;                                      // id from QuestCache.wdb
     uint32 LockID;
-    uint32 Material;                                        // id from Material.dbc
+    int32  Material;                                        // id from Material.dbc
     uint32 Sheath;
     uint32 RandomProperty;                                  // id from ItemRandomProperties.dbc
     uint32 RandomSuffix;                                    // id from ItemRandomSuffix.dbc
@@ -621,6 +628,29 @@ struct ItemPrototype
     }
 
     uint32 GetMaxStackSize() const { return Stackable > 0 ? uint32(Stackable) : uint32(0x7FFFFFFF-1); }
+
+    float getDPS() const
+    {
+        if (Delay == 0)
+            return 0;
+        float temp = 0;
+        for (int i=0;i<5;++i)
+            temp+=Damage[i].DamageMin + Damage[i].DamageMax;
+        return temp*500/Delay;
+    }
+
+    int32 getFeralBonus() const
+    {
+        // 0x02A5F3 - is mask for Melee weapon from ItemSubClassMask.dbc
+        if (Class == ITEM_CLASS_WEAPON && (1<<SubClass)&0x02A5F3)
+        {
+            int32 bonus = int32(getDPS()*14.0f) - 767;
+            if (bonus < 0)
+                return 0;
+            return bonus;
+        }
+        return 0;
+    }
 };
 
 struct ItemLocale

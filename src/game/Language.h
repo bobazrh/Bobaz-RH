@@ -670,7 +670,17 @@ enum MangosStrings
     LANG_CANNOT_SUMMON_TO_BG            = 734,              // "You cannot summon players to a battleground or arena map."
     LANG_CANNOT_GO_TO_BG_GM             = 735,              // "You must be in GM mode to teleport to a player in a battleground."
     LANG_CANNOT_GO_TO_BG_FROM_BG        = 736,              // "You cannot teleport to a battleground from another battleground. Please leave the current battleground first."
-    // Room for batleground/arena strings 737-799 not used
+    LANG_DEBUG_ARENA_ON                 = 737,
+    LANG_DEBUG_ARENA_OFF                = 738,
+    LANG_DEBUG_BG_ON                    = 739,
+    LANG_DEBUG_BG_OFF                   = 740,
+    LANG_DIST_ARENA_POINTS_START        = 741,
+    LANG_DIST_ARENA_POINTS_ONLINE_START = 742,
+    LANG_DIST_ARENA_POINTS_ONLINE_END   = 743,
+    LANG_DIST_ARENA_POINTS_TEAM_START   = 744,
+    LANG_DIST_ARENA_POINTS_TEAM_END     = 745,
+    LANG_DIST_ARENA_POINTS_END          = 746,
+    // Room for batleground/arena strings 747-799 not used
 
     // in game strings
     //                                  = 800, not used
@@ -683,7 +693,8 @@ enum MangosStrings
     LANG_NEED_CHARACTER_NAME            = 807,
     LANG_PLAYER_NOT_EXIST_OR_OFFLINE    = 808,
     LANG_ACCOUNT_FOR_PLAYER_NOT_FOUND   = 809,
-    // Room for in-game strings           810-999 not used
+    LANG_ACHIEVEMENT_EARNED             = 810,
+    // Room for in-game strings           811-999 not used
 
     // Level 4 (CLI only commands)
     LANG_COMMAND_EXIT                   = 1000,
@@ -723,7 +734,8 @@ enum MangosStrings
     LANG_MUST_MALE_OR_FEMALE            = 1119,
     LANG_YOU_CHANGE_GENDER              = 1120,
     LANG_YOUR_GENDER_CHANGED            = 1121,
-    // Room for more level 3              1122-1199 not used
+    LANG_SKILL_VALUES                   = 1122,
+    // Room for more level 3              1123-1199 not used
 
     // FREE IDS                           1200-9999
 

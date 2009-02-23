@@ -43,7 +43,7 @@
 #define MAX_GRID_LOAD_TIME      50
 
 // magic *.map header
-const char MAP_MAGIC[] = "MAP_2.01";
+const char MAP_MAGIC[] = "MAP_3.00";
 
 GridState* si_GridStates[MAX_GRID_STATE];
 
@@ -507,7 +507,7 @@ void Map::MessageBroadcast(WorldObject *obj, WorldPacket *msg)
     if( !loaded(GridPair(cell.data.Part.grid_x, cell.data.Part.grid_y)) )
         return;
 
-    MaNGOS::ObjectMessageDeliverer post_man(msg);
+    MaNGOS::ObjectMessageDeliverer post_man(*obj,msg);
     TypeContainerVisitor<MaNGOS::ObjectMessageDeliverer, WorldTypeMapContainer > message(post_man);
     CellLock<ReadGuard> cell_lock(cell, p);
     cell_lock->Visit(cell_lock, message, *this);
@@ -1002,24 +1002,74 @@ float Map::GetHeight(float x, float y, float z, bool pUseVmaps) const
     {
         int lx_int = (int)lx;
         int ly_int = (int)ly;
+        lx -= lx_int;
+        ly -= ly_int;
 
-        float zi[4];
-        // Probe 4 nearest points (except border cases)
-        zi[0] = gmap->Z[lx_int][ly_int];
-        zi[1] = lx < MAP_RESOLUTION-1 ? gmap->Z[lx_int+1][ly_int] : zi[0];
-        zi[2] = ly < MAP_RESOLUTION-1 ? gmap->Z[lx_int][ly_int+1] : zi[0];
-        zi[3] = lx < MAP_RESOLUTION-1 && ly < MAP_RESOLUTION-1 ? gmap->Z[lx_int+1][ly_int+1] : zi[0];
-        // Recalculate them like if their x,y positions were in the range 0,1
-        float b[4];
-        b[0] = zi[0];
-        b[1] = zi[1]-zi[0];
-        b[2] = zi[2]-zi[0];
-        b[3] = zi[0]-zi[1]-zi[2]+zi[3];
-        // Normalize the dx and dy to be in range 0..1
-        float fact_x = lx - lx_int;
-        float fact_y = ly - ly_int;
-        // Use the simplified bilinear equation, as described in [url="http://en.wikipedia.org/wiki/Bilinear_interpolation"]http://en.wikipedia.org/wiki/Bilinear_interpolation[/url]
-        float _mapheight = b[0] + (b[1]*fact_x) + (b[2]*fact_y) + (b[3]*fact_x*fact_y);
+        // Height stored as: h5 - its v8 grid, h1-h4 - its v9 grid
+        // +--------------> X
+        // | h1-------h2     Coordinates is:
+        // | | \  1  / |     h1 0,0
+        // | |  \   /  |     h2 0,1
+        // | | 2  h5 3 |     h3 1,0
+        // | |  /   \  |     h4 1,1
+        // | | /  4  \ |     h5 1/2,1/2
+        // | h3-------h4
+        // V Y
+        // For find height need
+        // 1 - detect triangle
+        // 2 - solve linear equation from triangle points
+
+        // Calculate coefficients for solve h = a*x + b*y + c
+        float a,b,c;
+        // Select triangle:
+        if (lx+ly < 1)
+        {
+            if (lx > ly)
+            {
+                // 1 triangle (h1, h2, h5 points)
+                float h1 = gmap->v9[lx_int][ly_int];
+                float h2 = gmap->v9[lx_int+1][ly_int];
+                float h5 = 2 * gmap->v8[lx_int][ly_int];
+                a = h2-h1;
+                b = h5-h1-h2;
+                c = h1;
+            }
+            else
+            {
+                // 2 triangle (h1, h3, h5 points)
+                float h1 = gmap->v9[lx_int][ly_int];
+                float h3 = gmap->v9[lx_int][ly_int+1];
+                float h5 = 2 * gmap->v8[lx_int][ly_int];
+                a = h5 - h1 - h3;
+                b = h3 - h1;
+                c = h1;
+            }
+        }
+        else
+        {
+            if (lx > ly)
+            {
+                // 3 triangle (h2, h4, h5 points)
+                float h2 = gmap->v9[lx_int+1][ly_int];
+                float h4 = gmap->v9[lx_int+1][ly_int+1];
+                float h5 = 2 * gmap->v8[lx_int][ly_int];
+                a = h2 + h4 - h5;
+                b = h4 - h2;
+                c = h5 - h4;
+            }
+            else
+            {
+                // 4 triangle (h3, h4, h5 points)
+                float h3 = gmap->v9[lx_int][ly_int+1];
+                float h4 = gmap->v9[lx_int+1][ly_int+1];
+                float h5 = 2 * gmap->v8[lx_int][ly_int];
+                a = h4 - h3;
+                b = h3 + h4 - h5;
+                c = h5 - h4;
+            }
+        }
+        // Calculate height
+        float _mapheight = a * lx + b * ly + c;
 
         // look from a bit higher pos to find the floor, ignore under surface case
         if(z + 2.0f > _mapheight)
@@ -1448,14 +1498,6 @@ void Map::RemoveAllObjectsInRemoveList()
     //sLog.outDebug("Object remover 2 check.");
 }
 
-bool Map::CanUnload(const uint32 &diff)
-{
-    if(!m_unloadTimer) return false;
-    if(m_unloadTimer < diff) return true;
-    m_unloadTimer -= diff;
-    return false;
-}
-
 uint32 Map::GetPlayersCountExceptGMs() const
 {
     uint32 count = 0;
@@ -1536,10 +1578,10 @@ bool InstanceMap::CanEnter(Player *player)
     }
 
     // cannot enter if the instance is full (player cap), GMs don't count
-    InstanceTemplate const* iTemplate = objmgr.GetInstanceTemplate(GetId());
-    if (!player->isGameMaster() && GetPlayersCountExceptGMs() >= iTemplate->maxPlayers)
+    uint32 maxPlayers = GetMaxPlayers();
+    if (!player->isGameMaster() && GetPlayersCountExceptGMs() >= maxPlayers)
     {
-        sLog.outDetail("MAP: Instance '%u' of map '%s' cannot have more than '%u' players. Player '%s' rejected", GetInstanceId(), GetMapName(), iTemplate->maxPlayers, player->GetName());
+        sLog.outDetail("MAP: Instance '%u' of map '%s' cannot have more than '%u' players. Player '%s' rejected", GetInstanceId(), GetMapName(), maxPlayers, player->GetName());
         player->SendTransferAborted(GetId(), TRANSFER_ABORT_MAX_PLAYERS);
         return false;
     }
@@ -1832,6 +1874,14 @@ void InstanceMap::SetResetSchedule(bool on)
     }
 }
 
+uint32 InstanceMap::GetMaxPlayers() const
+{
+    InstanceTemplate const* iTemplate = objmgr.GetInstanceTemplate(GetId());
+    if(!iTemplate)
+        return 0;
+    return IsHeroic() ? iTemplate->maxPlayersHeroic : iTemplate->maxPlayers;
+}
+
 /* ******* Battleground Instance Maps ******* */
 
 BattleGroundMap::BattleGroundMap(uint32 id, time_t expiry, uint32 InstanceId)
@@ -1887,12 +1937,14 @@ void BattleGroundMap::UnloadAll(bool pForce)
 {
     while(HavePlayers())
     {
-        Player * plr = m_mapRefManager.getFirst()->getSource();
-        if(plr) (plr)->TeleportTo(plr->m_homebindMapId, plr->m_homebindX, plr->m_homebindY, plr->m_homebindZ, plr->GetOrientation());
-        // TeleportTo removes the player from this map (if the map exists) -> calls BattleGroundMap::Remove -> invalidates the iterator.
-        // just in case, remove the player from the list explicitly here as well to prevent a possible infinite loop
-        // note that this remove is not needed if the code works well in other places
-        plr->GetMapRef().unlink();
+        if(Player * plr = m_mapRefManager.getFirst()->getSource())
+        {
+            plr->TeleportTo(plr->GetBattleGroundEntryPoint());
+            // TeleportTo removes the player from this map (if the map exists) -> calls BattleGroundMap::Remove -> invalidates the iterator.
+            // just in case, remove the player from the list explicitly here as well to prevent a possible infinite loop
+            // note that this remove is not needed if the code works well in other places
+            plr->GetMapRef().unlink();
+        }
     }
 
     Map::UnloadAll(pForce);

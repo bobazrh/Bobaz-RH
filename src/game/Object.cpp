@@ -58,8 +58,9 @@ uint32 GuidHigh2TypeId(uint32 guid_hi)
         case HIGHGUID_DYNAMICOBJECT:return TYPEID_DYNAMICOBJECT;
         case HIGHGUID_CORPSE:       return TYPEID_CORPSE;
         case HIGHGUID_MO_TRANSPORT: return TYPEID_GAMEOBJECT;
+        case HIGHGUID_VEHICLE:      return TYPEID_UNIT;
     }
-    return 10;                                              // unknown
+    return MAX_TYPEID;                                      // unknown
 }
 
 Object::Object( )
@@ -258,7 +259,7 @@ void Object::DestroyForPlayer(Player *target) const
 void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags, uint32 flags2) const
 {
     uint16 unk_flags = ((GetTypeId() == TYPEID_PLAYER) ? ((Player*)this)->m_movementInfo.unk1 : 0);
-    
+
     if(GetTypeId() == TYPEID_UNIT)
         if(((Creature*)this)->isVehicle())
             unk_flags |= 0x20;                              // always allow pitch
@@ -454,6 +455,8 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags, uint32 flags2)
                 *data << path.GetNodes()[i].y;
                 *data << path.GetNodes()[i].z;
             }
+
+            *data << uint8(0);                              // added in 3.0.8
 
             /*for(uint32 i = 0; i < poscount; i++)
             {
@@ -1021,25 +1024,18 @@ bool Object::PrintIndexError(uint32 index, bool set) const
 }
 
 WorldObject::WorldObject()
+    : m_mapId(0), m_InstanceId(0), m_phaseMask(PHASEMASK_NORMAL),
+    m_positionX(0.0f), m_positionY(0.0f), m_positionZ(0.0f), m_orientation(0.0f),
+    mSemaphoreTeleport(false)
 {
-    m_positionX         = 0.0f;
-    m_positionY         = 0.0f;
-    m_positionZ         = 0.0f;
-    m_orientation       = 0.0f;
-
-    m_mapId             = 0;
-    m_InstanceId        = 0;
-
-    m_name = "";
-
-    mSemaphoreTeleport  = false;
 }
 
-void WorldObject::_Create( uint32 guidlow, HighGuid guidhigh, uint32 mapid )
+void WorldObject::_Create( uint32 guidlow, HighGuid guidhigh, uint32 mapid, uint32 phaseMask )
 {
     Object::_Create(guidlow, 0, guidhigh);
 
     m_mapId = mapid;
+    m_phaseMask = phaseMask;
 }
 
 uint32 WorldObject::GetZoneId() const
@@ -1250,50 +1246,17 @@ void WorldObject::MonsterWhisper(const char* text, uint64 receiver, bool IsBossW
 
 namespace MaNGOS
 {
-    class MessageChatLocaleCacheDo
+    class MonsterChatBuilder
     {
         public:
-            MessageChatLocaleCacheDo(WorldObject const& obj, ChatMsg msgtype, int32 textId, uint32 language, uint64 targetGUID, float dist)
-                : i_object(obj), i_msgtype(msgtype), i_textId(textId), i_language(language),
-                i_targetGUID(targetGUID), i_dist(dist)
+            MonsterChatBuilder(WorldObject const& obj, ChatMsg msgtype, int32 textId, uint32 language, uint64 targetGUID)
+                : i_object(obj), i_msgtype(msgtype), i_textId(textId), i_language(language), i_targetGUID(targetGUID) {}
+            void operator()(WorldPacket& data, int32 loc_idx)
             {
-            }
+                char const* text = objmgr.GetMangosString(i_textId,loc_idx);
 
-            ~MessageChatLocaleCacheDo()
-            {
-                for(int i = 0; i < i_data_cache.size(); ++i)
-                    delete i_data_cache[i];
-            }
-
-            void operator()(Player* p)
-            {
-                // skip far away players
-                if(p->GetDistance(&i_object) > i_dist)
-                    return;
-
-                uint32 loc_idx = p->GetSession()->GetSessionDbLocaleIndex();
-                uint32 cache_idx = loc_idx+1;
-                WorldPacket* data;
-
-                // create if not cached yet
-                if(i_data_cache.size() < cache_idx+1 || !i_data_cache[cache_idx])
-                {
-                    if(i_data_cache.size() < cache_idx+1)
-                        i_data_cache.resize(cache_idx+1);
-
-                    char const* text = objmgr.GetMangosString(i_textId,loc_idx);
-
-                    data = new WorldPacket(SMSG_MESSAGECHAT, 200);
-
-                    // TODO: i_object.GetName() also must be localized?
-                    i_object.BuildMonsterChat(data,i_msgtype,text,i_language,i_object.GetNameForLocaleIdx(loc_idx),i_targetGUID);
-
-                    i_data_cache[cache_idx] = data;
-                }
-                else
-                    data = i_data_cache[cache_idx];
-
-                p->SendDirectMessage(data);
+                // TODO: i_object.GetName() also must be localized?
+                i_object.BuildMonsterChat(&data,i_msgtype,text,i_language,i_object.GetNameForLocaleIdx(loc_idx),i_targetGUID);
             }
 
         private:
@@ -1302,8 +1265,6 @@ namespace MaNGOS
             int32 i_textId;
             uint32 i_language;
             uint64 i_targetGUID;
-            float i_dist;
-            std::vector<WorldPacket*> i_data_cache;             // 0 = default, i => i-1 locale index
     };
 }                                                           // namespace MaNGOS
 
@@ -1315,9 +1276,10 @@ void WorldObject::MonsterSay(int32 textId, uint32 language, uint64 TargetGuid)
     cell.data.Part.reserved = ALL_DISTRICT;
     cell.SetNoCreate();
 
-    MaNGOS::MessageChatLocaleCacheDo say_do(*this, CHAT_MSG_MONSTER_SAY, textId,language,TargetGuid,sWorld.getConfig(CONFIG_LISTEN_RANGE_SAY));
-    MaNGOS::PlayerWorker<MaNGOS::MessageChatLocaleCacheDo> say_worker(say_do);
-    TypeContainerVisitor<MaNGOS::PlayerWorker<MaNGOS::MessageChatLocaleCacheDo>, WorldTypeMapContainer > message(say_worker);
+    MaNGOS::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_SAY, textId,language,TargetGuid);
+    MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> say_do(say_build);
+    MaNGOS::PlayerDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> > say_worker(this,sWorld.getConfig(CONFIG_LISTEN_RANGE_SAY),say_do);
+    TypeContainerVisitor<MaNGOS::PlayerDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> >, WorldTypeMapContainer > message(say_worker);
     CellLock<GridReadGuard> cell_lock(cell, p);
     cell_lock->Visit(cell_lock, message, *GetMap());
 }
@@ -1330,9 +1292,10 @@ void WorldObject::MonsterYell(int32 textId, uint32 language, uint64 TargetGuid)
     cell.data.Part.reserved = ALL_DISTRICT;
     cell.SetNoCreate();
 
-    MaNGOS::MessageChatLocaleCacheDo say_do(*this, CHAT_MSG_MONSTER_YELL, textId,language,TargetGuid,sWorld.getConfig(CONFIG_LISTEN_RANGE_YELL));
-    MaNGOS::PlayerWorker<MaNGOS::MessageChatLocaleCacheDo> say_worker(say_do);
-    TypeContainerVisitor<MaNGOS::PlayerWorker<MaNGOS::MessageChatLocaleCacheDo>, WorldTypeMapContainer > message(say_worker);
+    MaNGOS::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_YELL, textId,language,TargetGuid);
+    MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> say_do(say_build);
+    MaNGOS::PlayerDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> > say_worker(this,sWorld.getConfig(CONFIG_LISTEN_RANGE_YELL),say_do);
+    TypeContainerVisitor<MaNGOS::PlayerDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> >, WorldTypeMapContainer > message(say_worker);
     CellLock<GridReadGuard> cell_lock(cell, p);
     cell_lock->Visit(cell_lock, message, *GetMap());
 }
@@ -1345,9 +1308,10 @@ void WorldObject::MonsterTextEmote(int32 textId, uint64 TargetGuid, bool IsBossE
     cell.data.Part.reserved = ALL_DISTRICT;
     cell.SetNoCreate();
 
-    MaNGOS::MessageChatLocaleCacheDo say_do(*this, IsBossEmote ? CHAT_MSG_RAID_BOSS_EMOTE : CHAT_MSG_MONSTER_EMOTE, textId,LANG_UNIVERSAL,TargetGuid,sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE));
-    MaNGOS::PlayerWorker<MaNGOS::MessageChatLocaleCacheDo> say_worker(say_do);
-    TypeContainerVisitor<MaNGOS::PlayerWorker<MaNGOS::MessageChatLocaleCacheDo>, WorldTypeMapContainer > message(say_worker);
+    MaNGOS::MonsterChatBuilder say_build(*this, IsBossEmote ? CHAT_MSG_RAID_BOSS_EMOTE : CHAT_MSG_MONSTER_EMOTE, textId,LANG_UNIVERSAL,TargetGuid);
+    MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> say_do(say_build);
+    MaNGOS::PlayerDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> > say_worker(this,sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE),say_do);
+    TypeContainerVisitor<MaNGOS::PlayerDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> >, WorldTypeMapContainer > message(say_worker);
     CellLock<GridReadGuard> cell_lock(cell, p);
     cell_lock->Visit(cell_lock, message, *GetMap());
 }
@@ -1362,7 +1326,7 @@ void WorldObject::MonsterWhisper(int32 textId, uint64 receiver, bool IsBossWhisp
     char const* text = objmgr.GetMangosString(textId,loc_idx);
 
     WorldPacket data(SMSG_MESSAGECHAT, 200);
-    BuildMonsterChat(&data,IsBossWhisper ? CHAT_MSG_RAID_BOSS_WHISPER : CHAT_MSG_MONSTER_WHISPER,text,LANG_UNIVERSAL,GetName(),receiver);
+    BuildMonsterChat(&data,IsBossWhisper ? CHAT_MSG_RAID_BOSS_WHISPER : CHAT_MSG_MONSTER_WHISPER,text,LANG_UNIVERSAL,GetNameForLocaleIdx(loc_idx),receiver);
 
     player->GetSession()->SendPacket(&data);
 }
@@ -1475,7 +1439,7 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
     if (GetTypeId()==TYPEID_PLAYER)
         team = ((Player*)this)->GetTeam();
 
-    if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT), GetMap(), id, team))
+    if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT), GetMap(), GetPhaseMask(), id, team))
     {
         delete pCreature;
         return NULL;
@@ -1617,7 +1581,7 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
         cell.SetNoCreate();
 
         MaNGOS::NearUsedPosDo u_do(*this,searcher,absAngle,selector);
-        MaNGOS::WorldObjectWorker<MaNGOS::NearUsedPosDo> worker(u_do);
+        MaNGOS::WorldObjectWorker<MaNGOS::NearUsedPosDo> worker(this,u_do);
 
         TypeContainerVisitor<MaNGOS::WorldObjectWorker<MaNGOS::NearUsedPosDo>, GridTypeMapContainer  > grid_obj_worker(worker);
         TypeContainerVisitor<MaNGOS::WorldObjectWorker<MaNGOS::NearUsedPosDo>, WorldTypeMapContainer > world_obj_worker(worker);
@@ -1710,4 +1674,12 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
     y = first_y;
 
     UpdateGroundPositionZ(x,y,z);                           // update to LOS height if available
+}
+
+void WorldObject::SetPhaseMask(uint32 newPhaseMask, bool update)
+{
+    m_phaseMask = newPhaseMask;
+
+    if(update && IsInWorld())
+        ObjectAccessor::UpdateObjectVisibility(this);
 }

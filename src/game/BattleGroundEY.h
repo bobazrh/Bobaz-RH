@@ -298,7 +298,7 @@ class BattleGroundEY : public BattleGround
     public:
         BattleGroundEY();
         ~BattleGroundEY();
-        void Update(time_t diff);
+        void Update(uint32 diff);
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);
@@ -317,7 +317,7 @@ class BattleGroundEY : public BattleGround
         void HandleKillPlayer(Player *player, Player *killer);
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 team);
         virtual bool SetupBattleGround();
-        virtual void ResetBGSubclass();
+        virtual void Reset();
         void UpdateTeamScore(uint32 Team);
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
         virtual void FillInitialWorldStates(WorldPacket& data);

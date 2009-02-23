@@ -22,7 +22,7 @@
 DROP TABLE IF EXISTS `db_version`;
 CREATE TABLE `db_version` (
   `version` varchar(120) default NULL,
-  `required_7078_01_mangos_spell_proc_event` bit(1) default NULL
+  `required_7312_01_mangos_mangos_string` bit(1) default NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Used DB version notes';
 
 --
@@ -264,6 +264,8 @@ INSERT INTO `command` VALUES
 ('cooldown',3,'Syntax: .cooldown [#spell_id]\r\n\r\nRemove all (if spell_id not provided) or #spel_id spell cooldown from selected character or you (if no selection).'),
 ('damage',3,'Syntax: .damage $damage_amount [$school [$spellid]]\r\n\r\nApply $damage to target. If not $school and $spellid provided then this flat clean melee damage without any modifiers. If $school provided then damage modified by armor reduction (if school physical), and target absorbing modifiers and result applied as melee damage to target. If spell provided then damage modified and applied as spell damage. $spellid can be shift-link.'),
 ('debug anim',2,'Syntax: .debug anim #emoteid\r\n\r\nPlay emote #emoteid for your character.'),
+('debug arena',3,'Syntax: .debug arena\r\n\r\nToggle debug mode for arenas. In debug mode GM can start arena with single player.'),
+('debug bg',3,'Syntax: .debug bg\r\n\r\nToggle debug mode for battlegrounds. In debug mode GM can start battleground with single player.'),
 ('debug getvalue',3,'Syntax: .debug getvalue #field #isInt\r\n\r\nGet the field #field of the selected creature. If no creature is selected, get the content of your field.\r\n\r\nUse a #isInt of value 1 if the expected field content is an integer.'),
 ('debug playsound',1,'Syntax: .debug playsound #soundid\r\n\r\nPlay sound with #soundid.\r\nSound will be play only for you. Other players do not hear this.\r\nWarning: client may have more 5000 sounds...'),
 ('debug setvalue',3,'Syntax: .debug setvalue #field #value #isInt\r\n\r\nSet the field #field of the selected creature with value #value. If no creature is selected, set the content of your field.\r\n\r\nUse a #isInt of value 1 if #value is an integer.'),
@@ -299,10 +301,11 @@ INSERT INTO `command` VALUES
 ('gobject delete',2,'Syntax: .gobject delete #go_guid\r\nDelete gameobject with guid #go_guid.'),
 ('gobject move',2,'Syntax: .gobject move #goguid [#x #y #z]\r\n\r\nMove gameobject #goguid to character coordinates (or to (#x,#y,#z) coordinates if its provide).'),
 ('gobject near ',3,'Syntax: .gobject near  [#distance]\r\n\r\nOutput gameobjects at distance #distance from player. Output gameobject guids and coordinates sorted by distance from character. If #distance not provided use 10 as default value.'),
+('gobject phase',3,'Syntax: .gobject phase #guid #phasemask\r\n\r\nGameobject with DB guid #guid phasemask changed to #phasemask with related world vision update for players. Gameobject state saved to DB and persistent.'),
 ('gobject turn',2,'Syntax: .gobject turn #goguid \r\n\r\nSet for gameobject #goguid orientation same as current character orientation.'),
 ('gobject target',2,'Syntax: .gobject target [#go_id|#go_name_part]\r\n\r\nLocate and show position nearest gameobject. If #go_id or #go_name_part provide then locate and show position of nearest gameobject with gameobject template id #go_id or name included #go_name_part as part.'),
 ('goname',1,'Syntax: .goname $charactername\r\n\r\nTeleport to the given character. Either specify the character name or click on the character\'s portrait, e.g. when you are in a group.'),
-('gps',1,'Syntax: .gps\r\n\r\nDisplay the position information for a selected character or creature. Position information includes X, Y, Z, and orientation, map Id and zone Id'),
+('gps',1,'Syntax: .gps [$name|$shift-link]\r\n\r\nDisplay the position information for a selected character or creature (also if player name $name provided then for named player, or if creature/gameobject shift-link provided then pointed creature/gameobject if it loaded). Position information includes X, Y, Z, and orientation, map Id and zone Id'),
 ('groupgo',1,'Syntax: .groupgo $charactername\r\n\r\nTeleport the given character and his group to you.'),
 ('guid',2,'Syntax: .guid\r\n\r\nDisplay the GUID for the selected character.'),
 ('guild create',2,'Syntax: .guild create $GuildLeaderName $GuildName\r\n\r\nCreate a guild named $GuildName with the player $GuildLeaderName as leader.'),
@@ -322,7 +325,7 @@ INSERT INTO `command` VALUES
 ('instance savedata',3,'Syntax: .instance savedata\r\n  Save the InstanceData for the current player\'s map to the DB.'),
 ('itemmove',2,'Syntax: .itemmove #sourceslotid #destinationslotid\r\n\r\nMove an item from slots #sourceslotid to #destinationslotid in your inventory\r\n\r\nNot yet implemented'),
 ('kick',2,'Syntax: .kick [$charactername]\r\n\r\nKick the given character name from the world. If no character name is provided then the selected player (except for yourself) will be kicked.'),
-('learn',3,'Syntax: .learn #parameter\r\n\r\nSelected character learn a spell of id #parameter.'),
+('learn',3,'Syntax: .learn #spell [all]\r\n\r\nSelected character learn a spell of id #spell. If \'all\' provided then all ranks learned.'),
 ('learn all',3,'Syntax: .learn all\r\n\r\nLearn all big set different spell maybe useful for Administaror.'),
 ('learn all_crafts',2,'Syntax: .learn crafts\r\n\r\nLearn all professions and recipes.'),
 ('learn all_default',1,'Syntax: .learn all_default [$playername]\r\n\r\nLearn for selected/$playername player all default spells for his race/class and spells rewarded by completed quests.'),
@@ -369,6 +372,7 @@ INSERT INTO `command` VALUES
 ('modify money',1,'Syntax:\r\n.modify money #money\r\n.money #money\r\n\r\nAdd or remove money to the selected player. If no player is selected, modify your money.\r\n\r\n #gold can be negative to remove money.'),
 ('modify morph',2,'Syntax: .modify morph #displayid\r\n\r\nChange your current model id to #displayid.'),
 ('modify mount',1,'Syntax:\r\n.modify mount #id #speed\r\nDisplay selected player as mounted at #id creature and set speed to #speed value.'),
+('modify phase',3,'Syntax: .modify phase #phasemask\r\n\r\nSelected character phasemask changed to #phasemask with related world vision update. Change active until in game phase changed, or GM-mode enable/disable, or re-login. Character pts pasemask update to same value.'),
 ('modify rage',1,'Syntax: .modify rage #newrage\r\n\r\nModify the rage of the selected player. If no player is selected, modify your rage.'),
 ('modify rep',2,'Syntax: .modify rep #repId (#repvalue | $rankname [#delta])\r\nSets the selected players reputation with faction #repId to #repvalue or to $reprank.\r\nIf the reputation rank name is provided, the resulting reputation will be the lowest reputation for that rank plus the delta amount, if specified.\r\nYou can use \'.pinfo rep\' to list all known reputation ids, or use \'.lookup faction $name\' to locate a specific faction id.'),
 ('modify runicpower',1,'Syntax: .modify runicpower #newrunicpower\r\n\r\nModify the runic power of the selected player. If no player is selected, modify your runic power.'),
@@ -395,7 +399,9 @@ INSERT INTO `command` VALUES
 ('npc info',3,'Syntax: .npc info\r\n\r\nDisplay a list of details for the selected creature.\r\n\r\nThe list includes:\r\n- GUID, Faction, NPC flags, Entry ID, Model ID,\r\n- Level,\r\n- Health (current/maximum),\r\n\r\n- Field flags, dynamic flags, faction template, \r\n- Position information,\r\n- and the creature type, e.g. if the creature is a vendor.'),
 ('npc move',2,'Syntax: .npc move [#creature_guid]\r\n\r\nMove the targeted creature spawn point to your coordinates.'),
 ('npc name',2,'Syntax: .npc name $name\r\n\r\nChange the name of the selected creature or character to $name.\r\n\r\nCommand disabled.'),
+('npc phase',3,'Syntax: .npc phase #phasemask\r\n\r\nSelected unit or pet phasemask changed to #phasemask with related world vision update for players. In creature case state saved to DB and persistent. In pet case change active until in game phase changed for owner, owner re-login, or GM-mode enable/disable..'),
 ('npc playemote',3,'Syntax: .npc playemote #emoteid\r\n\r\nMake the selected creature emote with an emote of id #emoteid.'),
+('npc setdeathstate',2,'Syntax: .npc setdeathstate on/off\r\n\r\nSet default death state (dead/alive) for npc at spawn.'),
 ('npc setmodel',2,'Syntax: .npc setmodel #displayid\r\n\r\nChange the model id of the selected creature to #displayid.'),
 ('npc setmovetype',2,'Syntax: .npc setmovetype [#creature_guid] stay/random/way [NODEL]\r\n\r\nSet for creature pointed by #creature_guid (or selected if #creature_guid not provided) movement type and move it to respawn position (if creature alive). Any existing waypoints for creature will be removed from the database if you do not use NODEL. If the creature is dead then movement type will applied at creature respawn.\r\nMake sure you use NODEL, if you want to keep the waypoints.'),
 ('npc spawndist',2,'Syntax: .npc spawndist #dist\r\n\r\nAdjust spawndistance of selected creature to dist.'),
@@ -422,6 +428,7 @@ INSERT INTO `command` VALUES
 ('reload all_locales',3,'Syntax: .reload all_locales\r\n\r\nReload all `locales_*` tables with reload support added and that can be _safe_ reloaded.'),
 ('reload config',3,'Syntax: .reload config\r\n\r\nReload config settings (by default stored in mangosd.conf). Not all settings can be change at reload: some new setting values will be ignored until restart, some values will applied with delay or only to new objects/maps, some values will explicitly rejected to change at reload.'),
 ('repairitems',2,'Syntax: .repairitems\r\n\r\nRepair all selected player''s items.'),
+('reset achievements',3,'Syntax: .reset achievements [$playername]\r\n\r\nReset achievements data for selected or named (online or offline) character. Achievements for persistance progress data like completed quests/etc re-filled at reset. Achievements for events like kills/casts/etc will lost.'),
 ('reset all',3,'Syntax: .reset all spells\r\n\r\nSyntax: .reset all talents\r\n\r\nRequest reset spells or talents at next login each existed character.'),
 ('reset honor',3,'Syntax:\r\n.reset honor [Playername]\r\n  Reset all honor data for targeted character.'),
 ('reset level',3,'Syntax:\r\n.reset level [Playername]\r\n  Reset level to 1 including reset stats and talents.  Equipped items with greater level requirement can be lost.'),
@@ -464,7 +471,7 @@ INSERT INTO `command` VALUES
 ('unban account',3,'Syntax is: unban account $Name\r\nUnban accounts for account name pattern.'),
 ('unban character',3,'Syntax is: unban character $Name\r\nUnban accounts for character name pattern.'),
 ('unban ip',3,'Syntax is: unban ip $Ip\r\nUnban accounts for IP pattern.'),
-('unlearn',3,'Syntax: .unlearn #startspell #endspell\r\n\r\nUnlearn for selected player the range of spells between id #startspell and #endspell. If no #endspell is provided, just unlearn spell of id #startspell.'),
+('unlearn',3,'Syntax: .unlearn #spell [all]\r\n\r\nUnlearn for selected player a spell #spell.  If \'all\' provided then all ranks unlearned.'),
 ('unmute',1,'Syntax: .unmute $playerName\r\n\r\nRestore chat messaging for any character from account of character $playerName.'),
 ('waterwalk',2,'Syntax: .waterwalk on/off\r\n\r\nSet on/off waterwalk state for selected player.'),
 ('wchange',3,'Syntax: .wchange #weathertype #status\r\n\r\nSet current weather to #weathertype with an intensity of #status.\r\n\r\n#weathertype can be 1 for rain, 2 for snow, and 3 for sand. #status can be 0 for disabled, and 1 for enabled.'),
@@ -488,6 +495,7 @@ CREATE TABLE `creature` (
   `id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'Creature Identifier',
   `map` smallint(5) unsigned NOT NULL default '0' COMMENT 'Map Identifier',
   `spawnMask` tinyint(3) unsigned NOT NULL default '1',
+  `phaseMask` smallint(5) unsigned NOT NULL default '1',
   `modelid` mediumint(8) unsigned NOT NULL default '0',
   `equipment_id` mediumint(9) NOT NULL default '0',
   `position_x` float NOT NULL default '0',
@@ -819,7 +827,7 @@ CREATE TABLE `creature_template` (
 LOCK TABLES `creature_template` WRITE;
 /*!40000 ALTER TABLE `creature_template` DISABLE KEYS */;
 INSERT INTO `creature_template` VALUES
-(1,1,10045,0,10045,0,'Waypoint(Only GM can see it)','Visual',NULL,1,1,64,64,0,0,0,35,35,0,0.91,1,0,14,15,0,100,2000,2200,4096,0,8,0,0,0,0,1.76,2.42,100,8,5242886,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'',0,3,0,1,0,0,0x82,'');
+(1,1,10045,0,10045,0,'Waypoint(Only GM can see it)','Visual',NULL,1,1,64,64,0,0,0,35,35,0,0.91,1,0,14,15,0,100,2000,2200,4096,0,0,0,0,0,0,1.76,2.42,100,8,5242886,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'',0,3,0,1,0,0,0x82,'');
 /*!40000 ALTER TABLE `creature_template` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1244,6 +1252,7 @@ CREATE TABLE `gameobject` (
   `id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'Gameobject Identifier',
   `map` smallint(5) unsigned NOT NULL default '0' COMMENT 'Map Identifier',
   `spawnMask` tinyint(3) unsigned NOT NULL default '1',
+  `phaseMask` smallint(5) unsigned NOT NULL default '1',
   `position_x` float NOT NULL default '0',
   `position_y` float NOT NULL default '0',
   `position_z` float NOT NULL default '0',
@@ -1445,6 +1454,7 @@ CREATE TABLE `instance_template` (
   `levelMin` tinyint(3) unsigned NOT NULL default '0',
   `levelMax` tinyint(3) unsigned NOT NULL default '0',
   `maxPlayers` tinyint(3) unsigned NOT NULL default '0',
+  `maxPlayersHeroic` tinyint(3) unsigned NOT NULL default '0',
   `reset_delay` int(10) unsigned NOT NULL default '0',
   `startLocX` float default NULL,
   `startLocY` float default NULL,
@@ -1461,32 +1471,35 @@ CREATE TABLE `instance_template` (
 LOCK TABLES `instance_template` WRITE;
 /*!40000 ALTER TABLE `instance_template` DISABLE KEYS */;
 INSERT INTO `instance_template` VALUES
-(33,0,22,30,10,7200,NULL,NULL,NULL,NULL,''),
-(34,0,24,32,10,7200,NULL,NULL,NULL,NULL,''),
-(36,0,15,20,10,7200,NULL,NULL,NULL,NULL,''),
-(43,0,15,21,10,7200,NULL,NULL,NULL,NULL,''),
-(47,0,29,38,10,7200,NULL,NULL,NULL,NULL,''),
-(48,0,24,32,10,7200,NULL,NULL,NULL,NULL,''),
-(70,0,35,47,10,7200,NULL,NULL,NULL,NULL,''),
-(90,0,29,38,10,7200,NULL,NULL,NULL,NULL,''),
-(109,0,45,55,10,7200,NULL,NULL,NULL,NULL,''),
-(129,0,37,46,10,7200,NULL,NULL,NULL,NULL,''),
-(189,0,34,45,10,7200,NULL,NULL,NULL,NULL,''),
-(209,0,44,54,10,7200,NULL,NULL,NULL,NULL,''),
-(229,0,58,0,10,120000,78.5083,-225.044,49.839,5.1,''),
-(230,0,52,0,5,7200,NULL,NULL,NULL,NULL,''),
-(249,0,60,0,40,432000,NULL,NULL,NULL,NULL,''),
-(289,0,57,0,5,7200,NULL,NULL,NULL,NULL,''),
-(309,0,60,0,20,259200,NULL,NULL,NULL,NULL,''),
-(329,0,58,60,5,7200,NULL,NULL,NULL,NULL,''),
-(349,0,46,55,10,7200,NULL,NULL,NULL,NULL,''),
-(389,0,13,18,10,7200,NULL,NULL,NULL,NULL,''),
-(409,0,60,0,40,604800,NULL,NULL,NULL,NULL,''),
-(429,0,55,60,5,7200,NULL,NULL,NULL,NULL,''),
-(469,0,60,0,40,604800,NULL,NULL,NULL,NULL,''),
-(509,0,60,0,20,259200,NULL,NULL,NULL,NULL,''),
-(531,0,60,0,40,604800,NULL,NULL,NULL,NULL,''),
-(533,0,60,0,40,604800,NULL,NULL,NULL,NULL,'');
+(33,0,22,30,10,10,7200,NULL,NULL,NULL,NULL,''),
+(34,0,24,32,10,10,7200,NULL,NULL,NULL,NULL,''),
+(36,0,15,20,10,10,7200,NULL,NULL,NULL,NULL,''),
+(43,0,15,21,10,10,7200,NULL,NULL,NULL,NULL,''),
+(47,0,29,38,10,10,7200,NULL,NULL,NULL,NULL,''),
+(48,0,24,32,10,10,7200,NULL,NULL,NULL,NULL,''),
+(70,0,35,47,10,10,7200,NULL,NULL,NULL,NULL,''),
+(90,0,29,38,10,10,7200,NULL,NULL,NULL,NULL,''),
+(109,0,45,55,10,10,7200,NULL,NULL,NULL,NULL,''),
+(129,0,37,46,10,10,7200,NULL,NULL,NULL,NULL,''),
+(189,0,34,45,10,10,7200,NULL,NULL,NULL,NULL,''),
+(209,0,44,54,10,10,7200,NULL,NULL,NULL,NULL,''),
+(229,0,58,0,10,10,120000,78.5083,-225.044,49.839,5.1,''),
+(230,0,52,0,5,5,7200,NULL,NULL,NULL,NULL,''),
+(249,0,60,0,40,40,432000,NULL,NULL,NULL,NULL,''),
+(289,0,57,0,5,5,7200,NULL,NULL,NULL,NULL,''),
+(309,0,60,0,20,20,259200,NULL,NULL,NULL,NULL,''),
+(329,0,58,60,5,5,7200,NULL,NULL,NULL,NULL,''),
+(349,0,46,55,10,10,7200,NULL,NULL,NULL,NULL,''),
+(389,0,13,18,10,10,7200,NULL,NULL,NULL,NULL,''),
+(409,0,60,0,40,40,604800,NULL,NULL,NULL,NULL,''),
+(429,0,55,60,5,5,7200,NULL,NULL,NULL,NULL,''),
+(469,0,60,0,40,40,604800,NULL,NULL,NULL,NULL,''),
+(509,0,60,0,20,20,259200,NULL,NULL,NULL,NULL,''),
+(531,0,60,0,40,40,604800,NULL,NULL,NULL,NULL,''),
+(533,0,80,0,10,25,0,NULL,NULL,NULL,NULL,''),
+(615,0,80,0,10,25,0,NULL,NULL,NULL,NULL,''),
+(616,0,80,0,10,25,0,NULL,NULL,NULL,NULL,''),
+(624,0,80,0,10,25,0,NULL,NULL,NULL,NULL,'');
 /*!40000 ALTER TABLE `instance_template` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2140,6 +2153,33 @@ LOCK TABLES `locales_page_text` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `locales_points_of_interest`
+--
+
+DROP TABLE IF EXISTS `locales_points_of_interest`; 
+CREATE TABLE `locales_points_of_interest` (
+  `entry` mediumint(8) unsigned NOT NULL default '0',
+  `icon_name_loc1` text,
+  `icon_name_loc2` text,
+  `icon_name_loc3` text,
+  `icon_name_loc4` text,
+  `icon_name_loc5` text,
+  `icon_name_loc6` text,
+  `icon_name_loc7` text,
+  `icon_name_loc8` text,
+  PRIMARY KEY  (`entry`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `locales_points_of_interest`
+--
+
+LOCK TABLES `locales_points_of_interest` WRITE;
+/*!40000 ALTER TABLE `locales_points_of_interest` DISABLE KEYS */;
+/*!40000 ALTER TABLE `locales_points_of_interest` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `locales_quest`
 --
 
@@ -2323,7 +2363,7 @@ INSERT INTO `mangos_string` VALUES
 (57,'Using World DB: %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (58,'Using script library: %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (100,'Global notify: ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(101,'Map: %u (%s) Zone: %u (%s) Area: %u (%s)\nX: %f Y: %f Z: %f Orientation: %f\ngrid[%u,%u]cell[%u,%u] InstanceID: %u\n ZoneX: %f ZoneY: %f\nGroundZ: %f FloorZ: %f Have height data (Map: %u VMap: %u)',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(101,'Map: %u (%s) Zone: %u (%s) Area: %u (%s) Phase: %u\nX: %f Y: %f Z: %f Orientation: %f\ngrid[%u,%u]cell[%u,%u] InstanceID: %u\n ZoneX: %f ZoneY: %f\nGroundZ: %f FloorZ: %f Have height data (Map: %u VMap: %u)',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (102,'%s is already being teleported.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (103,'You can summon a player to your instance only if he is in your party with you as leader.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (104,'You cannot go to the player\'s instance because you are in a party now.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -2661,7 +2701,7 @@ INSERT INTO `mangos_string` VALUES
 (518,'%d - |cffffffff|Hitemset:%d|h[%s %s]|h|r ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (519,'|cffffffff|Htele:%s|h[%s]|h|r ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (520,'%d - |cffffffff|Hspell:%d|h[%s]|h|r ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(521,'%d - |cffffffff|Hskill:%d|h[%s %s]|h|r %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(521,'%d - |cffffffff|Hskill:%d|h[%s %s]|h|r %s %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (522,'Game Object (GUID: %u) not found',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (523,'>> Game Object %s (GUID: %u) at %f %f %f. Orientation %f.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (524,'Selected object:\n|cffffffff|Hitemset:%d|h[%s]|h|r\nGUID: %u ID: %u\nX: %f Y: %f Z: %f MapId: %u\nOrientation: %f',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -2682,7 +2722,7 @@ INSERT INTO `mangos_string` VALUES
 (539,'Player selected NPC\nGUID: %u.\nFaction: %u.\nnpcFlags: %u.\nEntry: %u.\nDisplayID: %u (Native: %u).',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (540,'Level: %u.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (541,'Health (base): %u. (max): %u. (current): %u.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(542,'Field Flags: %u.\nDynamic Flags: %u.\nFaction Template: %u.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(542,'Unit Flags: %u.\nDynamic Flags: %u.\nFaction Template: %u.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (543,'Loot: %u Pickpocket: %u Skinning: %u',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (544,'Position: %f %f %f.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (545,'*** Is a vendor!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -2811,6 +2851,16 @@ INSERT INTO `mangos_string` VALUES
 (734,'You cannot summon players to a battleground or arena map.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (735,'You must be in GM mode to teleport to a player in a battleground.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (736,'You cannot teleport to a battleground from another battleground. Please leave the current battleground first.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(737,'Arenas are set to 1v1 for debugging. So, don\'t join as group.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(738,'Arenas are set to normal playercount.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(739,'Battlegrounds are set to 1v0 for debugging.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(740,'Battlegrounds are set to normal playercount.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(741,'Flushing Arena points based on team ratings, this may take a few minutes. Please stand by...',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(742,'Distributing arena points to players...',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(743,'Finished setting arena points for online players.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(744,'Modifying played count, arena points etc. for loaded arena teams, sending updated stats to online players...',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(745,'Modification done.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(746,'Done flushing Arena points.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (801,'You do not have enough gold',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (802,'You do not have enough free slots',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (803,'Your partner does not have enough free bag slots',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -2820,6 +2870,7 @@ INSERT INTO `mangos_string` VALUES
 (807,'Please provide character name',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (808,'Player %s not found or offline',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (809,'Account for character %s not found',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(810,'|Hplayer:$N|h[$N]|h has earned the achievement $a!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (1000,'Exiting daemon...',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (1001,'Account deleted: %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (1002,'Account %s NOT deleted (probably sql file format was updated)',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -2841,7 +2892,7 @@ INSERT INTO `mangos_string` VALUES
 (1106,'%d - %s %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (1107,'%d - %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (1108,'%d - %s %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(1109,'%d - %s %s %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(1109,'%d - %s %s %s %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (1110,'%d - %s X:%f Y:%f Z:%f MapId:%d',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (1111,'%d - %s X:%f Y:%f Z:%f MapId:%d',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (1112,'Failed to open file: %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -2853,7 +2904,8 @@ INSERT INTO `mangos_string` VALUES
 (1118,'%d - guild: %s (guid: %u) %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (1119,'You must use male or female as gender.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (1120,'You change gender of %s to %s.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(1121,'Your gender changed to %s by %s.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+(1121,'Your gender changed to %s by %s.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(1122,'(%u/%u +perm %u +temp %u)',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `mangos_string` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -9291,6 +9343,105 @@ INSERT INTO `player_levelstats` VALUES
 /*!40000 ALTER TABLE `player_levelstats` ENABLE KEYS */;
 UNLOCK TABLES;
 
+-- ----------------------------
+-- Table structure for player_xp_for_level
+-- ----------------------------
+DROP TABLE IF EXISTS `player_xp_for_level`;
+CREATE TABLE `player_xp_for_level` (
+  `lvl` int(3) unsigned NOT NULL,
+  `xp_for_next_level` int(10) unsigned NOT NULL,
+  PRIMARY KEY  (`lvl`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `player_xp_for_level`
+--
+
+LOCK TABLES `player_xp_for_level` WRITE;
+/*!40000 ALTER TABLE `player_xp_for_level` DISABLE KEYS */;
+INSERT INTO `player_xp_for_level` VALUES
+('1', '400'),
+('2', '900'),
+('3', '1400'),
+('4', '2100'),
+('5', '2800'),
+('6', '3600'),
+('7', '4500'),
+('8', '5400'),
+('9', '6500'),
+('10', '7600'),
+('11', '8700'),
+('12', '9800'),
+('13', '11000'),
+('14', '12300'),
+('15', '13600'),
+('16', '15000'),
+('17', '16400'),
+('18', '17800'),
+('19', '19300'),
+('20', '20800'),
+('21', '22400'),
+('22', '24000'),
+('23', '25500'),
+('24', '27200'),
+('25', '28900'),
+('26', '30500'),
+('27', '32200'),
+('28', '33900'),
+('29', '36300'),
+('30', '38800'),
+('31', '41600'),
+('32', '44600'),
+('33', '48000'),
+('34', '51400'),
+('35', '55000'),
+('36', '58700'),
+('37', '62400'),
+('38', '66200'),
+('39', '70200'),
+('40', '74300'),
+('41', '78500'),
+('42', '82800'),
+('43', '87100'),
+('44', '91600'),
+('45', '96300'),
+('46', '101000'),
+('47', '105800'),
+('48', '110700'),
+('49', '115700'),
+('50', '120900'),
+('51', '126100'),
+('52', '131500'),
+('53', '137000'),
+('54', '142500'),
+('55', '148200'),
+('56', '154000'),
+('57', '159900'),
+('58', '165800'),
+('59', '172000'),
+('60', '290000'),
+('61', '317000'),
+('62', '349000'),
+('63', '386000'),
+('64', '428000'),
+('65', '475000'),
+('66', '527000'),
+('67', '585000'),
+('68', '648000'),
+('69', '717000'),
+('70', '1523800'),
+('71', '1539600'),
+('72', '1555700'),
+('73', '1571800'),
+('74', '1587900'),
+('75', '1604200'),
+('76', '1620700'),
+('77', '1637400'),
+('78', '1653900'),
+('79', '1670800');
+/*!40000 ALTER TABLE `player_xp_for_level` ENABLE KEYS */;
+UNLOCK TABLES;
+
 --
 -- Table structure for table `playercreateinfo`
 --
@@ -11665,6 +11816,7 @@ INSERT INTO `playercreateinfo_spell` VALUES
 (7,9,22027,'Remove Insignia'),
 (7,9,22810,'Opening - No Text'),
 (7,9,45927,'Summon Friend'),
+(7,9,58284,'Chaos Bolt Passive'),
 (7,9,61437,'Opening'),
 (8,1,78,'Heroic Strike'),
 (8,1,81,'Dodge'),
@@ -12279,6 +12431,7 @@ INSERT INTO `playercreateinfo_spell` VALUES
 (10,9,28730,'Arcane Torrent'),
 (10,9,28734,'Mana Tap'),
 (10,9,28877,'Arcane Affinity'),
+(10,9,58284,'Chaos Bolt Passive'),
 (11,1,78,'Heroic Strike'),
 (11,1,81,'Dodge'),
 (11,1,107,'Block'),
@@ -12596,6 +12749,136 @@ INSERT INTO `playercreateinfo_spell` VALUES
 UNLOCK TABLES;
 
 --
+-- Table structure for table `points_of_interest`
+--
+
+DROP TABLE IF EXISTS `points_of_interest`; 
+CREATE TABLE `points_of_interest` (
+  `entry` mediumint(8) unsigned NOT NULL default '0',
+  `x` float NOT NULL default '0',
+  `y` float NOT NULL default '0',
+  `icon` mediumint(8) unsigned NOT NULL default '0',
+  `flags` mediumint(8) unsigned NOT NULL default '0',
+  `data` mediumint(8) unsigned NOT NULL default '0',
+  `icon_name` text NOT NULL,
+  PRIMARY KEY  (`entry`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `points_of_interest`
+--
+
+LOCK TABLES `points_of_interest` WRITE;
+/*!40000 ALTER TABLE `points_of_interest` DISABLE KEYS */;
+/*!40000 ALTER TABLE `points_of_interest` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+--
+-- Table structure for table `pool_creature`
+--
+
+DROP TABLE IF EXISTS `pool_creature`;
+CREATE TABLE `pool_creature` (
+  `guid` int(10) unsigned NOT NULL default '0',
+  `pool_entry` mediumint(8) unsigned NOT NULL default '0',
+  `chance` float unsigned NOT NULL default '0',
+  PRIMARY KEY  (`pool_entry`,`guid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+
+--
+-- Dumping data for table `pool_creature`
+--
+
+LOCK TABLES `pool_creature` WRITE;
+/*!40000 ALTER TABLE `pool_creature` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pool_creature` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pool_gameobject`
+--
+
+DROP TABLE IF EXISTS `pool_gameobject`;
+CREATE TABLE `pool_gameobject` (
+  `guid` int(10) unsigned NOT NULL default '0',
+  `pool_entry` mediumint(8) unsigned NOT NULL default '0',
+  `chance` float unsigned NOT NULL default '0',
+  PRIMARY KEY  (`guid`,`pool_entry`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `pool_gameobject`
+--
+
+LOCK TABLES `pool_gameobject` WRITE;
+/*!40000 ALTER TABLE `pool_gameobject` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pool_gameobject` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pool_pool`
+--
+
+DROP TABLE IF EXISTS `pool_pool`;
+CREATE TABLE `pool_pool` (
+  `pool_id` mediumint(8) unsigned NOT NULL default '0',
+  `mother_pool` mediumint(8) unsigned NOT NULL default '0',
+  `chance` float NOT NULL default '0',
+  PRIMARY KEY  (`pool_id`,`mother_pool`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `pool_pool`
+--
+
+LOCK TABLES `pool_pool` WRITE;
+/*!40000 ALTER TABLE `pool_pool` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pool_pool` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pool_template`
+--
+
+DROP TABLE IF EXISTS `pool_template`;
+CREATE TABLE `pool_template` (
+  `entry` mediumint(8) unsigned NOT NULL default '0' COMMENT 'Pool entry',
+  `max_limit` int(10) unsigned NOT NULL default '0' COMMENT 'Max number of objects (0) is no limit',
+  PRIMARY KEY  (`entry`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `pool_template`
+--
+
+LOCK TABLES `pool_template` WRITE;
+/*!40000 ALTER TABLE `pool_template` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pool_template` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `game_event_pool`
+--
+
+DROP TABLE IF EXISTS `game_event_pool`;
+CREATE TABLE `game_event_pool` (
+  `pool_entry` mediumint(8) unsigned NOT NULL default '0' COMMENT 'Id of the pool',
+  `event` smallint(6) NOT NULL default '0' COMMENT 'Put negatives values to remove during event',
+  PRIMARY KEY  (`pool_entry`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `game_event_pool`
+--
+
+LOCK TABLES `game_event_pool` WRITE;
+/*!40000 ALTER TABLE `game_event_pool` DISABLE KEYS */;
+/*!40000 ALTER TABLE `game_event_pool` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `prospecting_loot_template`
 --
 
@@ -12899,8 +13182,9 @@ DROP TABLE IF EXISTS `skill_discovery_template`;
 CREATE TABLE `skill_discovery_template` (
   `spellId` mediumint(8) unsigned NOT NULL default '0' COMMENT 'SpellId of the discoverable spell',
   `reqSpell` mediumint(8) unsigned NOT NULL default '0' COMMENT 'spell requirement',
+  `reqSkillValue` smallint(5) unsigned NOT NULL default '0' COMMENT 'skill points requirement',
   `chance` float NOT NULL default '0' COMMENT 'chance to discover',
-  PRIMARY KEY  (`spellId`)
+  PRIMARY KEY (`spellId`,`reqSpell`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Skill Discovery System';
 
 --
@@ -13855,12 +14139,6 @@ INSERT INTO spell_chain VALUES
 (34120,56641,56641,2,0),
 (49051,34120,56641,3,0),
 (49052,49051,56641,4,0),
-/*ViperSting*/
-(3034,0,3034,1,0),
-(14279,3034,3034,2,0),
-(14280,14279,3034,3,0),
-(27018,14280,3034,4,0),
-(49008,27018,3034,5,0),
 /*Volley*/
 (1510,0,1510,1,0),
 (14294,1510,1510,2,0),
@@ -14730,7 +15008,7 @@ INSERT INTO spell_chain VALUES
 (27216,25311,172,8,0),
 (47812,27216,172,9,0),
 (47813,47812,172,10,0),
-/*CurseofAgony*/
+/*Curse of Agony*/
 (980,0,980,1,0),
 (1014,980,980,2,0),
 (6217,1014,980,3,0),
@@ -14740,27 +15018,27 @@ INSERT INTO spell_chain VALUES
 (27218,11713,980,7,0),
 (47863,27218,980,8,0),
 (47864,47863,980,9,0),
-/*CurseofDoom*/
+/*Curse of Doom*/
 (603,0,603,1,0),
 (30910,603,603,2,0),
 (47867,30910,603,3,0),
-/*CurseofRecklessness*/
+/*Curse of Recklessness*/
 (704,0,704,1,0),
 (7658,704,704,2,0),
 (7659,7658,704,3,0),
 (11717,7659,704,4,0),
 (27226,11717,704,5,0),
 (57595,27226,704,6,0),
-/*CurseoftheElements*/
+/*Curse of the Elements*/
 (1490,0,1490,1,0),
 (11721,1490,1490,2,0),
 (11722,11721,1490,3,0),
 (27228,11722,1490,4,0),
 (47865,27228,1490,5,0),
-/*CurseofTongues*/
+/*Curse of Tongues*/
 (1714,0,1714,1,0),
 (11719,1714,1714,2,0),
-/*CurseofWeakness*/
+/*Curse of Weakness*/
 (702,0,702,1,0),
 (1108,702,702,2,0),
 (6205,1108,702,3,0),
@@ -14770,14 +15048,20 @@ INSERT INTO spell_chain VALUES
 (27224,11708,702,7,0),
 (30909,27224,702,8,0),
 (50511,30909,702,9,0),
-/*DeathCoil*/
+/*Dark Pact*/
+(18220,0,    18220,1,0),
+(18937,18220,18220,2,0),
+(18938,18937,18220,3,0),
+(27265,18938,18220,4,0),
+(59092,27265,18220,5,0),
+/*Death Coil*/
 (6789,0,6789,1,0),
 (17925,6789,6789,2,0),
 (17926,17925,6789,3,0),
 (27223,17926,6789,4,0),
 (47859,27223,6789,5,0),
 (47860,47859,6789,6,0),
-/*DrainLife*/
+/*Drain Life*/
 (689,0,689,1,0),
 (699,689,689,2,0),
 (709,699,689,3,0),
@@ -14787,14 +15071,6 @@ INSERT INTO spell_chain VALUES
 (27219,11700,689,7,0),
 (27220,27219,689,8,0),
 (47857,27220,689,9,0),
-/*DrainMana*/
-(5138,0,5138,1,0),
-(6226,5138,5138,2,0),
-(11703,6226,5138,3,0),
-(11704,11703,5138,4,0),
-(27221,11704,5138,5,0),
-(30908,27221,5138,6,0),
-(47858,30908,5138,7,0),
 /*DrainSoul*/
 (1120,0,1120,1,0),
 (8288,1120,1120,2,0),
@@ -15593,15 +15869,6 @@ INSERT INTO spell_chain VALUES
 (25431,10952,588,7,0),
 (48040,25431,588,8,0),
 (48168,48040,588,9,0),
-/*ManaBurn*/
-(8129,0,8129,1,0),
-(8131,8129,8129,2,0),
-(10874,8131,8129,3,0),
-(10875,10874,8129,4,0),
-(10876,10875,8129,5,0),
-(25379,10876,8129,6,0),
-(25380,25379,8129,7,0),
-(48128,25380,8129,8,0),
 /*Penance*/
 (47540,0,47540,1,0),
 (53005,47540,47540,2,0),
@@ -15838,11 +16105,11 @@ INSERT INTO spell_chain VALUES
 (49937,49936,43265,3,0),
 (49938,49937,43265,4,0),
 /*DeathCoil*/
-(52375,0,52375,1,0),
-(49892,52375,52375,2,0),
-(49893,49892,52375,3,0),
-(49894,49893,52375,4,0),
-(49895,49894,52375,5,0),
+(47541,0,47541,1,0),
+(49892,47541,47541,2,0),
+(49893,49892,47541,3,0),
+(49894,49893,47541,4,0),
+(49895,49894,47541,5,0),
 /*DeathStrike*/
 (49998,0,49998,1,0),
 (49999,49998,49998,2,0),
@@ -15945,7 +16212,22 @@ INSERT INTO spell_chain VALUES
 (61195,61194,61193,3,0),
 (61196,61195,61193,4,0),
 (61197,61196,61193,5,0),
-(61198,61197,61193,6,0);
+(61198,61197,61193,6,0),
+
+/*Tranquility*/
+(44203,    0,44203,1,0),
+(44205,44203,44203,2,0),
+(44206,44205,44203,3,0),
+(44207,44206,44203,4,0),
+(44208,44207,44203,5,0),
+(48444,44208,44203,6,0),
+(48445,48444,44203,7,0),
+/*Hurricane*/
+(42231,    0,42231,1,0),
+(42232,42231,42231,2,0),
+(42233,42232,42231,3,0),
+(42230,42233,42231,4,0),
+(48466,42230,42231,5,0);
 /*!40000 ALTER TABLE `spell_chain` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -16125,6 +16407,33 @@ INSERT INTO `spell_learn_spell` VALUES
 UNLOCK TABLES;
 
 --
+-- Table structure for table `spell_loot_template`
+--
+
+DROP TABLE IF EXISTS `spell_loot_template`;
+CREATE TABLE `spell_loot_template` (
+  `entry` mediumint(8) unsigned NOT NULL default '0',
+  `item` mediumint(8) unsigned NOT NULL default '0',
+  `ChanceOrQuestChance` float NOT NULL default '100',
+  `groupid` tinyint(3) unsigned NOT NULL default '0',
+  `mincountOrRef` mediumint(9) NOT NULL default '1',
+  `maxcount` tinyint(3) unsigned NOT NULL default '1',
+  `lootcondition` tinyint(3) unsigned NOT NULL default '0',
+  `condition_value1` mediumint(8) unsigned NOT NULL default '0',
+  `condition_value2` mediumint(8) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`entry`,`item`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Loot System';
+
+--
+-- Dumping data for table `spell_loot_template`
+--
+
+LOCK TABLES `spell_loot_template` WRITE;
+/*!40000 ALTER TABLE `spell_loot_template` DISABLE KEYS */;
+/*!40000 ALTER TABLE `spell_loot_template` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `spell_pet_auras`
 --
 
@@ -16287,6 +16596,7 @@ INSERT INTO `spell_proc_event` VALUES
 (13046, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (13047, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (13048, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
+(13163, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000010, 0.000000, 0.000000,  0),
 (13165, 0x00000000,  9, 0x00000001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (13754, 0x00000000,  8, 0x00000010, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (13867, 0x00000000,  8, 0x00000010, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
@@ -16324,7 +16634,7 @@ INSERT INTO `spell_proc_event` VALUES
 (15362, 0x00000000,  6, 0x10001E00, 0x00010004, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (15363, 0x00000000,  6, 0x10001E00, 0x00010004, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (15600, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 1.000000, 0.000000,  0),
-(16164, 0x00000000, 11, 0x90100003, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
+(16164, 0x00000000, 11, 0x901000C3, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (16176, 0x00000000, 11, 0x000001C0, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (16180, 0x00000000, 11, 0x000000C0, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (16196, 0x00000000, 11, 0x000000C0, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
@@ -16631,9 +16941,9 @@ INSERT INTO `spell_proc_event` VALUES
 (35080, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 1.000000, 0.000000, 60),
 (35083, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000, 60),
 (35086, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000, 60),
-(35100, 0x00000000,  9, 0x00000001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
-(35102, 0x00000000,  9, 0x00000001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
-(35103, 0x00000000,  9, 0x00000001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(35100, 0x00000000,  9, 0x00003001, 0x00000000, 0x00000000, 0x00010140, 0x00000000, 0.000000, 0.000000,  0),
+(35102, 0x00000000,  9, 0x00003001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(35103, 0x00000000,  9, 0x00003001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (35121, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (36096, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000800, 0.000000, 0.000000,  0),
 (36111, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
@@ -16711,6 +17021,7 @@ INSERT INTO `spell_proc_event` VALUES
 (42136, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000, 90),
 (42368, 0x00000000, 10, 0x40000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (42370, 0x00000000, 11, 0x00000040, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(42770, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
 (43019, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000400, 0.000000, 0.000000,  0),
 (43020, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000400, 0.000000, 0.000000,  0),
 (43338, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
@@ -16727,7 +17038,10 @@ INSERT INTO `spell_proc_event` VALUES
 (44394, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000400, 0.000000, 0.000000,  0),
 (44395, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000400, 0.000000, 0.000000,  0),
 (44396, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000400, 0.000000, 0.000000,  0),
+(44401, 0x00000000,  3, 0x00200000, 0x00000000, 0x00000000, 0x00000000, 0x00000FFF, 0.000000, 0.000000,  0),
 (44404, 0x00000000,  3, 0x20000021, 0x00009000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(44442, 0x00000000,  3, 0x00800000, 0x00000040, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  1),
+(44443, 0x00000000,  3, 0x00800000, 0x00000040, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  1),
 (44445, 0x00000000,  3, 0x00000013, 0x00001000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (44446, 0x00000000,  3, 0x00000013, 0x00001000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (44448, 0x00000000,  3, 0x00000013, 0x00001000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
@@ -16791,11 +17105,11 @@ INSERT INTO `spell_proc_event` VALUES
 (47515, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (47516, 0x00000000,  6, 0x00001800, 0x00010000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (47517, 0x00000000,  6, 0x00001800, 0x00010000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
-(47535, 0x00000000,  6, 0x00001800, 0x00800000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
-(47536, 0x00000000,  6, 0x00001800, 0x00800000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
-(47537, 0x00000000,  6, 0x00001800, 0x00800000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
-(47538, 0x00000000,  6, 0x00001800, 0x00800000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
-(47539, 0x00000000,  6, 0x00001800, 0x00800000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
+(47535, 0x00000000,  6, 0x00001800, 0x00800000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(47536, 0x00000000,  6, 0x00001800, 0x00800000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(47537, 0x00000000,  6, 0x00001800, 0x00800000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(47538, 0x00000000,  6, 0x00001800, 0x00800000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(47539, 0x00000000,  6, 0x00001800, 0x00800000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (47549, 0x00000000,  6, 0x00000000, 0x00020000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (47551, 0x00000000,  6, 0x00000000, 0x00020000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (47552, 0x00000000,  6, 0x00000000, 0x00020000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
@@ -16803,9 +17117,9 @@ INSERT INTO `spell_proc_event` VALUES
 (47556, 0x00000000,  6, 0x00001800, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (47557, 0x00000000,  6, 0x00001800, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (47572, 0x00000000,  6, 0x00010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
-(47580, 0x00000000,  6, 0x00000000, 0x00000000, 0x00000040, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
-(47581, 0x00000000,  6, 0x00000000, 0x00000000, 0x00000040, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
-(47582, 0x00000000,  6, 0x00000000, 0x00000000, 0x00000040, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(47580, 0x00000000,  6, 0x00000000, 0x00000000, 0x00000040, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
+(47581, 0x00000000,  6, 0x00000000, 0x00000000, 0x00000040, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
+(47582, 0x00000000,  6, 0x00000000, 0x00000000, 0x00000040, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
 (48110, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x000A02A8, 0x00000000, 0.000000, 0.000000,  0),
 (48111, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x000A02A8, 0x00000000, 0.000000, 0.000000,  0),
 (48112, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x000A02A8, 0x00000000, 0.000000, 0.000000,  0),
@@ -16861,6 +17175,7 @@ INSERT INTO `spell_proc_event` VALUES
 (51470, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (51474, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
 (51478, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
+(51479, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
 (51556, 0x00000000, 11, 0x000000C0, 0x00000000, 0x00000010, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (51557, 0x00000000, 11, 0x000000C0, 0x00000000, 0x00000010, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (51558, 0x00000000, 11, 0x000000C0, 0x00000000, 0x00000010, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
@@ -16890,6 +17205,12 @@ INSERT INTO `spell_proc_event` VALUES
 (51698, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  1),
 (51700, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  1),
 (51701, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  1),
+(51940, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 20.000000,  0),
+(51989, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 20.000000,  0),
+(52004, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 20.000000,  0),
+(52005, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 20.000000,  0),
+(52007, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 20.000000,  0),
+(52008, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 20.000000,  0),
 (52020, 0x00000000,  7, 0x00008000, 0x00100000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (52127, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  3),
 (52129, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  3),
@@ -16913,8 +17234,8 @@ INSERT INTO `spell_proc_event` VALUES
 (53221, 0x00000000,  9, 0x00000000, 0x00000001, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (53222, 0x00000000,  9, 0x00000000, 0x00000001, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (53224, 0x00000000,  9, 0x00000000, 0x00000001, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
-(53228, 0x00000000,  9, 0x00000020, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
-(53232, 0x00000000,  9, 0x00000020, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(53228, 0x00000000,  9, 0x00000020, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(53232, 0x00000000,  9, 0x00000020, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (53256, 0x00000000,  9, 0x00000800, 0x00800001, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (53259, 0x00000000,  9, 0x00000800, 0x00800001, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (53260, 0x00000000,  9, 0x00000800, 0x00800001, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
@@ -16930,6 +17251,9 @@ INSERT INTO `spell_proc_event` VALUES
 (53384, 0x00000000, 10, 0x00800000, 0x00020000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (53486, 0x00000000, 10, 0x00800000, 0x00028000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (53488, 0x00000000, 10, 0x00800000, 0x00028000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
+(53501, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
+(53502, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
+(53503, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (53551, 0x00000000, 10, 0x00001000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (53552, 0x00000000, 10, 0x00001000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (53553, 0x00000000, 10, 0x00001000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
@@ -16967,6 +17291,9 @@ INSERT INTO `spell_proc_event` VALUES
 (55680, 0x00000000,  6, 0x00000200, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (55689, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (56218, 0x00000000,  5, 0x00000002, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(56333, 0x00000000,  9, 0x00000004, 0x00000000, 0x00000200, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(56336, 0x00000000,  9, 0x00000004, 0x00000000, 0x00000200, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(56337, 0x00000000,  9, 0x00000004, 0x00000000, 0x00000200, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (56342, 0x00000000,  9, 0x00004000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (56343, 0x00000000,  9, 0x00004000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (56344, 0x00000000,  9, 0x00004000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
@@ -17013,7 +17340,6 @@ INSERT INTO `spell_proc_event` VALUES
 (60132, 0x00000000, 15, 0x00000000, 0x08020000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (60170, 0x00000000,  5, 0x00000006, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (60172, 0x00000000,  5, 0x00040000, 0x00000000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
-(60200, 0x00000000, 15, 0x00001000, 0x00000000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
 (60493, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000, 45),
 (60503, 0x00000000,  4, 0x00000004, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (60537, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
@@ -17034,8 +17360,257 @@ INSERT INTO `spell_proc_event` VALUES
 (60818, 0x00000000, 10, 0x00000000, 0x00000200, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (60826, 0x00000000, 15, 0x01400000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (61188, 0x00000000,  5, 0x00000004, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
-(61324, 0x00000000, 10, 0x00000000, 0x00020000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0);
+(61257, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x000202A8, 0x00010000, 0.000000, 0.000000,  0),
+(61324, 0x00000000, 10, 0x00000000, 0x00020000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(61846, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000010, 0.000000, 0.000000,  0),
+(61847, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000010, 0.000000, 0.000000,  0);
 /*!40000 ALTER TABLE `spell_proc_event` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for spell_bonus_data
+--
+DROP TABLE IF EXISTS `spell_bonus_data`;
+CREATE TABLE `spell_bonus_data` (
+  `entry` smallint(5) unsigned NOT NULL,
+  `direct_bonus` float NOT NULL default '0',
+  `dot_bonus` float NOT NULL default '0',
+  `ap_bonus` float NOT NULL default '0',
+  `comments` varchar(255) default NULL,
+  PRIMARY KEY  (`entry`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+LOCK TABLES `spell_bonus_data` WRITE;
+/*!40000 ALTER TABLE `spell_bonus_data` DISABLE KEYS */;
+INSERT INTO `spell_bonus_data` VALUES
+('5185', '1.6104', '0', '0', 'Druid - Healing Touch'),
+('33763', '0', '0.09518', '0', 'Druid - Lifebloom'),
+('774', '0', '0.37604', '0', 'Druid - Rejuvenation'),
+('8936', '0.539', '0.188', '0', 'Druid - Regrowth'),
+('18562', '0', '0', '0', 'Druid - Swiftmend'),
+('44203', '0.538', '0', '0', 'Druid - Tranquility Triggered'),
+('48438', '0', '0.11505', '0', 'Druid - Wild Growth'),
+('50464', '0.6611', '0', '0', 'Druid - Nourish'),
+('339', '0', '0.1', '0', 'Druid - Entangling Roots'),
+('42231', '0.12898', '0', '0', 'Druid - Hurricane Triggered'),
+('5570', '0', '0.127', '0', 'Druid - Insect Swarm'),
+('8921', '0.1515', '0.13', '0', 'Druid - Moonfire'),
+('2912', '1', '0', '0', 'Druid - Starfire'),
+('5176', '0.5714', '0', '0', 'Druid - Wrath'),
+('30451', '0.7143', '0', '0', 'Mage - Arcane Blast'),
+('1449', '0.2128', '0', '0', 'Mage - Arcane Explosion'),
+('7268', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 1'),
+('7269', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 2'),
+('7270', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 3'),
+('8419', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 4'),
+('8418', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 5'),
+('10273', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 6'),
+('10274', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 7'),
+('25346', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 8'),
+('27076', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 9'),
+('38700', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 10'),
+('38703', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 11'),
+('42844', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 12'),
+('42845', '0.2857', '0', '0', 'Mage - Arcane Missiles Triggered Spell Rank 13'),
+('1463', '0.8053', '0', '0', 'Mage - Mana Shield'),
+('44425', '0.8571', '0', '0', 'Mage - Arcane Barrage'),
+('11113', '0.1357', '0', '0', 'Mage - Blast Wave Rank'),
+('31661', '0.1357', '0', '0', 'Mage - Dragons Breath'),
+('2136', '0.4286', '0', '0', 'Mage - Fire Blast'),
+('133', '1', '0', '0', 'Mage - Fire Ball'),
+('2120', '0.2357', '0.122', '0', 'Mage - Flamestrike'),
+('11366', '1.15', '0.05', '0', 'Mage - Pyroblast'),
+('2948', '0.4286', '0', '0', 'Mage - Scorch'),
+('44614', '0.8571', '0', '0', 'Mage - Frostfire Bolt'),
+('44457', '0.4', '0.2', '0', 'Mage - Living Bomb'),
+('42208', '0.0952', '0', '0', 'Mage - Blizzard Triggered Spell Rank 1'),
+('42209', '0.0952', '0', '0', 'Mage - Blizzard Triggered Spell Rank 2'),
+('42210', '0.0952', '0', '0', 'Mage - Blizzard Triggered Spell Rank 3'),
+('42211', '0.0952', '0', '0', 'Mage - Blizzard Triggered Spell Rank 4'),
+('42212', '0.0952', '0', '0', 'Mage - Blizzard Triggered Spell Rank 5'),
+('42213', '0.0952', '0', '0', 'Mage - Blizzard Triggered Spell Rank 6'),
+('42198', '0.0952', '0', '0', 'Mage - Blizzard Triggered Spell Rank 7'),
+('42937', '0.0952', '0', '0', 'Mage - Blizzard Triggered Spell Rank 8'),
+('42938', '0.0952', '0', '0', 'Mage - Blizzard Triggered Spell Rank 9'),
+('120', '0.1357', '0', '0', 'Mage - Cone of Cold'),
+('122', '0.193', '0', '0', 'Mage - Frost Nova'),
+('116', '0.8143', '0', '0', 'Mage - Frost Bolt'),
+('11426', '0.8053', '0', '0', 'Mage - Ice Barrier'),
+('30455', '0.1429', '0', '0', 'Mage - Ice Lance'),
+('34913','0', '0', '0', 'Mage - Molten Armor Triggered Rank 1'),
+('43043','0', '0', '0', 'Mage - Molten Armor Triggered Rank 2'),
+('43044','0', '0', '0', 'Mage - Molten Armor Triggered Rank 3'),
+('19750','0.4286', '0', '0', 'Paladin - Flash of Light'),
+('635', '0.7143', '0', '0', 'Paladin - Holy Light'),
+('25912', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Hurt Rank 1'),
+('25911', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Hurt Rank 2'),
+('25902', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Hurt Rank 3'),
+('27176', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Hurt Rank 4'),
+('33073', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Hurt Rank 5'),
+('48822', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Hurt Rank 6'),
+('48823', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Hurt Rank 7'),
+('25914', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Heal Rank 1'),
+('25913', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Heal Rank 2'),
+('25903', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Heal Rank 3'),
+('27175', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Heal Rank 4'),
+('33074', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Heal Rank 5'),
+('48820', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Heal Rank 6'),
+('48821', '0.4286', '0', '0', 'Paladin - Holy Shock Triggered Heal Rank 7'),
+('31935', '0.07', '0', '0.07', 'Paladin - Avengers Shiled'),
+('26573', '0', '0.04', '0.04', 'Paladin - Consecration'),
+('879', '0.15', '0', '0.15', 'Paladin - Exorcism'),
+('24275', '0.15', '0', '0.15', 'Paladin - Hammer of Wrath'),
+('20925', '0.09', '0', '0.056', 'Paladin - Holy Shield'),
+('2812', '0.07', '0', '0.07', 'Paladin - Holy Wrath'),
+('31893', '0.25', '0', '0.16', 'Paladin - Seal of Blood Enemy Proc'),
+('32221', '0.25', '0', '0.16', 'Paladin - Seal of Blood Self Proc'),
+('20424', '0.25', '0', '0.16', 'Paladin - Seal of Command Proc'),
+('379', '0', '0', '0', 'Shaman - Earth Shield Triggered'),
+('20167', '0.25', '0', '0.16', 'Paladin - Seal of Light Proc'),
+('53719', '0.25', '0', '0.16', 'Paladin - Seal of The Martyr Enemy Proc'),
+('53718', '0.25', '0', '0.16', 'Paladin - Seal of The Martyr Self Proc'),
+('25742', '0.07', '0', '0.039', 'Paladin - Seal of Righteousness Dummy Proc'),
+('53595', '0', '0', '0','Paladin - Hammer of the Righteous'),
+('31803', '0', '0.013', '0.15', 'Paladin - Holy Vengeance'),
+('52042', '0.045', '0', '0', 'Shaman - Healing Stream Totem Triggered Heal'),
+('32546', '0.8068', '0', '0', 'Priest - Binding Heal'),
+('34861', '0.402', '0', '0', 'Priest - Circle of Healing'),
+('19236', '0.8068', '0', '0', 'Priest - Desperate Prayer'),
+('2061', '0.8068', '0', '0', 'Priest - Flash Heal'),
+('2060', '1.6135', '0', '0', 'Priest - Greater Heal'),
+('23455', '0.3035', '0', '0', 'Priest - Holy Nova Heal Rank 1'),
+('23458', '0.3035', '0', '0', 'Priest - Holy Nova Heal Rank 2'),
+('23459', '0.3035', '0', '0', 'Priest - Holy Nova Heal Rank 3'),
+('27803', '0.3035', '0', '0', 'Priest - Holy Nova Heal Rank 4'),
+('27804', '0.3035', '0', '0', 'Priest - Holy Nova Heal Rank 5'),
+('27805', '0.3035', '0', '0', 'Priest - Holy Nova Heal Rank 6'),
+('25329', '0.3035', '0', '0', 'Priest - Holy Nova Heal Rank 7'),
+('17', '0.8068', '0', '0', 'Priest - Power Word: Shield'),
+('596', '0.8086', '0', '0', 'Priest - Prayer of Healing'),
+('33110', '0.8068', '0', '0', 'Priest - Prayer of Mending Heal Proc'),
+('139', '0', '0.376', '0', 'Priest - Renew'),
+('2944', '0.1849', '0', '0', 'Priest - Devouring Plague'),
+('14914', '0.5711', '0.024', '0', 'Priest - Holy Fire'),
+('15237', '0.1606', '0', '0', 'Priest - Holy Nova Damage'),
+('8129', '0', '0', '0', 'Priest - Mana Burn'),
+('8092', '0.4296', '0', '0', 'Priest - Mind Blast'),
+('15407', '0.257', '0', '0', 'Priest - Mind Flay'),
+('49821', '0.14286', '0', '0', 'Priest - Mind Sear Trigger Rank 1'),
+('53022', '0.14286', '0', '0', 'Priest - Mind Sear Trigger Rank 2'),
+('34433', '0.65', '0', '0', 'Priest - Shadowfiend'),
+('32379', '0.4296', '0', '0', 'Priest - Shadow Word: Death'),
+('589', '0', '0.1829', '0', 'Priest - Shadow Word: Pain'),
+('585', '0.714', '0', '0', 'Priest - Smite'),
+('34914', '0', '0.4', '0', 'Priest - Vampiric Touch'),
+('974', '0.4762', '0', '0', 'Shaman - Earth Shield'),
+('1064', '1.34', '0', '0', 'Shaman - Chain Heal'),
+('331', '1.6106', '0', '0', 'Shaman - Healing Wave'),
+('8004', '0.8082', '0', '0', 'Shaman - Lesser Healing Wave'),
+('61295', '0.4', '0.18', '0', 'Shaman - Riptide'),
+('421', '0.57', '0', '0', 'Shaman - Chain Lightning'),
+('8042', '0.3858', '0', '0', 'Shaman - Earth Shock'),
+('8443', '0.2142', '0', '0', 'Shaman - Fire Nova Totem Casted by Totem Rank 1'),
+('8504', '0.2142', '0', '0', 'Shaman - Fire Nova Totem Casted by Totem Rank 2'),
+('8505', '0.2142', '0', '0', 'Shaman - Fire Nova Totem Casted by Totem Rank 3'),
+('11310', '0.2142', '0', '0', 'Shaman - Fire Nova Totem Casted by Totem Rank 4'),
+('11311', '0.2142', '0', '0', 'Shaman - Fire Nova Totem Casted by Totem Rank 5'),
+('25538', '0.2142', '0', '0', 'Shaman - Fire Nova Totem Casted by Totem Rank 6'),
+('25539', '0.2142', '0', '0', 'Shaman - Fire Nova Totem Casted by Totem Rank 7'),
+('61651', '0.2142', '0', '0', 'Shaman - Fire Nova Totem Casted by Totem Rank 8'),
+('61660', '0.2142', '0', '0', 'Shaman - Fire Nova Totem Casted by Totem Rank 9'),
+('8050', '0.2142', '0.1', '0', 'Shaman - Flame Shock'),
+('8026', '0.1', '0', '0', 'Shaman - Flametongue Weapon Proc Rank 1'),
+('8028', '0.1', '0', '0', 'Shaman - Flametongue Weapon Proc Rank 2'),
+('8029', '0.1', '0', '0', 'Shaman - Flametongue Weapon Proc Rank 3'),
+('10445', '0.1', '0', '0', 'Shaman - Flametongue Weapon Proc Rank 4'),
+('16343', '0.1', '0', '0', 'Shaman - Flametongue Weapon Proc Rank 5'),
+('16344', '0.1', '0', '0', 'Shaman - Flametongue Weapon Proc Rank 6'),
+('25488', '0.1', '0', '0', 'Shaman - Flametongue Weapon Proc Rank 7'),
+('58786', '0.1', '0', '0', 'Shaman - Flametongue Weapon Proc Rank 8'),
+('58787', '0.1', '0', '0', 'Shaman - Flametongue Weapon Proc Rank 9'),
+('58788', '0.1', '0', '0', 'Shaman - Flametongue Weapon Proc Rank 10'),
+('8056', '0.3858', '0', '0', 'Shaman - Frost Shock'),
+('8034', '0.1', '0', '0', 'Shaman - Frostbrand Attack Rank 1'),
+('8037', '0.1', '0', '0', 'Shaman - Frostbrand Attack Rank 2'),
+('10458', '0.1', '0', '0', 'Shaman - Frostbrand Attack Rank 3'),
+('16352', '0.1', '0', '0', 'Shaman - Frostbrand Attack Rank 4'),
+('16353', '0.1', '0', '0', 'Shaman - Frostbrand Attack Rank 5'),
+('25501', '0.1', '0', '0', 'Shaman - Frostbrand Attack Rank 6'),
+('58797', '0.1', '0', '0', 'Shaman - Frostbrand Attack Rank 7'),
+('58798', '0.1', '0', '0', 'Shaman - Frostbrand Attack Rank 8'),
+('58799', '0.1', '0', '0', 'Shaman - Frostbrand Attack Rank 9'),
+('51505', '0.5714', '0', '0', 'Shaman - Lava Burst'),
+('403', '0.7143', '0', '0', 'Shaman - Lightning Bolt'),
+('26364', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 1'),
+('26365', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 2'),
+('26366', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 3'),
+('26367', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 4'),
+('26369', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 5'),
+('26370', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 6'),
+('26363', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 7'),
+('26371', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 8'),
+('26372', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 9'),
+('49278', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 10'),
+('49279', '0.33', '0', '0', 'Shaman - Lightning Shield Proc Rank 11'),
+('8188', '0.1', '0', '0', 'Shaman - Magma Totam Passive Rank 1'),
+('10582', '0.1', '0', '0', 'Shaman - Magma Totam Passive Rank 2'),
+('10583', '0.1', '0', '0', 'Shaman - Magma Totam Passive Rank 3'),
+('10584', '0.1', '0', '0', 'Shaman - Magma Totam Passive Rank 4'),
+('25551', '0.1', '0', '0', 'Shaman - Magma Totam Passive Rank 5'),
+('58733', '0.1', '0', '0', 'Shaman - Magma Totam Passive Rank 6'),
+('58736', '0.1', '0', '0', 'Shaman - Magma Totam Passive Rank 7'),
+('3606', '0.1667', '0', '0', 'Shaman - Searing Totem Attack Rank 1'),
+('6350', '0.1667', '0', '0', 'Shaman - Searing Totem Attack Rank 2'),
+('6351', '0.1667', '0', '0', 'Shaman - Searing Totem Attack Rank 3'),
+('6352', '0.1667', '0', '0', 'Shaman - Searing Totem Attack Rank 4'),
+('10435', '0.1667', '0', '0', 'Shaman - Searing Totem Attack Rank 5'),
+('10436', '0.1667', '0', '0', 'Shaman - Searing Totem Attack Rank 6'),
+('25530', '0.1667', '0', '0', 'Shaman - Searing Totem Attack Rank 7'),
+('58700', '0.1667', '0', '0', 'Shaman - Searing Totem Attack Rank 8'),
+('58701', '0.1667', '0', '0', 'Shaman - Searing Totem Attack Rank 9'),
+('58702', '0.1667', '0', '0', 'Shaman - Searing Totem Attack Rank 10'),
+('980', '0', '0.1', '0', 'Warlock - Curse of Agony'),
+('603', '0', '2', '0', 'Warlock - Curse of Doom'),
+('172', '0', '0.3', '0', 'Warlock - Corruption'),
+('348', '0.2', '0.2', '0', 'Warlock - Immolate'),
+('27243', '0.22', '0.25', '0', 'Warlock - Seed of Corruption'),
+('18265', '0', '0.1', '0', 'Warlock - Siphon Life'),
+('30108', '0', '0.24', '0', 'Warlock - Unstable Affliction'),
+('31117', '1.8', '0', '0', 'Warlock - Unstable Affliction Dispell'),
+('17962', '0.4286', '0', '0', 'Warlock - Conflagrate'),
+('6789', '0.22', '0', '0', 'Warlock - Death Coil'),
+('28176', '0', '0', '0', 'Warlock - Fel Armor'),
+('48181', '0.4729', '0', '0', 'Warlock - Haunt'),
+('29722', '0.7143', '0', '0', 'Warlock - Incinerate'),
+('5676', '0.4286', '0', '0', 'Warlock - Searing Pain'),
+('686', '0.8571', '0', '0', 'Warlock - Shadow Bolt'),
+('17877', '0.4286', '0', '0', 'Warlock - Shadowburn'),
+('30283', '0.195', '0', '0', 'Warlock - Shadowfury'),
+('6353', '1.15', '0', '0', 'Warlock - Soul Fire'),
+('689', '0', '0.1428', '0', 'Warlock - Drain Life'),
+('5138', '0', '0', '0', 'Warlock - Drain Mana'),
+('1120', '0', '0.4286', '0', 'Warlock - Drain Soul'),
+('755', '0', '0.4485', '0', 'Warlock - Health Funnel'),
+('1949', '0', '0.0946', '0', 'Warlock - Hellfire'),
+('5857', '0.1428', '0', '0', 'Warlock - Hellfire Effect on Enemy Rank 1'),
+('11681', '0.1428', '0', '0', 'Warlock - Hellfire Effect on Enemy Rank 2'),
+('11682', '0.1428', '0', '0', 'Warlock - Hellfire Effect on Enemy Rank 3'),
+('27214', '0.1428', '0', '0', 'Warlock - Hellfire Effect on Enemy Rank 4'),
+('47822', '0.1428', '0', '0', 'Warlock - Hellfire Effect on Enemy Rank 5'),
+('42223', '0.952', '0', '0', 'Warlock - Rain of Fire Triggered Rank 1'),
+('42224', '0.952', '0', '0', 'Warlock - Rain of Fire Triggered Rank 2'),
+('42225', '0.952', '0', '0', 'Warlock - Rain of Fire Triggered Rank 3'),
+('42226', '0.952', '0', '0', 'Warlock - Rain of Fire Triggered Rank 4'),
+('42218', '0.952', '0', '0', 'Warlock - Rain of Fire Triggered Rank 5'),
+('47817', '0.952', '0', '0', 'Warlock - Rain of Fire Triggered Rank 6'),
+('47818', '0.952', '0', '0', 'Warlock - Rain of Fire Triggered Rank 7'),
+('18220', '0.96', '0', '0', 'Warlock - Dark Pact Rank 1'),
+('18937', '0.96', '0', '0', 'Warlock - Dark Pact Rank 2'),
+('18938', '0.96', '0', '0', 'Warlock - Dark Pact Rank 3'),
+('27265', '0.96', '0', '0', 'Warlock - Dark Pact Rank 4'),
+('59092', '0.96', '0', '0', 'Warlock - Dark Pact Rank 5'),
+('6229', '0.3', '0', '0', 'Warlock - Shadow Ward');
+/*!40000 ALTER TABLE `spell_bonus_data` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

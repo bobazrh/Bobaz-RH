@@ -55,7 +55,7 @@ class BattleGroundBE : public BattleGround
     public:
         BattleGroundBE();
         ~BattleGroundBE();
-        void Update(time_t diff);
+        void Update(uint32 diff);
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);
@@ -63,7 +63,7 @@ class BattleGroundBE : public BattleGround
         void RemovePlayer(Player *plr, uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
         bool SetupBattleGround();
-        void ResetBGSubclass();
+        virtual void Reset();
         virtual void FillInitialWorldStates(WorldPacket &d);
         void HandleKillPlayer(Player* player, Player *killer);
         bool HandlePlayerUnderMap(Player * plr);

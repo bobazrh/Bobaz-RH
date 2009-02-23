@@ -20,12 +20,15 @@
 #define __BATTLEGROUND_H
 
 #include "Common.h"
-#include "WorldPacket.h"
-#include "WorldSession.h"
-#include "Opcodes.h"
-#include "ObjectMgr.h"
-#include "BattleGroundMgr.h"
 #include "SharedDefines.h"
+
+class Creature;
+class GameObject;
+class Group;
+class Player;
+class WorldPacket;
+
+struct WorldSafeLocsEntry;
 
 enum BattleGroundSounds
 {
@@ -129,24 +132,10 @@ struct BattleGroundObjectInfo
     uint32      spellid;
 };
 
-enum BattleGroundTypeId
-{
-    BATTLEGROUND_AV     = 1,
-    BATTLEGROUND_WS     = 2,
-    BATTLEGROUND_AB     = 3,
-    BATTLEGROUND_NA     = 4,
-    BATTLEGROUND_BE     = 5,
-    BATTLEGROUND_AA     = 6,
-    BATTLEGROUND_EY     = 7,
-    BATTLEGROUND_RL     = 8,
-    BATTLEGROUND_SA     = 9,
-    BATTLEGROUND_DS     = 10,
-    BATTLEGROUND_RV     = 11
-};
-
 // handle the queue types and bg types separately to enable joining queue for different sized arenas at the same time
 enum BattleGroundQueueTypeId
 {
+    BATTLEGROUND_QUEUE_NONE   = 0,
     BATTLEGROUND_QUEUE_AV     = 1,
     BATTLEGROUND_QUEUE_WS     = 2,
     BATTLEGROUND_QUEUE_AB     = 3,
@@ -254,21 +243,18 @@ class BattleGround
         BattleGround();
         /*BattleGround(const BattleGround& bg);*/
         virtual ~BattleGround();
-        virtual void Update(time_t diff);                   // must be implemented in BG subclass of BG specific update code, but must in begginning call parent version
+        virtual void Update(uint32 diff);                   // must be implemented in BG subclass of BG specific update code, but must in begginning call parent version
         virtual bool SetupBattleGround()                    // must be implemented in BG subclass
         {
             return true;
         }
-        void Reset();                                       // resets all common properties for battlegrounds
-        virtual void ResetBGSubclass()                      // must be implemented in BG subclass
-        {
-        }
+        virtual void Reset();                               // resets all common properties for battlegrounds, must be implemented and called in BG subclass
 
         /* Battleground */
         // Get methods:
         char const* GetName() const         { return m_Name; }
-        uint32 GetTypeID() const            { return m_TypeID; }
-        uint32 GetQueueType() const         { return m_Queue_type; }
+        BattleGroundTypeId GetTypeID() const { return m_TypeID; }
+        uint32 GetQueueId() const           { return m_QueueId; }
         uint32 GetInstanceID() const        { return m_InstanceID; }
         uint32 GetStatus() const            { return m_Status; }
         uint32 GetStartTime() const         { return m_StartTime; }
@@ -290,8 +276,8 @@ class BattleGround
 
         // Set methods:
         void SetName(char const* Name)      { m_Name = Name; }
-        void SetTypeID(uint32 TypeID)       { m_TypeID = TypeID; }
-        void SetQueueType(uint32 ID)        { m_Queue_type = ID; }
+        void SetTypeID(BattleGroundTypeId TypeID) { m_TypeID = TypeID; }
+        void SetQueueId(uint32 ID)          { m_QueueId = ID; }
         void SetInstanceID(uint32 InstanceID) { m_InstanceID = InstanceID; }
         void SetStatus(uint32 Status)       { m_Status = Status; }
         void SetStartTime(uint32 Time)      { m_StartTime = Time; }
@@ -384,13 +370,7 @@ class BattleGround
 
         /* Raid Group */
         Group *GetBgRaid(uint32 TeamID) const { return TeamID == ALLIANCE ? m_BgRaids[BG_TEAM_ALLIANCE] : m_BgRaids[BG_TEAM_HORDE]; }
-        void SetBgRaid(uint32 TeamID, Group *bg_raid)
-        {
-            Group* &old_raid = TeamID == ALLIANCE ? m_BgRaids[BG_TEAM_ALLIANCE] : m_BgRaids[BG_TEAM_HORDE];
-            if(old_raid) old_raid->SetBattlegroundGroup(NULL);
-            if(bg_raid) bg_raid->SetBattlegroundGroup(this);
-            old_raid = bg_raid;
-        }
+        void SetBgRaid(uint32 TeamID, Group *bg_raid);
 
         virtual void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
 
@@ -428,6 +408,8 @@ class BattleGround
 
         virtual void AddPlayer(Player *plr);                // must be implemented in BG subclass
 
+        void AddOrSetPlayerToCorrectBgGroup(Player *plr, uint64 plr_guid, uint32 team);
+
         virtual void RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPacket);
                                                             // can be extended in in BG subclass
 
@@ -454,6 +436,8 @@ class BattleGround
 
         // since arenas can be AvA or Hvh, we have to get the "temporary" team of a player
         uint32 GetPlayerTeam(uint64 guid);
+        bool IsPlayerInBattleGround(uint64 guid);
+        void PlayerRelogin(Player* plr);
 
         void SetDeleteThis() {m_SetDeleteThis = true;}
 
@@ -481,13 +465,13 @@ class BattleGround
 
     private:
         /* Battleground */
-        uint32 m_TypeID;                                    //Battleground type, defined in enum BattleGroundTypeId
+        BattleGroundTypeId m_TypeID;
         uint32 m_InstanceID;                                //BattleGround Instance's GUID!
         uint32 m_Status;
         uint32 m_StartTime;
         uint32 m_EndTime;
         uint32 m_LastResurrectTime;
-        uint32 m_Queue_type;
+        uint32 m_QueueId;
         uint8  m_ArenaType;                                 // 2=2v2, 3=3v3, 5=5v5
         bool   m_InBGFreeSlotQueue;                         // used to make sure that BG is only once inserted into the BattleGroundMgr.BGFreeSlotQueue[bgTypeId] deque
         bool   m_SetDeleteThis;                             // used for safe deletion of the bg after end / all players leave

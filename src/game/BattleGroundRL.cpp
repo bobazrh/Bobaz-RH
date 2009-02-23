@@ -24,6 +24,7 @@
 #include "ObjectMgr.h"
 #include "MapManager.h"
 #include "Language.h"
+#include "WorldPacket.h"
 
 BattleGroundRL::BattleGroundRL()
 {
@@ -35,7 +36,7 @@ BattleGroundRL::~BattleGroundRL()
 
 }
 
-void BattleGroundRL::Update(time_t diff)
+void BattleGroundRL::Update(uint32 diff)
 {
     BattleGround::Update(diff);
 
@@ -194,9 +195,10 @@ void BattleGroundRL::FillInitialWorldStates(WorldPacket &data)
     data << uint32(0xbba) << uint32(1);           // 9
 }
 
-void BattleGroundRL::ResetBGSubclass()
+void BattleGroundRL::Reset()
 {
-
+    //call parent's reset
+    BattleGround::Reset();
 }
 
 bool BattleGroundRL::SetupBattleGround()

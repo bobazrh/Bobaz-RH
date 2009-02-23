@@ -160,28 +160,28 @@ void WorldSession::SendTrainerList( uint64 guid, const std::string& strTitle )
     float fDiscountMod = _player->GetReputationPriceDiscount(unit);
 
     uint32 count = 0;
-    for(TrainerSpellList::const_iterator itr = trainer_spells->spellList.begin(); itr != trainer_spells->spellList.end(); ++itr)
+    for(TrainerSpellMap::const_iterator itr = trainer_spells->spellList.begin(); itr != trainer_spells->spellList.end(); ++itr)
     {
-        TrainerSpell const* tSpell = *itr;
+        TrainerSpell const* tSpell = &itr->second;
 
-        if(!_player->IsSpellFitByClassAndRace(tSpell->learned_spell))
+        if(!_player->IsSpellFitByClassAndRace(tSpell->learnedSpell))
             continue;
 
         ++count;
 
-        bool primary_prof_first_rank = spellmgr.IsPrimaryProfessionFirstRankSpell(tSpell->learned_spell);
+        bool primary_prof_first_rank = spellmgr.IsPrimaryProfessionFirstRankSpell(tSpell->learnedSpell);
 
-        SpellChainNode const* chain_node = spellmgr.GetSpellChainNode(tSpell->learned_spell);
+        SpellChainNode const* chain_node = spellmgr.GetSpellChainNode(tSpell->learnedSpell);
 
         data << uint32(tSpell->spell);                      // learned spell (or cast-spell in profession case)
         data << uint8(_player->GetTrainerSpellState(tSpell));
-        data << uint32(floor(tSpell->spellcost * fDiscountMod));
+        data << uint32(floor(tSpell->spellCost * fDiscountMod));
 
         data << uint32(primary_prof_first_rank ? 1 : 0);    // primary prof. learn confirmation dialog
         data << uint32(primary_prof_first_rank ? 1 : 0);    // must be equal prev. field to have learn button in enabled state
-        data << uint8(tSpell->reqlevel);
-        data << uint32(tSpell->reqskill);
-        data << uint32(tSpell->reqskillvalue);
+        data << uint8(tSpell->reqLevel);
+        data << uint32(tSpell->reqSkill);
+        data << uint32(tSpell->reqSkillValue);
         data << uint32(chain_node ? (chain_node->prev ? chain_node->prev : chain_node->req) : 0);
         data << uint32(chain_node && chain_node->prev ? chain_node->req : 0);
         data << uint32(0);
@@ -232,7 +232,7 @@ void WorldSession::HandleTrainerBuySpellOpcode( WorldPacket & recv_data )
         return;
 
     // apply reputation discount
-    uint32 nSpellCost = uint32(floor(trainer_spell->spellcost * _player->GetReputationPriceDiscount(unit)));
+    uint32 nSpellCost = uint32(floor(trainer_spell->spellCost * _player->GetReputationPriceDiscount(unit)));
 
     // check money requirement
     if(_player->GetMoney() < nSpellCost )
@@ -240,24 +240,22 @@ void WorldSession::HandleTrainerBuySpellOpcode( WorldPacket & recv_data )
 
     _player->ModifyMoney( -int32(nSpellCost) );
 
+    WorldPacket data(SMSG_PLAY_SPELL_VISUAL, 12);           // visual effect on trainer
+    data << uint64(guid) << uint32(0xB3);
+    SendPacket(&data);
+
+    data.Initialize(SMSG_PLAY_SPELL_IMPACT, 12);            // visual effect on player
+    data << uint64(_player->GetGUID()) << uint32(0x016A);
+    SendPacket(&data);
+
     // learn explicitly or cast explicitly
     if(trainer_spell->IsCastable ())
         //FIXME: prof. spell entry in trainer list not marked gray until list re-open.
-        unit->CastSpell(_player,trainer_spell->spell,true);
+        _player->CastSpell(_player,trainer_spell->spell,true);
     else
-    {
-        WorldPacket data(SMSG_PLAY_SPELL_VISUAL, 12);           // visual effect on trainer
-        data << uint64(guid) << uint32(0xB3);
-        SendPacket(&data);
+        _player->learnSpell(spellId,false);
 
-        data.Initialize(SMSG_PLAY_SPELL_IMPACT, 12);            // visual effect on player
-        data << uint64(_player->GetGUID()) << uint32(0x016A);
-        SendPacket(&data);
-
-        _player->learnSpell(spellId);
-    }
-
-    WorldPacket data(SMSG_TRAINER_BUY_SUCCEEDED, 12);
+    data.Initialize(SMSG_TRAINER_BUY_SUCCEEDED, 12);
     data << uint64(guid) << uint32(trainer_spell->spell);
     SendPacket(&data);
 }

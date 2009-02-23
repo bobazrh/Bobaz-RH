@@ -122,6 +122,7 @@ enum WorldConfigs
     CONFIG_MAX_PRIMARY_TRADE_SKILL,
     CONFIG_MIN_PETITION_SIGNS,
     CONFIG_GM_LOGIN_STATE,
+    CONFIG_GM_VISIBLE_STATE,
     CONFIG_GM_ACCEPT_TICKETS,
     CONFIG_GM_CHAT,
     CONFIG_GM_WISPERING_TO,
@@ -130,6 +131,7 @@ enum WorldConfigs
     CONFIG_GM_LOG_TRADE,
     CONFIG_START_GM_LEVEL,
     CONFIG_GM_LOWER_SECURITY,
+    CONFIG_GM_ALLOW_ACHIEVEMENT_GAINS,
     CONFIG_GROUP_VISIBILITY,
     CONFIG_MAIL_DELIVERY_DELAY,
     CONFIG_UPTIME_UPDATE,
@@ -217,7 +219,6 @@ enum Rates
     RATE_XP_KILL,
     RATE_XP_QUEST,
     RATE_XP_EXPLORE,
-    RATE_XP_PAST_70,
     RATE_REPUTATION_GAIN,
     RATE_CREATURE_NORMAL_HP,
     RATE_CREATURE_ELITE_ELITE_HP,
@@ -317,7 +318,7 @@ enum RealmZone
 #define SCRIPT_COMMAND_CLOSE_DOOR           12              // source = unit, datalong=db_guid, datalong2=reset_delay
 #define SCRIPT_COMMAND_ACTIVATE_OBJECT      13              // source = unit, target=GO
 #define SCRIPT_COMMAND_REMOVE_AURA          14              // source (datalong2!=0) or target (datalong==0) unit, datalong = spell_id
-#define SCRIPT_COMMAND_CAST_SPELL           15              // source (datalong2!=0) or target (datalong==0) unit, datalong = spell_id
+#define SCRIPT_COMMAND_CAST_SPELL           15              // source/target cast spell at target/source (script->datalong2: 0: s->t 1: s->s 2: t->t 3: t->s
 
 /// Storage class for commands issued for delayed execution
 struct CliCommandHolder
@@ -427,9 +428,9 @@ class World
         static void StopNow(uint8 exitcode) { m_stopEvent = true; m_ExitCode = exitcode; }
         static bool IsStopped() { return m_stopEvent; }
 
-        void Update(time_t diff);
+        void Update(uint32 diff);
 
-        void UpdateSessions( time_t diff );
+        void UpdateSessions( uint32 diff );
         /// Set a server rate (see #Rates)
         void setRate(Rates rate,float value) { rate_values[rate]=value; }
         /// Get a server rate (see #Rates)

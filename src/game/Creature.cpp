@@ -27,6 +27,7 @@
 #include "QuestDef.h"
 #include "GossipDef.h"
 #include "Player.h"
+#include "PoolHandler.h"
 #include "Opcodes.h"
 #include "Log.h"
 #include "LootMgr.h"
@@ -37,7 +38,7 @@
 #include "SpellAuras.h"
 #include "WaypointMovementGenerator.h"
 #include "InstanceData.h"
-#include "BattleGround.h"
+#include "BattleGroundMgr.h"
 #include "Util.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
@@ -46,18 +47,11 @@
 // apply implementation of the singletons
 #include "Policies/SingletonImp.h"
 
-void TrainerSpellData::Clear()
-{
-    for (TrainerSpellList::iterator itr = spellList.begin(); itr != spellList.end(); ++itr)
-        delete (*itr);
-    spellList.empty();
-}
-
 TrainerSpell const* TrainerSpellData::Find(uint32 spell_id) const
 {
-    for(TrainerSpellList::const_iterator itr = spellList.begin(); itr != spellList.end(); ++itr)
-        if((*itr)->spell == spell_id)
-            return *itr;
+    TrainerSpellMap::const_iterator itr = spellList.find(spell_id);
+    if (itr != spellList.end())
+        return &itr->second;
 
     return NULL;
 }
@@ -303,10 +297,8 @@ bool Creature::UpdateEntry(uint32 Entry, uint32 team, const CreatureData *data )
                 SetPvP(true);
     }
 
-    m_spells[0] = GetCreatureInfo()->spell1;
-    m_spells[1] = GetCreatureInfo()->spell2;
-    m_spells[2] = GetCreatureInfo()->spell3;
-    m_spells[3] = GetCreatureInfo()->spell4;
+    for(int i=0; i < CREATURE_MAX_SPELLS; ++i)
+        m_spells[i] = GetCreatureInfo()->spells[i];
 
     return true;
 }
@@ -358,7 +350,11 @@ void Creature::Update(uint32 diff)
                 //Call AI respawn virtual function
                 i_AI->JustRespawned();
 
-                GetMap()->Add(this);
+                uint16 poolid = poolhandler.IsPartOfAPool(GetGUIDLow(), GetTypeId());
+                if (poolid)
+                    poolhandler.UpdatePool(poolid, GetGUIDLow(), GetTypeId());
+                else
+                    GetMap()->Add(this);
             }
             break;
         }
@@ -530,10 +526,11 @@ bool Creature::AIM_Initialize()
     return true;
 }
 
-bool Creature::Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, const CreatureData *data)
+bool Creature::Create (uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, uint32 team, const CreatureData *data)
 {
     SetMapId(map->GetId());
     SetInstanceId(map->GetInstanceId());
+    SetPhaseMask(phaseMask,false);
 
     //oX = x;     oY = y;    dX = x;    dY = y;    m_moveTime = 0;    m_startMove = 0;
     const bool bResult = CreateFromProto(guidlow, Entry, team, data);
@@ -650,12 +647,12 @@ bool Creature::isCanTrainingOf(Player* pPlayer, bool msg) const
     return true;
 }
 
-bool Creature::isCanIneractWithBattleMaster(Player* pPlayer, bool msg) const
+bool Creature::isCanInteractWithBattleMaster(Player* pPlayer, bool msg) const
 {
     if(!isBattleMaster())
         return false;
 
-    uint32 bgTypeId = objmgr.GetBattleMasterBG(GetEntry());
+    BattleGroundTypeId bgTypeId = sBattleGroundMgr.GetBattleMasterBG(GetEntry());
     if(!msg)
         return pPlayer->GetBGAccessByLevel(bgTypeId);
 
@@ -706,7 +703,7 @@ void Creature::prepareGossipMenu( Player *pPlayer,uint32 gossipid )
             if(gso->Id==1)
             {
                 uint32 textid=GetNpcTextId();
-                GossipText * gossiptext=objmgr.GetGossipText(textid);
+                GossipText const* gossiptext=objmgr.GetGossipText(textid);
                 if(!gossiptext)
                     cantalking=false;
             }
@@ -755,7 +752,7 @@ void Creature::prepareGossipMenu( Player *pPlayer,uint32 gossipid )
                             return;
                         break;
                     case GOSSIP_OPTION_BATTLEFIELD:
-                        if(!isCanIneractWithBattleMaster(pPlayer,false))
+                        if(!isCanInteractWithBattleMaster(pPlayer,false))
                             cantalking=false;
                         break;
                     case GOSSIP_OPTION_SPIRITGUIDE:
@@ -803,7 +800,7 @@ void Creature::prepareGossipMenu( Player *pPlayer,uint32 gossipid )
         }
         if(HasFlag(UNIT_NPC_FLAGS,UNIT_NPC_FLAG_BATTLEMASTER))
         {
-            isCanIneractWithBattleMaster(pPlayer,true);     // output error message if need
+            isCanInteractWithBattleMaster(pPlayer,true);     // output error message if need
         }
     }
 }
@@ -813,10 +810,8 @@ void Creature::sendPreparedGossip(Player* player)
     if(!player)
         return;
 
-    GossipMenu& gossipmenu = player->PlayerTalkClass->GetGossipMenu();
-
-    // in case empty gossip menu open quest menu if any
-    if (gossipmenu.Empty() && GetNpcTextId() == 0)
+    // in case no gossip flag and quest menu not empty, open quest menu (client expect gossip menu with this flag)
+    if (!HasFlag(UNIT_NPC_FLAGS,UNIT_NPC_FLAG_GOSSIP) && !player->PlayerTalkClass->GetQuestMenu().Empty())
     {
         player->SendPreparedQuest(GetGUID());
         return;
@@ -914,7 +909,7 @@ void Creature::OnGossipSelect(Player* player, uint32 option)
             break;
         case GOSSIP_OPTION_BATTLEFIELD:
         {
-            uint32 bgTypeId = objmgr.GetBattleMasterBG(GetEntry());
+            BattleGroundTypeId bgTypeId = sBattleGroundMgr.GetBattleMasterBG(GetEntry());
             player->GetSession()->SendBattlegGroundList( GetGUID(), bgTypeId );
             break;
         }
@@ -929,12 +924,12 @@ void Creature::OnPoiSelect(Player* player, GossipOption const *gossip)
 {
     if(gossip->GossipId==GOSSIP_GUARD_SPELLTRAINER || gossip->GossipId==GOSSIP_GUARD_SKILLTRAINER)
     {
-        Poi_Icon icon = ICON_POI_0;
+        Poi_Icon icon = ICON_POI_BLANK;
         //need add more case.
         switch(gossip->Action)
         {
             case GOSSIP_GUARD_BANK:
-                icon=ICON_POI_HOUSE;
+                icon=ICON_POI_SMALL_HOUSE;
                 break;
             case GOSSIP_GUARD_RIDE:
                 icon=ICON_POI_RWHORSE;
@@ -943,7 +938,7 @@ void Creature::OnPoiSelect(Player* player, GossipOption const *gossip)
                 icon=ICON_POI_BLUETOWER;
                 break;
             default:
-                icon=ICON_POI_TOWER;
+                icon=ICON_POI_GREYTOWER;
                 break;
         }
         uint32 textid = GetGossipTextId( gossip->Action, GetZoneId() );
@@ -1065,10 +1060,10 @@ void Creature::SaveToDB()
         return;
     }
 
-    SaveToDB(GetMapId(), data->spawnMask);
+    SaveToDB(GetMapId(), data->spawnMask,GetPhaseMask());
 }
 
-void Creature::SaveToDB(uint32 mapid, uint8 spawnMask)
+void Creature::SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask)
 {
     // update in loaded data
     if (!m_DBTableGuid)
@@ -1100,6 +1095,7 @@ void Creature::SaveToDB(uint32 mapid, uint8 spawnMask)
     // data->guid = guid don't must be update at save
     data.id = GetEntry();
     data.mapid = mapid;
+    data.phaseMask = phaseMask;
     data.displayid = displayId;
     data.equipmentId = GetEquipmentId();
     data.posX = GetPositionX();
@@ -1129,6 +1125,7 @@ void Creature::SaveToDB(uint32 mapid, uint8 spawnMask)
         << GetEntry() << ","
         << mapid <<","
         << (uint32)spawnMask << ","
+        << (uint32)GetPhaseMask() << ","
         << displayId <<","
         << GetEquipmentId() <<","
         << GetPositionX() << ","
@@ -1293,7 +1290,7 @@ bool Creature::LoadFromDB(uint32 guid, Map *map)
     if (map->GetInstanceId() != 0) guid = objmgr.GenerateLowGuid(HIGHGUID_UNIT);
 
     uint16 team = 0;
-    if(!Create(guid,map,data->id,team,data))
+    if(!Create(guid,map,data->phaseMask,data->id,team,data))
         return false;
 
     Relocate(data->posX,data->posY,data->posZ,data->orientation);
@@ -1547,12 +1544,12 @@ bool Creature::IsImmunedToSpell(SpellEntry const* spellInfo)
     return Unit::IsImmunedToSpell(spellInfo);
 }
 
-bool Creature::IsImmunedToSpellEffect(uint32 effect, uint32 mechanic) const
+bool Creature::IsImmunedToSpellEffect(SpellEntry const* spellInfo, uint32 index) const
 {
-    if (GetCreatureInfo()->MechanicImmuneMask & (1 << (mechanic-1)))
+    if (GetCreatureInfo()->MechanicImmuneMask & (1 << (spellInfo->EffectMechanic[index] - 1)))
         return true;
 
-    return Unit::IsImmunedToSpellEffect(effect, mechanic);
+    return Unit::IsImmunedToSpellEffect(spellInfo, index);
 }
 
 SpellEntry const *Creature::reachWithSpellAttack(Unit *pVictim)
@@ -1703,7 +1700,7 @@ void Creature::CallAssistance()
                 cell.SetNoCreate();
 
                 MaNGOS::AnyAssistCreatureInRangeCheck u_check(this, getVictim(), radius);
-                MaNGOS::CreatureListSearcher<MaNGOS::AnyAssistCreatureInRangeCheck> searcher(assistList, u_check);
+                MaNGOS::CreatureListSearcher<MaNGOS::AnyAssistCreatureInRangeCheck> searcher(this, assistList, u_check);
 
                 TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyAssistCreatureInRangeCheck>, GridTypeMapContainer >  grid_creature_searcher(searcher);
 

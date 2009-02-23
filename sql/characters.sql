@@ -21,7 +21,7 @@
 
 DROP TABLE IF EXISTS `character_db_version`;
 CREATE TABLE `character_db_version` (
-  `required_7077_01_characters_character_spell` bit(1) default NULL
+  `required_7324_02_characters_character_aura` bit(1) default NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Last applied sql update to DB';
 
 --
@@ -96,7 +96,8 @@ CREATE TABLE `arena_team_member` (
   `wons_week` int(10) unsigned NOT NULL default '0',
   `played_season` int(10) unsigned NOT NULL default '0',
   `wons_season` int(10) unsigned NOT NULL default '0',
-  `personal_rating` int(10) UNSIGNED NOT NULL DEFAULT '0'
+  `personal_rating` int(10) UNSIGNED NOT NULL DEFAULT '0',
+  PRIMARY KEY  (`arenateamid`,`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -150,7 +151,6 @@ CREATE TABLE `auctionhouse` (
   `lastbid` int(11) NOT NULL default '0',
   `startbid` int(11) NOT NULL default '0',
   `deposit` int(11) NOT NULL default '0',
-  `location` tinyint(3) unsigned NOT NULL default '3',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `item_guid` (`itemguid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -225,6 +225,13 @@ CREATE TABLE `characters` (
   `death_expire_time` bigint(20) unsigned NOT NULL default '0',
   `taxi_path` text,
   `arena_pending_points` int(10) UNSIGNED NOT NULL default '0',
+  `bgid` int(10) unsigned NOT NULL default '0',
+  `bgteam` int(10) unsigned NOT NULL default '0',
+  `bgmap` int(10) unsigned NOT NULL default '0',
+  `bgx` float NOT NULL default '0',
+  `bgy` float NOT NULL default '0',
+  `bgz` float NOT NULL default '0',
+  `bgo` float NOT NULL default '0',
   PRIMARY KEY  (`guid`),
   KEY `idx_account` (`account`),
   KEY `idx_online` (`online`),
@@ -727,6 +734,7 @@ CREATE TABLE `corpse` (
   `orientation` float NOT NULL default '0',
   `zone` int(11) unsigned NOT NULL default '38' COMMENT 'Zone Identifier',
   `map` int(11) unsigned NOT NULL default '0' COMMENT 'Map Identifier',
+  `phaseMask` smallint(5) unsigned NOT NULL default '1',
   `data` longtext,
   `time` bigint(20) unsigned NOT NULL default '0',
   `corpse_type` tinyint(3) unsigned NOT NULL default '0',

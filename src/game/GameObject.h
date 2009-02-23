@@ -349,7 +349,7 @@ struct GameObjectInfo
             uint32 state2Name;                              //3
         } destructibleBuilding;
         //34 GAMEOBJECT_TYPE_TRAPDOOR
-        struct  
+        struct
         {
             uint32 whenToPause;                             // 0
             uint32 startOpen;                               // 1
@@ -375,7 +375,8 @@ struct GameObjectLocale
 struct GameObjectData
 {
     uint32 id;                                              // entry in gamobject_template
-    uint32 mapid;
+    uint16 mapid;
+    uint16 phaseMask;
     float posX;
     float posY;
     float posZ;
@@ -423,7 +424,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         void AddToWorld();
         void RemoveFromWorld();
 
-        bool Create(uint32 guidlow, uint32 name_id, Map *map, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint32 animprogress, uint32 go_state);
+        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint32 animprogress, uint32 go_state);
         void Update(uint32 p_time);
         static GameObject* GetGameObject(WorldObject& object, uint64 guid);
         GameObjectInfo const* GetGOInfo() const;
@@ -440,10 +441,6 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         uint32 GetDBTableGUIDLow() const { return m_DBTableGuid; }
 
-        void Say(const char* text, uint32 language, uint64 TargetGuid) { MonsterSay(text,language,TargetGuid); }
-        void Yell(const char* text, uint32 language, uint64 TargetGuid) { MonsterYell(text,language,TargetGuid); }
-        void TextEmote(const char* text, uint64 TargetGuid) { MonsterTextEmote(text,TargetGuid); }
-        void Whisper(const char* text,uint64 receiver) { MonsterWhisper(text,receiver); }
         void Say(int32 textId, uint32 language, uint64 TargetGuid) { MonsterSay(textId,language,TargetGuid); }
         void Yell(int32 textId, uint32 language, uint64 TargetGuid) { MonsterYell(textId,language,TargetGuid); }
         void TextEmote(int32 textId, uint64 TargetGuid) { MonsterTextEmote(textId,TargetGuid); }
@@ -453,7 +450,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         const char* GetNameForLocaleIdx(int32 locale_idx) const;
 
         void SaveToDB();
-        void SaveToDB(uint32 mapid, uint8 spawnMask);
+        void SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask);
         bool LoadFromDB(uint32 guid, Map *map);
         void DeleteFromDB();
         void SetLootState(LootState s) { m_lootState = s; }
@@ -506,7 +503,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         void Delete();
         void SetSpellId(uint32 id) { m_spellId = id;}
         uint32 GetSpellId() const { return m_spellId;}
-        void getFishLoot(Loot *loot);
+        void getFishLoot(Loot *loot, Player* loot_owner);
         GameobjectTypes GetGoType() const { return GameobjectTypes(GetByteValue(GAMEOBJECT_BYTES_1, 1)); }
         void SetGoType(GameobjectTypes type) { SetByteValue(GAMEOBJECT_BYTES_1, 1, type); }
         uint8 GetGoState() const { return GetByteValue(GAMEOBJECT_BYTES_1, 0); }

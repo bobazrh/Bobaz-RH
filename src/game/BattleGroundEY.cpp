@@ -25,6 +25,7 @@
 #include "ObjectMgr.h"
 #include "MapManager.h"
 #include "Language.h"
+#include "WorldPacket.h"
 #include "Util.h"
 
 BattleGroundEY::BattleGroundEY()
@@ -42,7 +43,7 @@ BattleGroundEY::~BattleGroundEY()
 {
 }
 
-void BattleGroundEY::Update(time_t diff)
+void BattleGroundEY::Update(uint32 diff)
 {
     BattleGround::Update(diff);
     // after bg start we get there (once)
@@ -512,8 +513,11 @@ bool BattleGroundEY::SetupBattleGround()
     return true;
 }
 
-void BattleGroundEY::ResetBGSubclass()
+void BattleGroundEY::Reset()
 {
+    //call parent's class reset
+    BattleGround::Reset();
+
     m_TeamScores[BG_TEAM_ALLIANCE] = 0;
     m_TeamScores[BG_TEAM_HORDE] = 0;
     m_TeamPointsCount[BG_TEAM_ALLIANCE] = 0;

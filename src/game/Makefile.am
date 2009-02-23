@@ -40,8 +40,9 @@ libmangosgame_a_SOURCES = \
     ArenaTeam.cpp \
     ArenaTeam.h \
     ArenaTeamHandler.cpp \
-    AuctionHouse.cpp \
-    AuctionHouseObject.h \
+    AuctionHouseHandler.cpp \
+    AuctionHouseMgr.cpp \
+    AuctionHouseMgr.h \
     Bag.cpp \
     Bag.h \
     BattleGround.cpp \
@@ -205,6 +206,8 @@ libmangosgame_a_SOURCES = \
     PlayerDump.h \
     PointMovementGenerator.cpp \
     PointMovementGenerator.h \
+    PoolHandler.cpp \
+    PoolHandler.h \
     QueryHandler.cpp \
     QuestDef.cpp \
     QuestDef.h \

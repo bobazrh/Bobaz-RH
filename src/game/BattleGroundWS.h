@@ -134,7 +134,7 @@ class BattleGroundWS : public BattleGround
         /* Construction */
         BattleGroundWS();
         ~BattleGroundWS();
-        void Update(time_t diff);
+        void Update(uint32 diff);
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);
@@ -159,7 +159,7 @@ class BattleGroundWS : public BattleGround
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
         void HandleKillPlayer(Player *player, Player *killer);
         bool SetupBattleGround();
-        virtual void ResetBGSubclass();
+        virtual void Reset();
 
         void UpdateFlagState(uint32 team, uint32 value);
         void UpdateTeamScore(uint32 team);

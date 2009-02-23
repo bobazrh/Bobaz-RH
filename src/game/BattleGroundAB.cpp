@@ -26,6 +26,7 @@
 #include "MapManager.h"
 #include "Language.h"
 #include "Util.h"
+#include "WorldPacket.h"
 
 BattleGroundAB::BattleGroundAB()
 {
@@ -38,7 +39,7 @@ BattleGroundAB::~BattleGroundAB()
 {
 }
 
-void BattleGroundAB::Update(time_t diff)
+void BattleGroundAB::Update(uint32 diff)
 {
     BattleGround::Update(diff);
 
@@ -409,9 +410,9 @@ void BattleGroundAB::_NodeDeOccupied(uint8 node)
     {
         WorldSafeLocsEntry const *ClosestGrave = NULL;
         Player *plr;
-        for (std::vector<uint64>::iterator itr = ghost_list.begin(); itr != ghost_list.end(); ++itr)
+        for (std::vector<uint64>::const_iterator itr = ghost_list.begin(); itr != ghost_list.end(); ++itr)
         {
-            plr = objmgr.GetPlayer(*ghost_list.begin());
+            plr = objmgr.GetPlayer(*itr);
             if( !plr )
                 continue;
             if( !ClosestGrave )
@@ -575,8 +576,11 @@ bool BattleGroundAB::SetupBattleGround()
     return true;
 }
 
-void BattleGroundAB::ResetBGSubclass()
+void BattleGroundAB::Reset()
 {
+    //call parent's class reset
+    BattleGround::Reset();
+
     m_TeamScores[BG_TEAM_ALLIANCE]          = 0;
     m_TeamScores[BG_TEAM_HORDE]             = 0;
     m_lastTick[BG_TEAM_ALLIANCE]            = 0;

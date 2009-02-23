@@ -375,7 +375,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\game\AuctionHouse.cpp"
+				RelativePath="..\..\src\game\AuctionHouseHandler.cpp"
 				>
 			</File>
 			<File
@@ -711,6 +711,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\PoolHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\PoolHandler.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\QueryHandler.cpp"
 				>
 			</File>
@@ -859,7 +867,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\game\AuctionHouseObject.h"
+				RelativePath="..\..\src\game\AuctionHouseMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\AuctionHouseMgr.h"
 				>
 			</File>
 			<File
