@@ -23,8 +23,7 @@
 #include "Creature.h"
 #include "GameObject.h"
 #include "DynamicObject.h"
-#include "Corpse.h"
-#include "WorldSession.h"
+#include "Vehicle.h"
 #include "WorldPacket.h"
 #include "Item.h"
 #include "Corpse.h"
@@ -84,7 +83,7 @@ ObjectAccessor::GetNPCIfCanInteractWith(Player const &player, uint64 guid, uint3
     if(factionTemplate)
     {
         FactionEntry const* faction = sFactionStore.LookupEntry(factionTemplate->faction);
-        if( faction->reputationListID >= 0 && player.GetReputationRank(faction) <= REP_UNFRIENDLY)
+        if( faction && faction->reputationListID >= 0 && player.GetReputationRank(faction) <= REP_UNFRIENDLY)
             return NULL;
     }
 
@@ -409,7 +408,7 @@ ObjectAccessor::ConvertCorpseForPlayer(uint64 player_guid, bool insignia)
         return NULL;
     }
 
-    DEBUG_LOG("Deleting Corpse and spawning bones.\n");
+    DEBUG_LOG("Deleting Corpse and spawning bones.");
 
     // remove corpse from player_guid -> corpse map
     RemoveCorpse(corpse);

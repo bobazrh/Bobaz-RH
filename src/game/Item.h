@@ -165,7 +165,7 @@ enum EnchantmentSlot
 
 #define MAX_VISIBLE_ITEM_OFFSET       18                    // 18 fields per visible item (creator(2) + enchantments(13) + properties(1) + seed(1) + pad(1))
 
-#define MAX_GEM_SOCKETS               3                     // (BONUS_ENCHANTMENT_SLOT-SOCK_ENCHANTMENT_SLOT)
+#define MAX_GEM_SOCKETS               MAX_ITEM_PROTO_SOCKETS// (BONUS_ENCHANTMENT_SLOT-SOCK_ENCHANTMENT_SLOT) and item proto size, equal value expected
 
 enum EnchantmentOffset
 {
@@ -285,13 +285,10 @@ class MANGOS_DLL_SPEC Item : public Object
             uState = state;
         }
 
-        bool hasQuest(uint32 quest_id) const
-        {
-            ItemPrototype const *itemProto = GetProto();
-            return itemProto && itemProto->StartQuest == quest_id;
-        }
+        bool hasQuest(uint32 quest_id) const { return GetProto()->StartQuest == quest_id; }
         bool hasInvolvedQuest(uint32 /*quest_id*/) const { return false; }
-
+        bool IsPotion() const { return GetProto()->IsPotion(); }
+        bool IsConjuredConsumable() const { return GetProto()->IsConjuredConsumable(); }
     private:
         uint8 m_slot;
         Bag *m_container;

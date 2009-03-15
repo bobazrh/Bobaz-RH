@@ -94,7 +94,7 @@ BindIP = "0.0.0.0"
 #
 #    SocketSelectTime
 #        Socket select time (in milliseconds)
-#        Default: 10000
+#        Default: 10000 (10 secs)
 #
 #    GridCleanUpDelay
 #        Grid clean up delay (in milliseconds)
@@ -115,8 +115,8 @@ BindIP = "0.0.0.0"
 #    vmap.enableLOS
 #    vmap.enableHeight
 #        Enable/Disable VMmap support for line of sight and height calculation
-#        Default: 1 (true)
-#                 0 (false)
+#        Default: 0 (disable)
+#                 1 (enable)
 #
 #    vmap.ignoreMapIds
 #        Map id that will be ignored by VMaps
@@ -219,8 +219,9 @@ AddonChannel = 1
 #        0 = Minimum; 1 = Error; 2 = Detail; 3 = Full/Debug
 #        Default: 0
 #
-#    LogFilter_TransportMoves
+#    LogFilter_AchievementUpdates
 #    LogFilter_CreatureMoves
+#    LogFilter_TransportMoves
 #    LogFilter_VisibilityChanges
 #        Log filters
 #        Default: 1 - not include with any log level
@@ -288,8 +289,9 @@ LogTime = 0
 LogFile = "Server.log"
 LogTimestamp = 0
 LogFileLevel = 0
-LogFilter_TransportMoves = 1
+LogFilter_AchievementUpdates = 1
 LogFilter_CreatureMoves = 1
+LogFilter_TransportMoves = 1
 LogFilter_VisibilityChanges = 1
 WorldLogFile = ""
 DBErrorLogFile = "DBErrors.log"
@@ -483,25 +485,6 @@ LogColors = ""
 #        Default: 1 (true)
 #                 0 (false)
 #
-#    Battleground.CastDeserter
-#        Cast or not Deserter spell at player who leave battleground in progress
-#        Default: 1 (true)
-#                 0 (false)
-#
-#    Battleground.QueueAnnouncer.Enable
-#        Enable queue announcer posting to chat
-#        Default: 0 (false)
-#                 1 (true)
-#
-#    Battleground.QueueAnnouncer.PlayerOnly
-#        Enable queue announcer posting to chat
-#        Default: 0 (false)
-#                 1 (true)
-#
-#    Arena.QueueAnnouncer.Enable: Enable queue announcer posting to chat
-#        Default: 0 (false)
-#                 1 (true)
-#
 #    CastUnstuck
 #        Allow cast or not Unstuck spell at .start or client Help option use
 #        Default: 1 (true)
@@ -523,7 +506,7 @@ LogColors = ""
 #
 #    Instance.UnloadDelay
 #        Unload the instance map from memory after some time if no players are inside.
-#        Default: 1800000 (miliseconds, i.e 30 minutes)
+#        Default: 1800000 (miliseconds 30 minutes)
 #                 0 (instance maps are kept in memory until they are reset)
 #
 #    Quests.LowLevelHideDiff
@@ -564,6 +547,11 @@ LogColors = ""
 #        For milling skillup impossible by default, but can be allowed as custom setting
 #        Default: 0 - no skilups
 #                 1 - skilups possible
+#
+#    OffhandCheckAtTalentsReset
+#        Talent reset can change offhand weapon restrictions for equip slots.
+#        Default: 0 - recheck offhand slot weapon only at zone update
+#                 1 - recheck offhand slot weapon at talent reset also
 #
 #    Event.Announce
 #        Default: 0 (false)
@@ -606,10 +594,6 @@ DisableWaterBreath = 4
 AllFlightPaths = 0
 AlwaysMaxSkillForLevel = 0
 ActivateWeather = 1
-Battleground.CastDeserter = 1
-Battleground.QueueAnnouncer.Enable = 0
-Battleground.QueueAnnouncer.PlayerOnly = 0
-Arena.QueueAnnouncer.Enable = 0
 CastUnstuck = 1
 Instance.IgnoreLevel = 0
 Instance.IgnoreRaid = 0
@@ -623,6 +607,7 @@ MaxGroupXPDistance = 74
 MailDeliveryDelay = 3600
 SkillChance.Prospecting = 0
 SkillChance.Milling = 0
+OffhandCheckAtTalentsReset = 0
 Event.Announce = 0
 BeepAtStart = 1
 Motd = "Welcome to the Massive Network Game Object Server."
@@ -858,7 +843,7 @@ Channel.SilentlyGMJoin = 0
 #                 1 (enable)
 #
 #    GM.InGMList
-#        Is GM showed in GM list (if visible) in non-GM state (.gmoff)
+#        Is GM showed in GM list (if visible) in non-GM state (.gm off)
 #        Default: 0 (false)
 #                 1 (true)
 #
@@ -883,8 +868,8 @@ Channel.SilentlyGMJoin = 0
 #
 #    GM.AllowAchievementGain
 #        If enabled it allows gaining achievements for GM characters
-#        Default: 0 (disable)
-#                 1 (enable) (default)
+#        Default: 1 (enable)
+#                 0 (disable)
 #
 ###################################################################################################################
 
@@ -1069,7 +1054,7 @@ Visibility.Distance.Grey.Object = 10
 #
 #    Death.Bones.World
 #    Death.Bones.BattlegroundOrArena
-#         Enabled/disabled creating bones instead corpse at resurrection (in normal zones/instacnes, or battleground/arenas)
+#         Enable/disable creating bones instead corpse at resurrection (in normal zones/instacnes, or battleground/arenas)
 #         Default: 1 (enabled)
 #                  0 (disabled)
 #
@@ -1128,59 +1113,101 @@ Death.CorpseReclaimDelay.PvE = 1
 Death.Bones.World = 1
 Death.Bones.BattlegroundOrArena = 1
 
+
 ###################################################################################################################
+# BATTLEGROUND CONFIG
 #
-# Rated arena matches config
+#    Battleground.CastDeserter
+#        Cast Deserter spell at player who leave battleground in progress
+#        Default: 1 (enable)
+#                 0 (disable)
 #
-# MaxRatingDifference: the maximum rating difference between two groups in rated matches
-#             Default: 0 (disable, rating difference is discarded)
+#    Battleground.QueueAnnouncer.Enable
+#        Enable queue announcer posting to chat
+#        Default: 0 (disable)
+#                 1 (enable)
 #
-# RatingDiscardTimer: after the specified milliseconds has passed,
-#                     rating information will be discarded when selecting teams for matches
-#                     also initiates an update by this timer
-#             Default: 60000
+#    Battleground.QueueAnnouncer.PlayerOnly
+#        Enable queue announcer posting to chat
+#        Default: 0 (disable)
+#                 1 (enable)
 #
-# AutoDistributePoints: set if arena points should be distributed automatically, or by GM command
-#             Default: 0 (disable) (recommended): use gm command or sql query to distribute the points
-#                      1 (enable): arena points are distributed automatically
+#    Battleground.InvitationType
+#        Set Battleground invitation type
+#        Default: 0 (normal - invite as much players to bg as possible, don't bother with ballance)
+#                 1 (Experimental - don't allow to invite much more players of one faction)
 #
-# AutoDistributeInterval: how often should the distribution take place
-#                         if automatic distribution is enabled
-#                         in days
-#             Default: 7 (weekly)
+#    Battleground.PrematureFinishTimer
+#        The time to end the bg if there are less than MinPlayersPerTeam on one side in milliseconds
+#        Default: 300000 (5 minutes)
+#                 0 - disable (not recommended)
 #
-# ArenaSeason.ID: current area season id show in client
-#             Default: 1
-#
-# ArenaSeason.InProgress: current area season state
-#             Default: 1 (active)
-#                      0 (finished)
+#    BattleGround.PremadeGroupWaitForMatch
+#        The time in which premade group of 1 faction waits in BG Queue for premade group of other faction
+#        Default: 1800000 (30 minutes)
+#                 0 - disable (not recommended)
 #
 ###################################################################################################################
 
-Arena.MaxRatingDifference = 0
-Arena.RatingDiscardTimer = 60000
+Battleground.CastDeserter = 1
+Battleground.QueueAnnouncer.Enable = 0
+Battleground.QueueAnnouncer.PlayerOnly = 0
+Battleground.InvitationType = 0
+BattleGround.PrematureFinishTimer = 300000
+BattleGround.PremadeGroupWaitForMatch = 1800000
+
+
+###################################################################################################################
+# ARENA CONFIG
+#
+#    Arena.MaxRatingDifference
+#        The maximum rating difference between two groups in rated matches
+#        Default: 150 (enable, recommended)
+#                 0 (disable, rating difference is discarded)
+#
+#    Arena.RatingDiscardTimer
+#        After the specified milliseconds has passed,
+#        rating information will be discarded when selecting teams for matches
+#        also initiates an update by this timer
+#        Default: 600000 (10 minutes, recommended)
+#                 0 (disable)
+#
+#    Arena.AutoDistributePoints
+#        Set if arena points should be distributed automatically, or by GM command
+#        Default: 0 (disable) (recommended): use gm command or sql query to distribute the points
+#                 1 (enable)  arena points are distributed automatically
+#
+#    Arena.AutoDistributeInterval
+#        How often should the distribution take place
+#        If automatic distribution is enabled in days
+#        Default: 7 (weekly)
+#
+#    Arena.QueueAnnouncer.Enable
+#        Enable bg queue announcer posting to chat
+#        Default: 0 (disable)
+#                 1 (enable)
+#
+#    Arena.ArenaSeason.ID
+#        Current area season id show in client
+#        Default: 1
+#
+#    Arena.ArenaSeason.InProgress
+#        Current area season state
+#        Default: 1 (active)
+#                 0 (finished)
+#
+###################################################################################################################
+
+Arena.MaxRatingDifference = 150
+Arena.RatingDiscardTimer = 600000
 Arena.AutoDistributePoints = 0
 Arena.AutoDistributeInterval = 7
+Arena.QueueAnnouncer.Enable = 0
 Arena.ArenaSeason.ID = 1
 Arena.ArenaSeason.InProgress = 1
 
-###################################################################################################################
-#
-# Battleground config
-#
-# PrematureFinishTimer: the time to end the bg if there are less than minplayersperteam on one side
-#                       in milliseconds
-#              Default: 300000
-#                       0 - disable
-#
-###################################################################################################################
-
-BattleGround.PrematureFinishTimer = 300000
-
 
 ###################################################################################################################
-#
 # NETWORK CONFIG
 #
 #    Network.Threads
