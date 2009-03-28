@@ -39,6 +39,7 @@ struct GameObjectInfo
     uint32  type;
     uint32  displayId;
     char   *name;
+    char   *IconName;
     char   *castBarCaption;
     uint32  faction;
     uint32  flags;
@@ -440,6 +441,8 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         Unit* GetOwner() const;
 
         uint32 GetDBTableGUIDLow() const { return m_DBTableGuid; }
+
+        void UpdateRotationFields(float rotation2 = 0.0f, float rotation3 = 0.0f);
 
         void Say(int32 textId, uint32 language, uint64 TargetGuid) { MonsterSay(textId,language,TargetGuid); }
         void Yell(int32 textId, uint32 language, uint64 TargetGuid) { MonsterYell(textId,language,TargetGuid); }

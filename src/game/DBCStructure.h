@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DBCSTRUCTURE_H
-#define DBCSTRUCTURE_H
+#ifndef MANGOS_DBCSTRUCTURE_H
+#define MANGOS_DBCSTRUCTURE_H
 
 #include "DBCEnums.h"
 #include "Platform/Define.h"
@@ -374,6 +374,7 @@ struct AchievementCriteriaEntry
         struct
         {
             uint32  itemID;                                 // 3
+            uint32  count;                                  // 4
         } equip_item;
 
         // ACHIEVEMENT_CRITERIA_TYPE_MONEY_FROM_QUEST_REWARD= 62
@@ -696,6 +697,23 @@ struct CreatureTypeEntry
     //uint32    no_expirience;                              // 18 no exp? critters, non-combat pets, gas cloud.
 };
 
+/* not used
+struct CurrencyCategoryEntry
+{
+    uint32    ID;                                           // 0
+    uint32    Unk1;                                         // 1        0 for known categories and 3 for unknown one (3.0.9)
+    char*   Name[16];                                       // 2-17     name
+    //                                                      // 18       string flags
+};
+*/
+
+struct CurrencyTypesEntry
+{
+    //uint32    ID;                                         // 0        not used
+    uint32    ItemId;                                       // 1        used as real index
+    uint32    BitIndex;                                     // 2        bit index in PLAYER_FIELD_KNOWN_CURRENCIES (1 << (index-1))
+};
+
 struct DurabilityCostsEntry
 {
     uint32    Itemlvl;                                      // 0
@@ -900,6 +918,13 @@ struct ItemEntry
    uint32   Sheath;                                         // 7
 };
 
+struct ItemBagFamilyEntry
+{
+    uint32   ID;                                            // 0
+    //char*     name[16]                                    // 1-16     m_name_lang
+    //                                                      // 17       name flags
+};
+
 struct ItemDisplayInfoEntry
 {
     uint32      ID;                                         // 0        m_ID
@@ -974,13 +999,15 @@ struct ItemSetEntry
     uint32    required_skill_value;                         // 52       m_requiredSkillRank
 };
 
+#define MAX_LOCK_CASE 8
+
 struct LockEntry
 {
     uint32      ID;                                         // 0        m_ID
-    uint32      Type[8];                                    // 1-8      m_Type
-    uint32      Index[8];                                   // 9-16     m_Index
-    uint32      Skill[8];                                   // 17-24    m_Skill
-    //uint32      Action[8];                                // 25-32    m_Action
+    uint32      Type[MAX_LOCK_CASE];                        // 1-8      m_Type
+    uint32      Index[MAX_LOCK_CASE];                       // 9-16     m_Index
+    uint32      Skill[MAX_LOCK_CASE];                       // 17-24    m_Skill
+    //uint32      Action[MAX_LOCK_CASE];                    // 25-32    m_Action
 };
 
 struct MailTemplateEntry
@@ -1393,13 +1420,16 @@ struct StableSlotPricesEntry
     uint32  Flags;                                          // 5
 };*/
 
+#define MAX_TALENT_RANK 5
+#define MAX_PET_TALENT_RANK 3                               // use in calculations, expected <= MAX_TALENT_RANK
+
 struct TalentEntry
 {
     uint32    TalentID;                                     // 0
     uint32    TalentTab;                                    // 1 index in TalentTab.dbc (TalentTabEntry)
     uint32    Row;                                          // 2
     uint32    Col;                                          // 3
-    uint32    RankID[5];                                    // 4-8
+    uint32    RankID[MAX_TALENT_RANK];                      // 4-8
                                                             // 9-12 not used, always 0, maybe not used high ranks
     uint32    DependsOn;                                    // 13 index in Talent.dbc (TalentEntry)
                                                             // 14-15 not used
@@ -1579,7 +1609,7 @@ struct WorldSafeLocsEntry
 struct WorldMapOverlayEntry
 {
     uint32    ID;                                           // 0
-    uint32    areatableID;                                  // 2
+    uint32    areatableID[4];                               // 2-5
 };
 
 // GCC have alternative #pragma pack() syntax and old gcc version not support pack(pop), also any gcc version not support it at some platform

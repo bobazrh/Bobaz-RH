@@ -24,7 +24,7 @@
 #include "zthread/Lockable.h"
 #include "zthread/Mutex.h"
 #include "zthread/FairReadWriteLock.h"
-#include "Database/DBCStructure.h"
+#include "DBCStructure.h"
 #include "GridDefines.h"
 #include "Cell.h"
 #include "Object.h"
@@ -530,7 +530,6 @@ class MANGOS_DLL_SPEC InstanceMap : public Map
         uint32 GetScriptId() { return i_script_id; }
         InstanceData* GetInstanceData() { return i_data; }
         void PermBindAllPlayers(Player *player);
-        time_t GetResetTime();
         void UnloadAll(bool pForce);
         bool CanEnter(Player* player);
         void SendResetWarnings(uint32 timeLeft) const;

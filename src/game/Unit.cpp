@@ -2842,7 +2842,7 @@ uint32 Unit::GetWeaponSkillValue (WeaponAttackType attType, Unit const* target) 
         if(attType != BASE_ATTACK && !item )
             return 0;
 
-        if(((Player*)this)->IsInFeralForm())
+        if(IsInFeralForm())
             return GetMaxSkillValueForLevel();              // always maximized SKILL_FERAL_COMBAT in fact
 
         // weapon skill or (unarmed for base attack)
@@ -2968,7 +2968,7 @@ void Unit::_UpdateAutoRepeatSpell()
     if (isAttackReady(RANGED_ATTACK))
     {
         // Check if able to cast
-        if(m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->CanCast(true))
+        if(m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->CheckCast(true) != SPELL_CAST_OK)
         {
             InterruptSpell(CURRENT_AUTOREPEAT_SPELL);
             return;
@@ -3561,6 +3561,7 @@ bool Unit::RemoveNoStackAurasDueToAura(Aura *Aur)
         SpellSpecific i_spellId_spec = GetSpellSpecific(i_spellId);
 
         bool is_sspc = IsSingleFromSpellSpecificPerCaster(spellId_spec,i_spellId_spec);
+        bool is_sspt = IsSingleFromSpellSpecificRanksPerTarget(spellId_spec,i_spellId_spec);
 
         if( is_sspc && Aur->GetCasterGUID() == (*i).second->GetCasterGUID() )
         {
@@ -3568,6 +3569,25 @@ bool Unit::RemoveNoStackAurasDueToAura(Aura *Aur)
             if (spellmgr.IsRankSpellDueToSpell(spellProto, i_spellId))
                 if(CompareAuraRanks(spellId, effIndex, i_spellId, i_effIndex) < 0)
                     return false;
+
+            // Its a parent aura (create this aura in ApplyModifier)
+            if ((*i).second->IsInUse())
+            {
+                sLog.outError("Aura (Spell %u Effect %u) is in process but attempt removed at aura (Spell %u Effect %u) adding, need add stack rule for Unit::RemoveNoStackAurasDueToAura", i->second->GetId(), i->second->GetEffIndex(),Aur->GetId(), Aur->GetEffIndex());
+                continue;
+            }
+            RemoveAurasDueToSpell(i_spellId);
+
+            if( m_Auras.empty() )
+                break;
+            else
+                next =  m_Auras.begin();
+        }
+        else if( is_sspt && Aur->GetCasterGUID() != (*i).second->GetCasterGUID() && spellmgr.IsRankSpellDueToSpell(spellProto, i_spellId) )
+        {
+            // cannot remove higher rank
+            if(CompareAuraRanks(spellId, effIndex, i_spellId, i_effIndex) < 0)
+                return false;
 
             // Its a parent aura (create this aura in ApplyModifier)
             if ((*i).second->IsInUse())
@@ -4082,17 +4102,25 @@ void Unit::RemoveGameObject(GameObject* gameObj, bool del)
 {
     assert(gameObj && gameObj->GetOwnerGUID()==GetGUID());
 
-    // GO created by some spell
-    if ( GetTypeId()==TYPEID_PLAYER && gameObj->GetSpellId() )
-    {
-        SpellEntry const* createBySpell = sSpellStore.LookupEntry(gameObj->GetSpellId());
-        // Need activate spell use for owner
-        if (createBySpell && createBySpell->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE)
-            // note: item based cooldowns and cooldown spell mods with charges ignored (unknown existed cases)
-            ((Player*)this)->SendCooldownEvent(createBySpell);
-    }
     gameObj->SetOwnerGUID(0);
+
+    // GO created by some spell
+    if (uint32 spellid = gameObj->GetSpellId())
+    {
+        RemoveAurasDueToSpell(spellid);
+
+        if (GetTypeId()==TYPEID_PLAYER)
+        {
+            SpellEntry const* createBySpell = sSpellStore.LookupEntry(spellid );
+            // Need activate spell use for owner
+            if (createBySpell && createBySpell->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE)
+                // note: item based cooldowns and cooldown spell mods with charges ignored (unknown existed cases)
+                ((Player*)this)->SendCooldownEvent(createBySpell);
+        }
+    }
+
     m_gameObj.remove(gameObj);
+
     if(del)
     {
         gameObj->SetRespawnTime(0);
@@ -5130,6 +5158,16 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 case 28809:
                 {
                     triggered_spell_id = 28810;
+                    break;
+                }
+                // Glyph of Dispel Magic
+                case 55677:
+                {
+                    if(!target->IsFriendlyTo(this))
+                        return false;
+
+                    basepoints0 = int32(target->GetMaxHealth() * triggerAmount / 100);
+                    triggered_spell_id = 56131;
                     break;
                 }
             }
@@ -6930,15 +6968,13 @@ bool Unit::IsHostileTo(Unit const* unit) const
         // forced reaction
         if(target_faction->faction)
         {
-            ForcedReactions::const_iterator forceItr = ((Player*)tester)->m_forcedReactions.find(target_faction->faction);
-            if(forceItr!=((Player*)tester)->m_forcedReactions.end())
-                return forceItr->second <= REP_HOSTILE;
+            if(ReputationRank const* force =((Player*)tester)->GetReputationMgr().GetForcedRankIfAny(target_faction))
+                return *force <= REP_HOSTILE;
 
             // if faction have reputation then hostile state for tester at 100% dependent from at_war state
             if(FactionEntry const* raw_target_faction = sFactionStore.LookupEntry(target_faction->faction))
-                if(raw_target_faction->reputationListID >=0)
-                    if(FactionState const* factionState = ((Player*)tester)->GetFactionState(raw_target_faction))
-                        return (factionState->Flags & FACTION_FLAG_AT_WAR);
+                if(FactionState const* factionState = ((Player*)tester)->GetReputationMgr().GetState(raw_target_faction))
+                    return (factionState->Flags & FACTION_FLAG_AT_WAR);
         }
     }
     // CvP forced reaction and reputation case
@@ -6947,14 +6983,13 @@ bool Unit::IsHostileTo(Unit const* unit) const
         // forced reaction
         if(tester_faction->faction)
         {
-            ForcedReactions::const_iterator forceItr = ((Player const*)target)->m_forcedReactions.find(tester_faction->faction);
-            if(forceItr!=((Player const*)target)->m_forcedReactions.end())
-                return forceItr->second <= REP_HOSTILE;
+            if(ReputationRank const* force = ((Player*)target)->GetReputationMgr().GetForcedRankIfAny(tester_faction))
+                return *force <= REP_HOSTILE;
 
             // apply reputation state
             FactionEntry const* raw_tester_faction = sFactionStore.LookupEntry(tester_faction->faction);
             if(raw_tester_faction && raw_tester_faction->reputationListID >=0 )
-                return ((Player const*)target)->GetReputationRank(raw_tester_faction) <= REP_HOSTILE;
+                return ((Player const*)target)->GetReputationMgr().GetRank(raw_tester_faction) <= REP_HOSTILE;
         }
     }
 
@@ -7045,15 +7080,13 @@ bool Unit::IsFriendlyTo(Unit const* unit) const
         // forced reaction
         if(target_faction->faction)
         {
-            ForcedReactions::const_iterator forceItr = ((Player const*)tester)->m_forcedReactions.find(target_faction->faction);
-            if(forceItr!=((Player const*)tester)->m_forcedReactions.end())
-                return forceItr->second >= REP_FRIENDLY;
+            if(ReputationRank const* force =((Player*)tester)->GetReputationMgr().GetForcedRankIfAny(target_faction))
+                return *force >= REP_FRIENDLY;
 
             // if faction have reputation then friendly state for tester at 100% dependent from at_war state
             if(FactionEntry const* raw_target_faction = sFactionStore.LookupEntry(target_faction->faction))
-                if(raw_target_faction->reputationListID >=0)
-                    if(FactionState const* FactionState = ((Player*)tester)->GetFactionState(raw_target_faction))
-                        return !(FactionState->Flags & FACTION_FLAG_AT_WAR);
+                if(FactionState const* factionState = ((Player*)tester)->GetReputationMgr().GetState(raw_target_faction))
+                    return !(factionState->Flags & FACTION_FLAG_AT_WAR);
         }
     }
     // CvP forced reaction and reputation case
@@ -7062,14 +7095,13 @@ bool Unit::IsFriendlyTo(Unit const* unit) const
         // forced reaction
         if(tester_faction->faction)
         {
-            ForcedReactions::const_iterator forceItr = ((Player const*)target)->m_forcedReactions.find(tester_faction->faction);
-            if(forceItr!=((Player const*)target)->m_forcedReactions.end())
-                return forceItr->second >= REP_FRIENDLY;
+            if(ReputationRank const* force =((Player*)target)->GetReputationMgr().GetForcedRankIfAny(tester_faction))
+                return *force >= REP_FRIENDLY;
 
             // apply reputation state
             if(FactionEntry const* raw_tester_faction = sFactionStore.LookupEntry(tester_faction->faction))
                 if(raw_tester_faction->reputationListID >=0 )
-                    return ((Player const*)target)->GetReputationRank(raw_tester_faction) >= REP_FRIENDLY;
+                    return ((Player const*)target)->GetReputationMgr().GetRank(raw_tester_faction) >= REP_FRIENDLY;
         }
     }
 
@@ -7334,7 +7366,7 @@ Unit* Unit::GetCharm() const
             return pet;
 
         sLog.outError("Unit::GetCharm: Charmed creature %u not exist.",GUID_LOPART(charm_guid));
-        const_cast<Unit*>(this)->SetCharm(0);
+        const_cast<Unit*>(this)->SetCharm(NULL);
     }
 
     return NULL;
@@ -8206,6 +8238,9 @@ bool Unit::IsImmunedToSpell(SpellEntry const* spellInfo)
         if ( hasUnitState(UNIT_STAT_STUNNED) )
             return true;
     }
+
+    //TODO add spellEffect immunity checks!, player with flag in bg is imune to imunity buffs from other friendly players!
+    //SpellImmuneList const& dispelList = m_spellImmune[IMMUNITY_EFFECT];
 
     SpellImmuneList const& dispelList = m_spellImmune[IMMUNITY_DISPEL];
     for(SpellImmuneList::const_iterator itr = dispelList.begin(); itr != dispelList.end(); ++itr)
@@ -9645,7 +9680,7 @@ uint32 Unit::GetCreatureType() const
 {
     if(GetTypeId() == TYPEID_PLAYER)
     {
-        SpellShapeshiftEntry const* ssEntry = sSpellShapeshiftStore.LookupEntry(((Player*)this)->m_form);
+        SpellShapeshiftEntry const* ssEntry = sSpellShapeshiftStore.LookupEntry(m_form);
         if(ssEntry && ssEntry->creatureType > 0)
             return ssEntry->creatureType;
         else
@@ -9737,7 +9772,7 @@ float Unit::GetModifierValue(UnitMods unitMod, UnitModifierType modifierType) co
 {
     if( unitMod >= UNIT_MOD_END || modifierType >= MODIFIER_TYPE_END)
     {
-        sLog.outError("ERROR: trial to access non existed modifier value from UnitMods!");
+        sLog.outError("trial to access non existed modifier value from UnitMods!");
         return 0.0f;
     }
 
@@ -9767,7 +9802,7 @@ float Unit::GetTotalAuraModValue(UnitMods unitMod) const
 {
     if(unitMod >= UNIT_MOD_END)
     {
-        sLog.outError("ERROR: trial to access non existed UnitMods in GetTotalAuraModValue()!");
+        sLog.outError("trial to access non existed UnitMods in GetTotalAuraModValue()!");
         return 0.0f;
     }
 
@@ -10615,8 +10650,11 @@ Player* Unit::GetSpellModOwner()
 }
 
 ///----------Pet responses methods-----------------
-void Unit::SendPetCastFail(uint32 spellid, uint8 msg)
+void Unit::SendPetCastFail(uint32 spellid, SpellCastResult msg)
 {
+    if(msg == SPELL_CAST_OK)
+        return; 
+
     Unit *owner = GetCharmerOrOwner();
     if(!owner || owner->GetTypeId() != TYPEID_PLAYER)
         return;
@@ -11194,7 +11232,7 @@ Pet* Unit::CreateTamedPetFrom(Creature* creatureTarget,uint32 spell_id)
 
     if(!pet->InitStatsForLevel(level))
     {
-        sLog.outError("ERROR: Pet::InitStatsForLevel() failed for creature (Entry: %u)!",creatureTarget->GetEntry());
+        sLog.outError("Pet::InitStatsForLevel() failed for creature (Entry: %u)!",creatureTarget->GetEntry());
         delete pet;
         return NULL;
     }

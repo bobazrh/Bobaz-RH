@@ -692,9 +692,9 @@ enum MangosStrings
     LANG_BATTLEGROUND_PREMATURE_FINISH_WARNING = 750,       // "Not enough players. This game will close in %u mins."
     LANG_BATTLEGROUND_PREMATURE_FINISH_WARNING_SECS = 751,  // "Not enough players. This game will close in %u seconds."
 //                                      = 752, not used
-//  LANG_BG_WS_START_TWO_MINUTES        = 753,
-//  LANG_BG_AB_START_TWO_MINUTES        = 754,
-//  LANG_BG_EY_START_TWO_MINUTES        = 755,
+//  LANG_BG_WS_START_TWO_MINUTES        = 753, - defined above
+//  LANG_BG_AB_START_TWO_MINUTES        = 754, - defined above
+//  LANG_BG_EY_START_TWO_MINUTES        = 755, - defined above
     // Room for batleground/arena strings 756-799 not used
 
     // in game strings
@@ -729,7 +729,10 @@ enum MangosStrings
     LANG_CHARACTER_DELETED              = 1009,
     LANG_ACCOUNT_LIST_HEADER            = 1010,
     LANG_ACCOUNT_LIST_ERROR             = 1011,
-    // Room for more level 4              1012-1099 not used
+    LANG_ACCOUNT_LIST_BAR               = 1012,
+    LANG_ACCOUNT_LIST_LINE              = 1013,
+    LANG_ACCOUNT_LIST_EMPTY             = 1014,
+    // Room for more level 4              1015-1099 not used
 
     // Level 3 (continue)
     LANG_ACCOUNT_SETADDON               = 1100,
@@ -755,7 +758,12 @@ enum MangosStrings
     LANG_YOU_CHANGE_GENDER              = 1120,
     LANG_YOUR_GENDER_CHANGED            = 1121,
     LANG_SKILL_VALUES                   = 1122,
-    // Room for more level 3              1123-1199 not used
+    LANG_NO_PET_FOUND                   = 1123,
+    LANG_WRONG_PET_TYPE                 = 1124,
+    LANG_COMMAND_LEARN_PET_TALENTS      = 1125,
+    LANG_RESET_PET_TALENTS              = 1126,
+    LANG_RESET_PET_TALENTS_ONLINE       = 1127,
+    // Room for more level 3              1128-1199 not used
 
     // FREE IDS                           1200-9999
 

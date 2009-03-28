@@ -518,7 +518,7 @@ void WorldSession::HandleCharDeleteOpcode( WorldPacket & recv_data )
         return;
 
     std::string IP_str = GetRemoteAddress();
-    sLog.outBasic("Account: %d (IP: %s) Delete Character:[%s] (guid:%u)",GetAccountId(),IP_str.c_str(),name.c_str(),GUID_LOPART(guid));
+    sLog.outBasic("Account: %d (IP: %s) Delete Character:[%s] (guid: %u)",GetAccountId(),IP_str.c_str(),name.c_str(),GUID_LOPART(guid));
     sLog.outChar("Account: %d (IP: %s) Delete Character:[%s] (guid: %u)",GetAccountId(),IP_str.c_str(),name.c_str(),GUID_LOPART(guid));
 
     if(sLog.IsOutCharDump())                                // optimize GetPlayerDump call
@@ -634,6 +634,11 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
         SendPacket( &data );
         DEBUG_LOG( "WORLD: Sent motd (SMSG_MOTD)" );
     }
+
+    data.Initialize(SMSG_LEARNED_DANCE_MOVES, 4+4);
+    data << uint32(0);
+    data << uint32(0);
+    SendPacket(&data);
 
     //QueryResult *result = CharacterDatabase.PQuery("SELECT guildid,rank FROM guild_member WHERE guid = '%u'",pCurrChar->GetGUIDLow());
     QueryResult *resultGuild = holder->GetResult(PLAYER_LOGIN_QUERY_LOADGUILD);
@@ -754,7 +759,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
 
     if(uint32 sourceNode = pCurrChar->m_taxi.GetTaxiSource())
     {
-
         sLog.outDebug( "WORLD: Restart character %u taxi flight", pCurrChar->GetGUIDLow() );
 
         uint32 MountId = objmgr.GetTaxiMount(sourceNode, pCurrChar->GetTeam());
@@ -856,15 +860,7 @@ void WorldSession::HandleSetFactionAtWar( WorldPacket & recv_data )
     recv_data >> repListID;
     recv_data >> flag;
 
-    FactionStateList::iterator itr = GetPlayer()->m_factions.find(repListID);
-    if (itr == GetPlayer()->m_factions.end())
-        return;
-
-    // always invisible or hidden faction can't change war state
-    if(itr->second.Flags & (FACTION_FLAG_INVISIBLE_FORCED|FACTION_FLAG_HIDDEN) )
-        return;
-
-    GetPlayer()->SetFactionAtWar(&itr->second,flag);
+    GetPlayer()->GetReputationMgr().SetAtWar(repListID,flag);
 }
 
 //I think this function is never used :/ I dunno, but i guess this opcode not exists
@@ -872,7 +868,7 @@ void WorldSession::HandleSetFactionCheat( WorldPacket & /*recv_data*/ )
 {
     //CHECK_PACKET_SIZE(recv_data,4+4);
 
-    //sLog.outDebug("WORLD SESSION: HandleSetFactionCheat");
+    sLog.outError("WORLD SESSION: HandleSetFactionCheat, not expected call, please report.");
     /*
         uint32 FactionID;
         uint32 Standing;
@@ -892,7 +888,7 @@ void WorldSession::HandleSetFactionCheat( WorldPacket & /*recv_data*/ )
             }
         }
     */
-    GetPlayer()->UpdateReputation();
+    GetPlayer()->GetReputationMgr().SendStates();
 }
 
 void WorldSession::HandleMeetingStoneInfo( WorldPacket & /*recv_data*/ )
@@ -957,11 +953,7 @@ void WorldSession::HandleSetWatchedFactionInactiveOpcode(WorldPacket & recv_data
     uint8 inactive;
     recv_data >> replistid >> inactive;
 
-    FactionStateList::iterator itr = _player->m_factions.find(replistid);
-    if (itr == _player->m_factions.end())
-        return;
-
-    _player->SetFactionInactive(&itr->second, inactive);
+    _player->GetReputationMgr().SetInactive(replistid, inactive);
 }
 
 void WorldSession::HandleToggleHelmOpcode( WorldPacket & /*recv_data*/ )
@@ -1206,7 +1198,7 @@ void WorldSession::HandleRemoveGlyph( WorldPacket & recv_data )
     uint32 slot;
     recv_data >> slot;
 
-    if(slot > MAX_GLYPH_SLOT_INDEX)
+    if(slot >= MAX_GLYPH_SLOT_INDEX)
     {
         sLog.outDebug("Client sent wrong glyph slot number in opcode CMSG_REMOVE_GLYPH %u", slot);
         return;
@@ -1235,7 +1227,7 @@ void WorldSession::HandleCharCustomize(WorldPacket& recv_data)
     CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+1+1+1+1+1+1);
 
     uint8 gender, skin, face, hairStyle, hairColor, facialHair;
-    recv_data >> gender >> skin >> face >> hairStyle >> hairColor >> facialHair;
+    recv_data >> gender >> skin >> hairColor >> hairStyle >> facialHair >> face;
 
     QueryResult *result = CharacterDatabase.PQuery("SELECT at_login FROM characters WHERE guid ='%u'", GUID_LOPART(guid));
     if (!result)

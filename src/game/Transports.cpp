@@ -24,7 +24,7 @@
 #include "Path.h"
 
 #include "WorldPacket.h"
-#include "Database/DBCStores.h"
+#include "DBCStores.h"
 #include "ProgressBar.h"
 
 void MapManager::LoadTransports()
@@ -147,7 +147,7 @@ bool Transport::Create(uint32 guidlow, uint32 mapid, float x, float y, float z, 
 
     if(!IsPositionValid())
     {
-        sLog.outError("ERROR: Transport (GUID: %u) not created. Suggested coordinates isn't valid (X: %f Y: %f)",
+        sLog.outError("Transport (GUID: %u) not created. Suggested coordinates isn't valid (X: %f Y: %f)",
             guidlow,x,y);
         return false;
     }
@@ -409,7 +409,7 @@ bool Transport::GenerateWaypoints(uint32 pathid, std::set<uint32> &mapids)
 
     uint32 timer = t;
 
-    //    sLog.outDetail("    Generated %d waypoints, total time %u.", m_WayPoints.size(), timer);
+    //    sLog.outDetail("    Generated %lu waypoints, total time %u.", (unsigned long)m_WayPoints.size(), timer);
 
     m_curr = m_WayPoints.begin();
     m_curr = GetNextWayPoint();

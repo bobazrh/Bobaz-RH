@@ -20,7 +20,7 @@
 #include "Common.h"
 #include "Player.h"
 #include "WorldPacket.h"
-#include "Database/DBCEnums.h"
+#include "DBCEnums.h"
 #include "GameEventMgr.h"
 #include "ObjectMgr.h"
 #include "Guild.h"
@@ -197,10 +197,8 @@ void AchievementMgr::SaveToDB()
 
         if(need_execute)
         {
-            CharacterDatabase.BeginTransaction ();
             CharacterDatabase.Execute( ssdel.str().c_str() );
             CharacterDatabase.Execute( ssins.str().c_str() );
-            CharacterDatabase.CommitTransaction ();
         }
     }
 
@@ -258,12 +256,10 @@ void AchievementMgr::SaveToDB()
 
         if(need_execute_del || need_execute_ins)
         {
-            CharacterDatabase.BeginTransaction ();
             if(need_execute_del)
                 CharacterDatabase.Execute( ssdel.str().c_str() );
             if(need_execute_ins)
                 CharacterDatabase.Execute( ssins.str().c_str() );
-            CharacterDatabase.CommitTransaction ();
         }
     }
 }
@@ -319,6 +315,7 @@ void AchievementMgr::SendAchievementEarned(AchievementEntry const* achievement)
         MaNGOS::LocalizedPacketDo<MaNGOS::AchievementChatBuilder> say_do(say_builder);
         guild->BroadcastWorker(say_do,GetPlayer());
     }
+
     if(achievement->flags & (ACHIEVEMENT_FLAG_REALM_FIRST_KILL|ACHIEVEMENT_FLAG_REALM_FIRST_REACH))
     {
         // broadcast realm first reached
@@ -337,19 +334,20 @@ void AchievementMgr::SendAchievementEarned(AchievementEntry const* achievement)
         cell.data.Part.reserved = ALL_DISTRICT;
         cell.SetNoCreate();
 
-        MaNGOS::AchievementChatBuilder say_builder(*GetPlayer(), CHAT_MSG_GUILD_ACHIEVEMENT, LANG_ACHIEVEMENT_EARNED,achievement->ID);
+        MaNGOS::AchievementChatBuilder say_builder(*GetPlayer(), CHAT_MSG_ACHIEVEMENT, LANG_ACHIEVEMENT_EARNED,achievement->ID);
         MaNGOS::LocalizedPacketDo<MaNGOS::AchievementChatBuilder> say_do(say_builder);
         MaNGOS::PlayerDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::AchievementChatBuilder> > say_worker(GetPlayer(),sWorld.getConfig(CONFIG_LISTEN_RANGE_SAY),say_do);
         TypeContainerVisitor<MaNGOS::PlayerDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::AchievementChatBuilder> >, WorldTypeMapContainer > message(say_worker);
         CellLock<GridReadGuard> cell_lock(cell, p);
         cell_lock->Visit(cell_lock, message, *GetPlayer()->GetMap());
     }
+
     WorldPacket data(SMSG_ACHIEVEMENT_EARNED, 8+4+8);
     data.append(GetPlayer()->GetPackGUID());
     data << uint32(achievement->ID);
     data << uint32(secsToTimeBitFields(time(NULL)));
     data << uint32(0);
-    GetPlayer()->SendMessageToSet(&data, true);
+    GetPlayer()->SendMessageToSetInRange(&data, sWorld.getConfig(CONFIG_LISTEN_RANGE_SAY), true);
 }
 
 void AchievementMgr::SendCriteriaUpdate(uint32 id, CriteriaProgress const* progress)
@@ -365,7 +363,7 @@ void AchievementMgr::SendCriteriaUpdate(uint32 id, CriteriaProgress const* progr
     data << uint32(secsToTimeBitFields(progress->date));
     data << uint32(0);  // timer 1
     data << uint32(0);  // timer 2
-    GetPlayer()->SendMessageToSet(&data, true);
+    GetPlayer()->SendDirectMessage(&data);
 }
 
 /**
@@ -689,12 +687,15 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
                 break;
             case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SPELL:
-                if(GetPlayer()->HasSpell(achievementCriteria->learn_spell.spellID))
+                // spell always provide and at login spell learning.
+                if(miscvalue1 && miscvalue1!=achievementCriteria->learn_spell.spellID)
+                    continue;
+                if(GetPlayer()->HasSpell(miscvalue1))
                     SetCriteriaProgress(achievementCriteria, 1);
                 break;
             case ACHIEVEMENT_CRITERIA_TYPE_OWN_ITEM:
                 // speedup for non-login case
-                if(miscvalue1 && achievementCriteria->own_item.itemID!=miscvalue1)
+                if(miscvalue1 && achievementCriteria->own_item.itemID != miscvalue1)
                     continue;
                 SetCriteriaProgress(achievementCriteria, GetPlayer()->GetItemCount(achievementCriteria->own_item.itemID, true));
                 break;
@@ -720,14 +721,24 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 if(!worldOverlayEntry)
                     break;
 
-                int32 exploreFlag = GetAreaFlagByAreaID(worldOverlayEntry->areatableID);
-                if(exploreFlag < 0)
-                    break;
+                bool matchFound = false;
+                for (int i = 0; i < 3; ++i)
+                {
+                    int32 exploreFlag = GetAreaFlagByAreaID(worldOverlayEntry->areatableID[i]);
+                    if(exploreFlag < 0)
+                        break;
 
-                uint32 playerIndexOffset = uint32(exploreFlag) / 32;
-                uint32 mask = 1<< (uint32(exploreFlag) % 32);
+                    uint32 playerIndexOffset = uint32(exploreFlag) / 32;
+                    uint32 mask = 1<< (uint32(exploreFlag) % 32);
 
-                if(GetPlayer()->GetUInt32Value(PLAYER_EXPLORED_ZONES_1 + playerIndexOffset) & mask)
+                    if(GetPlayer()->GetUInt32Value(PLAYER_EXPLORED_ZONES_1 + playerIndexOffset) & mask)
+                    {
+                        matchFound = true;
+                        break;
+                    }
+                }
+
+                if(matchFound)
                     SetCriteriaProgress(achievementCriteria, 1);
                 break;
             }
@@ -736,21 +747,18 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 break;
             case ACHIEVEMENT_CRITERIA_TYPE_GAIN_REPUTATION:
             {
-                int32 reputation = GetPlayer()->GetReputation(achievementCriteria->gain_reputation.factionID);
+                // skip faction check only at loading
+                if (miscvalue1 && miscvalue1 != achievementCriteria->gain_reputation.factionID)
+                    continue;
+
+                int32 reputation = GetPlayer()->GetReputationMgr().GetReputation(achievementCriteria->gain_reputation.factionID);
                 if (reputation > 0)
                     SetCriteriaProgress(achievementCriteria, reputation);
                 break;
             }
             case ACHIEVEMENT_CRITERIA_TYPE_GAIN_EXALTED_REPUTATION:
             {
-                uint32 counter = 0;
-                const FactionStateList factionStateList = GetPlayer()->GetFactionStateList();
-                for (FactionStateList::const_iterator iter = factionStateList.begin(); iter!= factionStateList.end(); ++iter)
-                {
-                    if(GetPlayer()->ReputationToRank(iter->second.Standing) >= REP_EXALTED)
-                        ++counter;
-                }
-                SetCriteriaProgress(achievementCriteria, counter);
+                SetCriteriaProgress(achievementCriteria, GetPlayer()->GetReputationMgr().GetExaltedFactionCount());
                 break;
             }
             case ACHIEVEMENT_CRITERIA_TYPE_VISIT_BARBER_SHOP:
@@ -806,24 +814,52 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
                 break;
             }
+            case ACHIEVEMENT_CRITERIA_TYPE_EQUIP_ITEM:
+                // miscvalue1 = item_id
+                if(!miscvalue1)
+                    continue;
+                if(miscvalue1 != achievementCriteria->equip_item.itemID)
+                    continue;
+
+                SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
+                break;
             case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILLLINE_SPELLS:
+            {
+                // spell always provide and at login spell learning.
+                if(!miscvalue1)
+                    continue;
+                // rescan only when change possible
+                SkillLineAbilityMap::const_iterator skillIter0 = spellmgr.GetBeginSkillLineAbilityMap(miscvalue1);
+                if(skillIter0 == spellmgr.GetEndSkillLineAbilityMap(miscvalue1))
+                    continue;
+                if(skillIter0->second->skillId != achievementCriteria->learn_skilline_spell.skillLine)
+                    continue;
+
+                uint32 spellCount = 0;
+                for (PlayerSpellMap::const_iterator spellIter = GetPlayer()->GetSpellMap().begin();
+                    spellIter != GetPlayer()->GetSpellMap().end();
+                    ++spellIter)
                 {
-                    uint32 spellCount = 0;
-                    for (PlayerSpellMap::const_iterator spellIter = GetPlayer()->GetSpellMap().begin();
-                        spellIter != GetPlayer()->GetSpellMap().end();
-                        ++spellIter)
+                    for(SkillLineAbilityMap::const_iterator skillIter = spellmgr.GetBeginSkillLineAbilityMap(spellIter->first);
+                        skillIter != spellmgr.GetEndSkillLineAbilityMap(spellIter->first);
+                        ++skillIter)
                     {
-                        for(SkillLineAbilityMap::const_iterator skillIter = spellmgr.GetBeginSkillLineAbilityMap(spellIter->first);
-                            skillIter != spellmgr.GetEndSkillLineAbilityMap(spellIter->first);
-                            ++skillIter)
-                        {
-                            if(skillIter->second->skillId == achievementCriteria->learn_skilline_spell.skillLine)
-                                spellCount++;
-                        }
+                        if(skillIter->second->skillId == achievementCriteria->learn_skilline_spell.skillLine)
+                            spellCount++;
                     }
-                    SetCriteriaProgress(achievementCriteria, spellCount);
-                    break;
                 }
+                SetCriteriaProgress(achievementCriteria, spellCount);
+                break;
+            }
+            case ACHIEVEMENT_CRITERIA_TYPE_GAIN_REVERED_REPUTATION:
+                SetCriteriaProgress(achievementCriteria, GetPlayer()->GetReputationMgr().GetReveredFactionCount());
+                break;
+            case ACHIEVEMENT_CRITERIA_TYPE_GAIN_HONORED_REPUTATION:
+                SetCriteriaProgress(achievementCriteria, GetPlayer()->GetReputationMgr().GetHonoredFactionCount());
+                break;
+            case ACHIEVEMENT_CRITERIA_TYPE_KNOWN_FACTIONS:
+                SetCriteriaProgress(achievementCriteria, GetPlayer()->GetReputationMgr().GetVisibleFactionCount());
+                break;
             case ACHIEVEMENT_CRITERIA_TYPE_CAST_SPELL2:
             {
                 if (!miscvalue1 || miscvalue1 != achievementCriteria->cast_spell.spellID)
@@ -876,7 +912,6 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             case ACHIEVEMENT_CRITERIA_TYPE_HK_RACE:
             case ACHIEVEMENT_CRITERIA_TYPE_HEALING_DONE:
             case ACHIEVEMENT_CRITERIA_TYPE_GET_KILLING_BLOWS:
-            case ACHIEVEMENT_CRITERIA_TYPE_EQUIP_ITEM:
             case ACHIEVEMENT_CRITERIA_TYPE_MONEY_FROM_VENDORS:
             case ACHIEVEMENT_CRITERIA_TYPE_NUMBER_OF_TALENT_RESETS:
             case ACHIEVEMENT_CRITERIA_TYPE_USE_GAMEOBJECT:
@@ -889,9 +924,6 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             case ACHIEVEMENT_CRITERIA_TYPE_CREATE_AUCTION:
             case ACHIEVEMENT_CRITERIA_TYPE_WON_AUCTIONS:
             case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_GOLD_VALUE_OWNED:
-            case ACHIEVEMENT_CRITERIA_TYPE_GAIN_REVERED_REPUTATION:
-            case ACHIEVEMENT_CRITERIA_TYPE_GAIN_HONORED_REPUTATION:
-            case ACHIEVEMENT_CRITERIA_TYPE_KNOWN_FACTIONS:
             case ACHIEVEMENT_CRITERIA_TYPE_LOOT_EPIC_ITEM:
             case ACHIEVEMENT_CRITERIA_TYPE_RECEIVE_EPIC_ITEM:
             case ACHIEVEMENT_CRITERIA_TYPE_ROLL_NEED:
@@ -1004,6 +1036,8 @@ bool AchievementMgr::IsCompletedCriteria(AchievementCriteriaEntry const* achieve
             return progress->counter >= achievementCriteria->roll_greed_on_loot.count;
         case ACHIEVEMENT_CRITERIA_TYPE_DO_EMOTE:
             return progress->counter >= achievementCriteria->do_emote.count;
+        case ACHIEVEMENT_CRITERIA_TYPE_EQUIP_ITEM:
+            return progress->counter >= achievementCriteria->equip_item.count;
         case ACHIEVEMENT_CRITERIA_TYPE_MONEY_FROM_QUEST_REWARD:
             return progress->counter >= achievementCriteria->quest_reward_money.goldInCopper;
         case ACHIEVEMENT_CRITERIA_TYPE_LOOT_MONEY:
@@ -1024,6 +1058,9 @@ bool AchievementMgr::IsCompletedCriteria(AchievementCriteriaEntry const* achieve
         case ACHIEVEMENT_CRITERIA_TYPE_GOLD_SPENT_FOR_MAIL:
         case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_AUCTION_BID:
         case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_AUCTION_SOLD:
+        case ACHIEVEMENT_CRITERIA_TYPE_GAIN_REVERED_REPUTATION:
+        case ACHIEVEMENT_CRITERIA_TYPE_GAIN_HONORED_REPUTATION:
+        case ACHIEVEMENT_CRITERIA_TYPE_KNOWN_FACTIONS:
         case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_HEALTH:
         case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_SPELLPOWER:
         case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_ARMOR:
@@ -1076,7 +1113,7 @@ AchievementCompletionState AchievementMgr::GetAchievementCompletionState(Achieve
 void AchievementMgr::SetCriteriaProgress(AchievementCriteriaEntry const* entry, uint32 changeValue, ProgressType ptype)
 {
     if((sLog.getLogFilter() & LOG_FILTER_ACHIEVEMENT_UPDATES)==0)
-        sLog.outDetail("AchievementMgr::SetCriteriaProgress(%u, %u) for (GUID:%u)", entry->ID, changeValue);
+        sLog.outDetail("AchievementMgr::SetCriteriaProgress(%u, %u) for (GUID:%u)", entry->ID, changeValue, m_player->GetGUIDLow());
 
     CriteriaProgress *progress = NULL;
 
@@ -1278,7 +1315,7 @@ void AchievementGlobalMgr::LoadAchievementCriteriaList()
     }
 
     sLog.outString();
-    sLog.outString(">> Loaded %u achievement criteria.",m_AchievementCriteriasByType->size());
+    sLog.outString(">> Loaded %lu achievement criteria.",(unsigned long)m_AchievementCriteriasByType->size());
 }
 
 
@@ -1307,7 +1344,7 @@ void AchievementGlobalMgr::LoadCompletedAchievements()
     delete result;
 
     sLog.outString();
-    sLog.outString(">> Loaded %u realm completed achievements.",m_allCompletedAchievements.size());
+    sLog.outString(">> Loaded %lu realm completed achievements.",(unsigned long)m_allCompletedAchievements.size());
 }
 
 void AchievementGlobalMgr::LoadRewards()
@@ -1417,7 +1454,7 @@ void AchievementGlobalMgr::LoadRewards()
     delete result;
 
     sLog.outString();
-    sLog.outString( ">> Loaded %u achievement reward locale strings", m_achievementRewardLocales.size() );
+    sLog.outString( ">> Loaded %lu achievement reward locale strings", (unsigned long)m_achievementRewardLocales.size() );
 }
 
 void AchievementGlobalMgr::LoadRewardLocales()
@@ -1486,5 +1523,5 @@ void AchievementGlobalMgr::LoadRewardLocales()
     delete result;
 
     sLog.outString();
-    sLog.outString( ">> Loaded %u achievement reward locale strings", m_achievementRewardLocales.size() );
+    sLog.outString( ">> Loaded %lu achievement reward locale strings", (unsigned long)m_achievementRewardLocales.size() );
 }

@@ -16,6 +16,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef MANGOS_DBCSFRM_H
+#define MANGOS_DBCSFRM_H
+
 const char Achievementfmt[]="niixxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxiixixxxxxxxxxxxxxxxxxxxi";
 const char AchievementCriteriafmt[]="niiiiiiiixxxxxxxxxxxxxxxxxiixix";
 const char AreaTableEntryfmt[]="iiinixxxxxissssssssssssssssxixxxxxxx";
@@ -35,6 +38,7 @@ const char CreatureDisplayInfofmt[]="nxxxfxxxxxxxxxxx";
 const char CreatureFamilyfmt[]="nfifiiiiixssssssssssssssssxx";
 const char CreatureSpellDatafmt[]="nxxxxxxxx";
 const char CreatureTypefmt[]="nxxxxxxxxxxxxxxxxxx";
+const char CurrencyTypesfmt[]="xnxi";
 const char DurabilityCostsfmt[]="niiiiiiiiiiiiiiiiiiiiiiiiiiiii";
 const char DurabilityQualityfmt[]="nf";
 const char EmoteEntryfmt[]="nxixxxxxxxxxxxxxxxx";
@@ -55,6 +59,7 @@ const char GtRegenHPPerSptfmt[]="f";
 const char GtRegenMPPerSptfmt[]="f";
 const char Holidaysfmt[]="nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 const char Itemfmt[]="nixiiiii";
+const char ItemBagFamilyfmt[]="nxxxxxxxxxxxxxxxxx";
 //const char ItemDisplayTemplateEntryfmt[]="nxxxxxxxxxxixxxxxxxxxxx";
 //const char ItemCondExtCostsEntryfmt[]="xiii";
 const char ItemExtendedCostEntryfmt[]="niiiiiiiiiiiiix";
@@ -94,5 +99,6 @@ const char VehicleEntryfmt[]="niffffiiiiiiiiffffiiiiiifffffffffffssssfifi";
 const char VehicleSeatEntryfmt[]="niiffffffffffiiiiiifffffffiiifffiiiiiiiffiiiii";
 const char WorldMapAreaEntryfmt[]="xinxffffix";
 const char WorldSafeLocsEntryfmt[]="nifffxxxxxxxxxxxxxxxxx";
-const char WorldMapOverlayEntryfmt[]="nxixxxxxxxxxxxxxx";
+const char WorldMapOverlayEntryfmt[]="nxiiiixxxxxxxxxxx";
 
+#endif
