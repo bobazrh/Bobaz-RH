@@ -214,7 +214,7 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
                 return;
             }
 
-            if (!sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHAT) && tSecurity == SEC_PLAYER && pSecurity == SEC_PLAYER )
+            /*if (!sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHAT) && tSecurity == SEC_PLAYER && pSecurity == SEC_PLAYER )
             {
                 uint32 sidea = GetPlayer()->GetTeam();
                 uint32 sideb = player->GetTeam();
@@ -225,7 +225,7 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
                     SendPacket(&data);
                     return;
                 }
-            }
+            }*/
 
             GetPlayer()->Whisper(msg, lang,player->GetGUID());
         } break;
