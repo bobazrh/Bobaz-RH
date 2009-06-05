@@ -15,33 +15,45 @@
  */
 
 /* ScriptData
-SDName: Boss_Keleseth
-SD%Complete: 20%
+SDName: Boss_Keristrasza
+SD%Complete: 10%
 SDComment:
-SDCategory: Utgarde Keep
+SDCategory: Nexus
 EndScriptData */
 
 #include "precompiled.h"
-#include "def_utgarde_keep.h"
 
 enum
 {
-    SAY_AGGRO               = -1574000,
-    SAY_FROSTTOMB           = -1574001,
-    SAY_SKELETONS           = -1574002,
-    SAY_KILL                = -1574003,
-    SAY_DEATH               = -1574004
+    SAY_AGGRO                   = -1576016,
+    SAY_CRYSTAL_NOVA            = -1576017,
+    SAY_ENRAGE                  = -1576018,
+    SAY_KILL                    = -1576019,
+    SAY_DEATH                   = -1576020,
+
+    SPELL_CRYSTALFIRE_BREATH    = 48096,
+    SPELL_CRYSTALFIRE_BREATH_H  = 57091,
+
+    SPELL_CRYSTALLIZE           = 48179,
+    
+    SPELL_CRYSTAL_CHAINS        = 50997,
+    SPELL_CRYSTAL_CHAINS_H      = 57050,
+
+    SPELL_TAIL_SWEEP            = 50155,
+    SPELL_INTENSE_COLD          = 48094,
+
+    SPELL_ENRAGE                = 8599
 };
 
 /*######
-## boss_keleseth
+## boss_keristrasza
 ######*/
 
-struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
+struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 {
-    boss_kelesethAI(Creature* pCreature) : ScriptedAI(pCreature)
+    boss_keristraszaAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsHeroic = pCreature->GetMap()->IsHeroic();
         Reset();
     }
@@ -65,7 +77,8 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
 
     void KilledUnit(Unit* pVictim)
     {
-        DoScriptText(SAY_KILL, m_creature);
+        if (rand()%2)
+            DoScriptText(SAY_KILL, m_creature);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -77,17 +90,17 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
     }
 };
 
-CreatureAI* GetAI_boss_keleseth(Creature* pCreature)
+CreatureAI* GetAI_boss_keristrasza(Creature* pCreature)
 {
-    return new boss_kelesethAI(pCreature);
+    return new boss_keristraszaAI(pCreature);
 }
 
-void AddSC_boss_keleseth()
+void AddSC_boss_keristrasza()
 {
     Script *newscript;
 
     newscript = new Script;
-    newscript->Name = "boss_keleseth";
-    newscript->GetAI = &GetAI_boss_keleseth;
+    newscript->Name = "boss_keristrasza";
+    newscript->GetAI = &GetAI_boss_keristrasza;
     newscript->RegisterSelf();
 }

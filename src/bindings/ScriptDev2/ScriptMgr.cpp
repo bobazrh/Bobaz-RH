@@ -384,6 +384,17 @@ extern void AddSC_instance_naxxramas();
 //Netherstorm
 extern void AddSC_netherstorm();
 
+//The Nexus
+//Eye of Eternety
+
+//Nexus
+extern void AddSC_boss_anomalus();
+extern void AddSC_boss_keristrasza();
+extern void AddSC_boss_ormorok();
+extern void AddSC_boss_telestra();
+
+//Oculus
+
 //Obsidian Sanctum
 extern void AddSC_boss_sartharion();
 extern void AddSC_instance_obsidian_sanctum();
@@ -541,6 +552,9 @@ extern void AddSC_undercity();
 //Upper blackrock spire
 
 //Utgarde Keep
+extern void AddSC_boss_ingvar();
+extern void AddSC_boss_keleseth();
+extern void AddSC_boss_skarvald_and_dalronn();
 extern void AddSC_instance_utgarde_keep();
 extern void AddSC_utgarde_keep();
 
@@ -1243,6 +1257,17 @@ void ScriptsInit()
     //Netherstorm
     AddSC_netherstorm();
 
+    //The Nexus
+    //Eye of Eternety
+
+    //Nexus
+    AddSC_boss_anomalus();
+    AddSC_boss_keristrasza();
+    AddSC_boss_ormorok();
+    AddSC_boss_telestra();
+
+    //Oculus
+
     //Obsidian Sanctum
     AddSC_boss_sartharion();
     AddSC_instance_obsidian_sanctum();
@@ -1400,6 +1425,9 @@ void ScriptsInit()
     //Upper blackrock spire
 
     //Utgarde Keep
+    AddSC_boss_ingvar();
+    AddSC_boss_keleseth();
+    AddSC_boss_skarvald_and_dalronn();
     AddSC_instance_utgarde_keep();
     AddSC_utgarde_keep();
 

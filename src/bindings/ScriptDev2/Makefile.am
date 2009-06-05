@@ -267,6 +267,10 @@ scripts/zone/naxxramas/boss_sapphiron.cpp \
 scripts/zone/naxxramas/boss_thaddius.cpp \
 scripts/zone/naxxramas/instance_naxxramas.cpp \
 scripts/zone/netherstorm/netherstorm.cpp \
+scripts/zone/nexus/nexus/boss_anomalus.cpp \
+scripts/zone/nexus/nexus/boss_keristrasza.cpp \
+scripts/zone/nexus/nexus/boss_ormorok.cpp \
+scripts/zone/nexus/nexus/boss_telestra.cpp \
 scripts/zone/obsidian_sanctum/boss_sartharion.cpp \
 scripts/zone/obsidian_sanctum/def_obsidian_sanctum.h \
 scripts/zone/obsidian_sanctum/instance_obsidian_sanctum.cpp \
@@ -377,6 +381,9 @@ scripts/zone/tirisfal_glades/tirisfal_glades.cpp \
 scripts/zone/uldaman/boss_ironaya.cpp \
 scripts/zone/uldaman/uldaman.cpp \
 scripts/zone/undercity/undercity.cpp \
+scripts/zone/utgarde_keep/utgarde_keep/boss_ingvar.cpp \
+scripts/zone/utgarde_keep/utgarde_keep/boss_keleseth.cpp \
+scripts/zone/utgarde_keep/utgarde_keep/boss_skarvald_and_dalronn.cpp \
 scripts/zone/utgarde_keep/utgarde_keep/def_utgarde_keep.h \
 scripts/zone/utgarde_keep/utgarde_keep/instance_utgarde_keep.cpp \
 scripts/zone/utgarde_keep/utgarde_keep/utgarde_keep.cpp \

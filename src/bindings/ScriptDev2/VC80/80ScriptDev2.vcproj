@@ -2405,6 +2405,22 @@
 					<Filter
 						Name="Nexus"
 						>
+						<File
+							RelativePath="..\scripts\zone\nexus\nexus\boss_anomalus.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\zone\nexus\nexus\boss_keristrasza.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\zone\nexus\nexus\boss_ormorok.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\zone\nexus\nexus\boss_telestra.cpp"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="Oculus"
@@ -2437,6 +2453,18 @@
 					<Filter
 						Name="Utgarde Keep"
 						>
+						<File
+							RelativePath="..\scripts\zone\utgarde_keep\utgarde_keep\boss_ingvar.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\zone\utgarde_keep\utgarde_keep\boss_keleseth.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\zone\utgarde_keep\utgarde_keep\boss_skarvald_and_dalronn.cpp"
+							>
+						</File>
 						<File
 							RelativePath="..\scripts\zone\utgarde_keep\utgarde_keep\def_utgarde_keep.h"
 							>

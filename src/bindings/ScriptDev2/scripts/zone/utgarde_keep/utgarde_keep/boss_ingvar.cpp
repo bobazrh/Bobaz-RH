@@ -15,7 +15,7 @@
  */
 
 /* ScriptData
-SDName: Boss_Keleseth
+SDName: Boss_Ingvar
 SD%Complete: 20%
 SDComment:
 SDCategory: Utgarde Keep
@@ -26,20 +26,21 @@ EndScriptData */
 
 enum
 {
-    SAY_AGGRO               = -1574000,
-    SAY_FROSTTOMB           = -1574001,
-    SAY_SKELETONS           = -1574002,
-    SAY_KILL                = -1574003,
-    SAY_DEATH               = -1574004
+    SAY_AGGRO_FIRST         = -1574005,
+    SAY_AGGRO_SECOND        = -1574006,
+    SAY_DEATH_FIRST         = -1574007,
+    SAY_DEATH_SECOND        = -1574008,
+    SAY_KILL_FIRST          = -1574009,
+    SAY_KILL_SECOND         = -1574010
 };
 
 /*######
-## boss_keleseth
+## boss_ingvar
 ######*/
 
-struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
+struct MANGOS_DLL_DECL boss_ingvarAI : public ScriptedAI
 {
-    boss_kelesethAI(Creature* pCreature) : ScriptedAI(pCreature)
+    boss_ingvarAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
         m_bIsHeroic = pCreature->GetMap()->IsHeroic();
@@ -49,23 +50,27 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     bool m_bIsHeroic;
 
+    bool m_bIsResurrected;
+
     void Reset() 
     {
+        m_bIsResurrected = false;
     }
 
     void Aggro(Unit* pWho)
     {
-        DoScriptText(SAY_AGGRO, m_creature);
+        DoScriptText(m_bIsResurrected ? SAY_AGGRO_SECOND : SAY_AGGRO_FIRST, m_creature);
     }
 
     void JustDied(Unit* pKiller)
     {
-        DoScriptText(SAY_DEATH, m_creature);
+        DoScriptText(m_bIsResurrected ? SAY_DEATH_SECOND : SAY_DEATH_FIRST, m_creature);
     }
 
     void KilledUnit(Unit* pVictim)
     {
-        DoScriptText(SAY_KILL, m_creature);
+        if (rand()%2)
+            DoScriptText(m_bIsResurrected ? SAY_KILL_SECOND : SAY_KILL_FIRST, m_creature);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -77,17 +82,17 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
     }
 };
 
-CreatureAI* GetAI_boss_keleseth(Creature* pCreature)
+CreatureAI* GetAI_boss_ingvar(Creature* pCreature)
 {
-    return new boss_kelesethAI(pCreature);
+    return new boss_ingvarAI(pCreature);
 }
 
-void AddSC_boss_keleseth()
+void AddSC_boss_ingvar()
 {
     Script *newscript;
 
     newscript = new Script;
-    newscript->Name = "boss_keleseth";
-    newscript->GetAI = &GetAI_boss_keleseth;
+    newscript->Name = "boss_ingvar";
+    newscript->GetAI = &GetAI_boss_ingvar;
     newscript->RegisterSelf();
 }

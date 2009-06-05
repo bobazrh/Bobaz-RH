@@ -15,33 +15,39 @@
  */
 
 /* ScriptData
-SDName: Boss_Keleseth
-SD%Complete: 20%
+SDName: Boss_Anomalus
+SD%Complete: 10%
 SDComment:
-SDCategory: Utgarde Keep
+SDCategory: Nexus
 EndScriptData */
 
 #include "precompiled.h"
-#include "def_utgarde_keep.h"
 
 enum
 {
-    SAY_AGGRO               = -1574000,
-    SAY_FROSTTOMB           = -1574001,
-    SAY_SKELETONS           = -1574002,
-    SAY_KILL                = -1574003,
-    SAY_DEATH               = -1574004
+    SAY_AGGRO               = -1576006,
+    SAY_RIFT                = -1576007,
+    SAY_SHIELD              = -1576008,
+    SAY_KILL                = -1576009,
+    SAY_DEATH               = -1576010,
+
+    SPELL_CREATE_RIFT       = 47743,
+    SPELL_CHARGE_RIFT       = 47747,
+    SPELL_RIFT_SHIELD       = 47748,
+
+    SPELL_SPARK             = 47751,
+    SPELL_SPARK_H           = 57062
 };
 
 /*######
-## boss_keleseth
+## boss_anomalus
 ######*/
 
-struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
+struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 {
-    boss_kelesethAI(Creature* pCreature) : ScriptedAI(pCreature)
+    boss_anomalusAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsHeroic = pCreature->GetMap()->IsHeroic();
         Reset();
     }
@@ -65,7 +71,8 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
 
     void KilledUnit(Unit* pVictim)
     {
-        DoScriptText(SAY_KILL, m_creature);
+        if (rand()%2)
+            DoScriptText(SAY_KILL, m_creature);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -77,17 +84,17 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
     }
 };
 
-CreatureAI* GetAI_boss_keleseth(Creature* pCreature)
+CreatureAI* GetAI_boss_anomalus(Creature* pCreature)
 {
-    return new boss_kelesethAI(pCreature);
+    return new boss_anomalusAI(pCreature);
 }
 
-void AddSC_boss_keleseth()
+void AddSC_boss_anomalus()
 {
     Script *newscript;
 
     newscript = new Script;
-    newscript->Name = "boss_keleseth";
-    newscript->GetAI = &GetAI_boss_keleseth;
+    newscript->Name = "boss_anomalus";
+    newscript->GetAI = &GetAI_boss_anomalus;
     newscript->RegisterSelf();
 }

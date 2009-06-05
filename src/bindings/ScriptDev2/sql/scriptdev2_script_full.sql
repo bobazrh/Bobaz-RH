@@ -3,7 +3,7 @@
 --
 
 DELETE FROM sd2_db_version;
-INSERT INTO sd2_db_version (version) VALUES ('ScriptDev2 (for MaNGOS 7871+) ');
+INSERT INTO sd2_db_version (version) VALUES ('ScriptDev2 (for MaNGOS 7951+) ');
 
 --
 -- Below contains data for table `script_texts` mainly used in C++ parts.
@@ -908,7 +908,9 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 (-1533115,'Soon... the world will tremble!',8832,1,0,0,'heigan SAY_TAUNT3'),
 (-1533116,'The end is upon you.',8833,1,0,0,'heigan SAY_TAUNT4'),
 (-1533117,'Hungry worms will feast on your rotten flesh!',8834,1,0,0,'heigan SAY_TAUNT5'),
-(-1533118,'Noo... o...',8828,1,0,0,'heigan SAY_DEATH');
+(-1533118,'Noo... o...',8828,1,0,0,'heigan SAY_DEATH'),
+
+(-1533119,'%s spots a nearby Zombie to devour!',0,3,0,0,'gluth EMOTE_ZOMBIE');
 
 -- -1 534 000 THE BATTLE OF MT. HYJAL
 INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
@@ -1724,10 +1726,60 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 (-1568081,'I\'ve researched this site extensively and i won\'t allow any dim-witted treasure hunters to swoop in and steal what belongs to in a museum. I\'ll lead this charge.',0,1,0,0,'harrison SAY_OPEN_ENTRANCE');
 
 -- -1 574 000 UTGARDE KEEP
+INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
+(-1574000,'Your blood is mine!',13221,1,0,0,'keleseth SAY_AGGRO'),
+(-1574001,'Not so fast.',13222,1,0,0,'keleseth SAY_FROSTTOMB'),
+(-1574002,'Aranal, lidel! Their fate shall be yours!',13224,1,0,0,'keleseth SAY_SKELETONS'),
+(-1574003,'Darkness waits!',13223,1,0,0,'keleseth SAY_KILL'),
+(-1574004,'I join... the night.',13225,1,0,0,'keleseth SAY_DEATH'),
+
+(-1574005,'I\'ll paint my face with your blood!',13207,1,0,0,'ingvar SAY_AGGRO_FIRST'),
+(-1574006,'I return! A second chance to carve out your skull!',13209,1,0,0,'ingvar SAY_AGGRO_SECOND'),
+(-1574007,'My life for the... death god!',13213,1,0,0,'ingvar SAY_DEATH_FIRST'),
+(-1574008,'No! I can do... better! I can...',13211,1,0,0,'ingvar SAY_DEATH_SECOND'),
+(-1574009,'Mjul orm agn gjor!',13212,1,0,0,'ingvar SAY_KILL_FIRST'),
+(-1574010,'I am a warrior born!',13214,1,0,0,'ingvar SAY_KILL_SECOND'),
+
+(-1574011,'Dalronn! See if you can muster the nerve to join my attack!',13229,1,0,0,'skarvald SAY_SKA_AGGRO'),
+(-1574012,'Not... over... yet.',13230,1,0,0,'skarvald SAY_SKA_DEATH'),
+(-1574013,'A warrior\'s death.',13231,1,0,0,'skarvald SAY_SKA_DEATH_REAL'),
+(-1574014,'???',13232,1,0,0,'skarvald SAY_SKA_KILL'),
+(-1574015,'Pagh! What sort of necromancer lets death stop him? I knew you were worthless!',13233,1,0,0,'skarvald SAY_SKA_DAL_DIES_REPLY'),
+
+(-1574016,'By all means, don\'t assess the situation, you halfwit! Just jump into the fray!',13199,1,0,0,'dalronn SAY_DAL_AGGRO_REPLY'),
+(-1574017,'See... you... soon.',13200,1,0,0,'dalronn SAY_DAL_DEATH'),
+(-1574018,'There\'s no... greater... glory.',13201,1,0,0,'dalronn SAY_DAL_DEATH_REAL'),
+(-1574019,'You may serve me yet.',13202,1,0,0,'dalronn SAY_DAL_KILL'),
+(-1574020,'Skarvald, you incompetent slug! Return and make yourself useful!',13203,1,0,0,'dalronn SAY_DAL_SKA_DIES_REPLY');
 
 -- -1 575 000 UTGARDE PINNACLE
 
 -- -1 576 000 NEXUS
+INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
+(-1576000,'You know what they say about curiosity.',13319,1,0,0,'telestra SAY_AGGRO'),
+(-1576001,'I\'ll give you more than you can handle.',13321,1,0,0,'telestra SAY_SPLIT_1'),
+(-1576002,'There\'s plenty of me to go around.',13322,1,0,0,'telestra SAY_SPLIT_2'),
+(-1576003,'Now to finish the job!',13323,1,0,0,'telestra SAY_MERGE'),
+(-1576004,'Death becomes you!',13324,1,0,0,'telestra SAY_KILL'),
+(-1576005,'Damn the... luck.',13320,1,0,0,'telestra SAY_DEATH'),
+
+(-1576006,'Chaos beckons.',13186,1,0,0,'anomalus SAY_AGGRO'),
+(-1576007,'Reality... unwoven.',13188,1,0,0,'anomalus SAY_RIFT'),
+(-1576008,'Indestructible.',13189,1,0,0,'anomalus SAY_SHIELD'),
+(-1576009,'Expiration... is necesarry.',13274,1,0,0,'anomalus SAY_KILL'),
+(-1576010,'Of course.',13187,1,0,0,'anomalus SAY_DEATH'),
+
+(-1576011,'Noo!',13328,1,0,0,'ormorok SAY_AGGRO'),
+(-1576012,'???',13329,1,0,0,'ormorok SAY_KILL'),
+(-1576013,'Baaack!',13331,1,0,0,'ormorok SAY_REFLECT'),
+(-1576014,'Bleeeed!',13332,1,0,0,'ormorok SAY_ICESPIKE'),
+(-1576015,'Aaggh!',13330,1,0,0,'ormorok SAY_DEATH'),
+
+(-1576016,'Preserve? Why? There\'s no truth in it. No no no... only in the taking! I see that now!',13450,1,0,0,'keristrasza SAY_AGGRO'),
+(-1576017,'Stay. Enjoy your final moments.',13451,1,0,0,'keristrasza SAY_CRYSTAL_NOVA'),
+(-1576018,'Finish it! Finish it! Kill me, or I swear by the Dragonqueen you\'ll never see daylight again!',13452,1,0,0,'keristrasza SAY_ENRAGE'),
+(-1576019,'Now we\'ve come to the truth!',13453,1,0,0,'keristrasza SAY_KILL'),
+(-1576020,'Dragonqueen... Life-Binder... preserve... me.',13454,1,0,0,'keristrasza SAY_DEATH');
 
 -- -1 578 000 OCULUS
 
