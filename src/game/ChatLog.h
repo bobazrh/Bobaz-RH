@@ -49,7 +49,7 @@ enum LexicsActions
     LEXICS_ACTION_SICKNESS = 7,
 };
 
-class ChatLog : public MaNGOS::Singleton<ChatLog, MaNGOS::ClassLevelLockable<ChatLog, ZThread::FastMutex> >
+class ChatLog : public MaNGOS::Singleton<ChatLog, MaNGOS::ClassLevelLockable<ChatLog, ACE_Thread_Mutex> >
 {
     public:
         ChatLog();
