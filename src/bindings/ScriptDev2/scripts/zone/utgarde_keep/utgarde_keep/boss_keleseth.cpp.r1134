@@ -15,59 +15,31 @@
  */
 
 /* ScriptData
-SDName: Boss_Telestra
-SD%Complete: 10%
+SDName: Boss_Keleseth
+SD%Complete: 20%
 SDComment:
-SDCategory: Nexus
+SDCategory: Utgarde Keep
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_utgarde_keep.h"
 
 enum
 {
-    SAY_AGGRO               = -1576000,
-    SAY_SPLIT_1             = -1576001,
-    SAY_SPLIT_2             = -1576002,
-    SAY_MERGE               = -1576003,
-    SAY_KILL                = -1576004,
-    SAY_DEATH               = -1576005,
-
-    SPELL_FIREBOMB          = 47773,
-    SPELL_FIREBOMB_H        = 56934,
-
-    SPELL_ICE_NOVA          = 47772,
-    SPELL_ICE_NOVA_H        = 56935,
-
-    SPELL_GRAVITY_WELL      = 47756,
-
-    SPELL_SUMMON_CLONES     = 47710,
-
-    SPELL_ARCANE_VISUAL     = 47704,
-    SPELL_FIRE_VISUAL       = 47705,
-    SPELL_FROST_VISUAL      = 47706,
-
-    SPELL_SUMMON_FIRE       = 47707,
-    SPELL_SUMMON_ARCANE     = 47708,
-    SPELL_SUMMON_FROST      = 47709,
-
-    SPELL_FIRE_DIES         = 47711,
-    SPELL_ARCANE_DIES       = 47713,
-    SPELL_FROST_DIES        = 47712,
-
-    SPELL_SPAWN_BACK_IN     = 47714,
-
-    NPC_TELEST_FIRE         = 26928,
-    NPC_TELEST_ARCANE       = 26929,
-    NPC_TELEST_FROST        = 26930
+    SAY_AGGRO               = -1574000,
+    SAY_FROSTTOMB           = -1574001,
+    SAY_SKELETONS           = -1574002,
+    SAY_KILL                = -1574003,
+    SAY_DEATH               = -1574004
 };
 
 /*######
-## boss_telestra
+## boss_keleseth
 ######*/
 
-struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
+struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
 {
-    boss_telestraAI(Creature* pCreature) : ScriptedAI(pCreature)
+    boss_kelesethAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsHeroicMode = pCreature->GetMap()->IsHeroic();
@@ -93,8 +65,7 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 
     void KilledUnit(Unit* pVictim)
     {
-        if (rand()%2)
-            DoScriptText(SAY_KILL, m_creature);
+        DoScriptText(SAY_KILL, m_creature);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -106,17 +77,17 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
     }
 };
 
-CreatureAI* GetAI_boss_telestra(Creature* pCreature)
+CreatureAI* GetAI_boss_keleseth(Creature* pCreature)
 {
-    return new boss_telestraAI(pCreature);
+    return new boss_kelesethAI(pCreature);
 }
 
-void AddSC_boss_telestra()
+void AddSC_boss_keleseth()
 {
     Script *newscript;
 
     newscript = new Script;
-    newscript->Name = "boss_telestra";
-    newscript->GetAI = &GetAI_boss_telestra;
+    newscript->Name = "boss_keleseth";
+    newscript->GetAI = &GetAI_boss_keleseth;
     newscript->RegisterSelf();
 }

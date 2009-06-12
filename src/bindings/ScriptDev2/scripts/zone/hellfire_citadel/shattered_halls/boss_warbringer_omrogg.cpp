@@ -136,13 +136,13 @@ struct MANGOS_DLL_DECL boss_warbringer_omroggAI : public ScriptedAI
     {
         m_uiLeftHeadGUID  = 0;
         m_uiRightHeadGUID = 0;
-        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-        m_bHeroicMode = pCreature->GetMap()->IsHeroic();
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsHeroicMode = pCreature->GetMap()->IsHeroic();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-    bool m_bHeroicMode;
+    bool m_bIsHeroicMode;
 
     uint64 m_uiLeftHeadGUID;
     uint64 m_uiRightHeadGUID;
@@ -215,8 +215,8 @@ struct MANGOS_DLL_DECL boss_warbringer_omroggAI : public ScriptedAI
 
     void Aggro(Unit* pWho)
     {
-        DoSpawnCreature(NPC_LEFT_HEAD,0.0f,0.0f,0.0f,0.0f,TEMPSUMMON_DEAD_DESPAWN,0);
-        DoSpawnCreature(NPC_RIGHT_HEAD,0.0f,0.0f,0.0f,0.0f,TEMPSUMMON_DEAD_DESPAWN,0);
+        m_creature->SummonCreature(NPC_LEFT_HEAD, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_DEAD_DESPAWN, 0);
+        m_creature->SummonCreature(NPC_RIGHT_HEAD, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_DEAD_DESPAWN, 0);
 
         if (Unit* pLeftHead = Unit::GetUnit(*m_creature,m_uiLeftHeadGUID))
         {
@@ -348,7 +348,7 @@ struct MANGOS_DLL_DECL boss_warbringer_omroggAI : public ScriptedAI
         if (m_uiBurningMaul_Timer < uiDiff)
         {
             DoScriptText(EMOTE_ENRAGE, m_creature);
-            DoCast(m_creature,m_bHeroicMode ? H_SPELL_BURNING_MAUL : SPELL_BURNING_MAUL);
+            DoCast(m_creature, m_bIsHeroicMode ? H_SPELL_BURNING_MAUL : SPELL_BURNING_MAUL);
             m_uiBurningMaul_Timer = 40000;
             m_uiBlastWave_Timer = 16000;
             m_uiBlastCount = 1;

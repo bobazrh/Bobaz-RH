@@ -83,11 +83,11 @@ struct MANGOS_DLL_DECL boss_aranAI : public ScriptedAI
 {
     boss_aranAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Reset();
     }
 
-    ScriptedInstance* pInstance;
+    ScriptedInstance* m_pInstance;
 
     uint32 SecondarySpellTimer;
     uint32 NormalCastTimer;
@@ -138,12 +138,12 @@ struct MANGOS_DLL_DECL boss_aranAI : public ScriptedAI
         Drinking = false;
         DrinkInturrupted = false;
 
-        if (pInstance)
+        if (m_pInstance)
         {
                                                             // Not in progress
-            pInstance->SetData(DATA_SHADEOFARAN_EVENT, NOT_STARTED);
+            m_pInstance->SetData(DATA_SHADEOFARAN_EVENT, NOT_STARTED);
 
-            if (GameObject* pDoor = pInstance->instance->GetGameObject(pInstance->GetData64(DATA_GAMEOBJECT_LIBRARY_DOOR)))
+            if (GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_LIBRARY_DOOR)))
                 pDoor->SetGoState(GO_STATE_ACTIVE);
         }
     }
@@ -161,11 +161,11 @@ struct MANGOS_DLL_DECL boss_aranAI : public ScriptedAI
     {
         DoScriptText(SAY_DEATH, m_creature);
 
-        if (pInstance)
+        if (m_pInstance)
         {
-            pInstance->SetData(DATA_SHADEOFARAN_EVENT, DONE);
+            m_pInstance->SetData(DATA_SHADEOFARAN_EVENT, DONE);
 
-            if (GameObject* pDoor = pInstance->instance->GetGameObject(pInstance->GetData64(DATA_GAMEOBJECT_LIBRARY_DOOR)))
+            if (GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_LIBRARY_DOOR)))
                 pDoor->SetGoState(GO_STATE_ACTIVE);
         }
     }
@@ -179,8 +179,8 @@ struct MANGOS_DLL_DECL boss_aranAI : public ScriptedAI
             case 2: DoScriptText(SAY_AGGRO3, m_creature); break;
         }
 
-        if (pInstance)
-            pInstance->SetData(DATA_SHADEOFARAN_EVENT, IN_PROGRESS);
+        if (m_pInstance)
+            m_pInstance->SetData(DATA_SHADEOFARAN_EVENT, IN_PROGRESS);
     }
 
     void FlameWreathEffect()
@@ -227,9 +227,9 @@ struct MANGOS_DLL_DECL boss_aranAI : public ScriptedAI
         {
             if (CloseDoorTimer <= diff)
             {
-                if (pInstance)
+                if (m_pInstance)
                 {
-                    if (GameObject* pDoor = pInstance->instance->GetGameObject(pInstance->GetData64(DATA_GAMEOBJECT_LIBRARY_DOOR)))
+                    if (GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_LIBRARY_DOOR)))
                         pDoor->SetGoState(GO_STATE_READY);
 
                     CloseDoorTimer = 0;
@@ -418,12 +418,10 @@ struct MANGOS_DLL_DECL boss_aranAI : public ScriptedAI
                     else
                         DoScriptText(SAY_BLIZZARD2, m_creature);
 
-                    Creature* Spawn = NULL;
-                    Spawn = DoSpawnCreature(CREATURE_ARAN_BLIZZARD, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 25000);
-                    if (Spawn)
+                    if (Creature* pSpawn = m_creature->SummonCreature(CREATURE_ARAN_BLIZZARD, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 25000))
                     {
-                        Spawn->setFaction(m_creature->getFaction());
-                        Spawn->CastSpell(Spawn, SPELL_CIRCULAR_BLIZZARD, false);
+                        pSpawn->setFaction(m_creature->getFaction());
+                        pSpawn->CastSpell(pSpawn, SPELL_CIRCULAR_BLIZZARD, false);
                     }
                     break;
             }
@@ -437,8 +435,7 @@ struct MANGOS_DLL_DECL boss_aranAI : public ScriptedAI
 
             for (uint32 i = 0; i < 4; i++)
             {
-                Creature* pUnit = DoSpawnCreature(CREATURE_WATER_ELEMENTAL, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 90000);
-                if (pUnit)
+                if (Creature* pUnit = m_creature->SummonCreature(CREATURE_WATER_ELEMENTAL, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 90000))
                 {
                     pUnit->Attack(m_creature->getVictim(), true);
                     pUnit->setFaction(m_creature->getFaction());
@@ -452,8 +449,7 @@ struct MANGOS_DLL_DECL boss_aranAI : public ScriptedAI
         {
             for (uint32 i = 0; i < 5; i++)
             {
-                Creature* pUnit = DoSpawnCreature(CREATURE_SHADOW_OF_ARAN, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
-                if (pUnit)
+                if (Creature* pUnit = m_creature->SummonCreature(CREATURE_SHADOW_OF_ARAN, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000))
                 {
                     pUnit->Attack(m_creature->getVictim(), true);
                     pUnit->setFaction(m_creature->getFaction());

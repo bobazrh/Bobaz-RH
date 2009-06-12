@@ -132,14 +132,14 @@ struct MANGOS_DLL_DECL eye_of_cthunAI : public Scripted_NoMovementAI
 {
     eye_of_cthunAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
-        pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-        if (!pInstance)
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        if (!m_pInstance)
             error_log("SD2: No Instance eye_of_cthunAI");
 
         Reset();
     }
 
-    ScriptedInstance* pInstance;
+    ScriptedInstance* m_pInstance;
 
     //Global variables
     uint32 PhaseTimer;
@@ -176,8 +176,8 @@ struct MANGOS_DLL_DECL eye_of_cthunAI : public Scripted_NoMovementAI
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
 
         //Reset Phase
-        if (pInstance)
-            pInstance->SetData(DATA_CTHUN_PHASE, 0);
+        if (m_pInstance)
+            m_pInstance->SetData(DATA_CTHUN_PHASE, 0);
     }
 
     void Aggro(Unit *who)
@@ -206,10 +206,10 @@ struct MANGOS_DLL_DECL eye_of_cthunAI : public Scripted_NoMovementAI
             return;
 
         //No instance
-        if (!pInstance)
+        if (!m_pInstance)
             return;
 
-        switch (pInstance->GetData(DATA_CTHUN_PHASE))
+        switch (m_pInstance->GetData(DATA_CTHUN_PHASE))
         {
             case 0:
             {
@@ -275,7 +275,7 @@ struct MANGOS_DLL_DECL eye_of_cthunAI : public Scripted_NoMovementAI
                 if (PhaseTimer < diff)
                 {
                     //Switch to Dark Beam
-                    pInstance->SetData(DATA_CTHUN_PHASE, 1);
+                    m_pInstance->SetData(DATA_CTHUN_PHASE, 1);
 
                     m_creature->InterruptNonMeleeSpells(false);
 
@@ -336,7 +336,7 @@ struct MANGOS_DLL_DECL eye_of_cthunAI : public Scripted_NoMovementAI
                 if (PhaseTimer < diff)
                 {
                     //Switch to Eye Beam
-                    pInstance->SetData(DATA_CTHUN_PHASE, 0);
+                    m_pInstance->SetData(DATA_CTHUN_PHASE, 0);
 
                     BeamTimer = 3000;
                     EyeTentacleTimer = 45000;               //Always spawns 5 seconds before Dark Beam
@@ -374,10 +374,10 @@ struct MANGOS_DLL_DECL eye_of_cthunAI : public Scripted_NoMovementAI
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
         //No instance
-        if (!pInstance)
+        if (!m_pInstance)
             return;
 
-        switch (pInstance->GetData(DATA_CTHUN_PHASE))
+        switch (m_pInstance->GetData(DATA_CTHUN_PHASE))
         {
             case 0:
             case 1:
@@ -399,7 +399,7 @@ struct MANGOS_DLL_DECL eye_of_cthunAI : public Scripted_NoMovementAI
                 m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 
                 //Death animation/respawning;
-                pInstance->SetData(DATA_CTHUN_PHASE, 2);
+                m_pInstance->SetData(DATA_CTHUN_PHASE, 2);
 
                 m_creature->SetHealth(0);
                 damage = 0;
@@ -430,14 +430,14 @@ struct MANGOS_DLL_DECL cthunAI : public Scripted_NoMovementAI
 {
     cthunAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
-        pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-        if (!pInstance)
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        if (!m_pInstance)
             error_log("SD2: No Instance eye_of_cthunAI");
 
         Reset();
     }
 
-    ScriptedInstance* pInstance;
+    ScriptedInstance* m_pInstance;
 
     //Out of combat whisper timer
     uint32 WisperTimer;
@@ -491,8 +491,8 @@ struct MANGOS_DLL_DECL cthunAI : public Scripted_NoMovementAI
         m_creature->RemoveAurasDueToSpell(SPELL_TRANSFORM);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
 
-        if (pInstance)
-            pInstance->SetData(DATA_CTHUN_PHASE, 0);
+        if (m_pInstance)
+            m_pInstance->SetData(DATA_CTHUN_PHASE, 0);
     }
 
     void Aggro(Unit *who)
@@ -586,10 +586,10 @@ struct MANGOS_DLL_DECL cthunAI : public Scripted_NoMovementAI
         m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 
         //No instance
-        if (!pInstance)
+        if (!m_pInstance)
             return;
 
-        switch (pInstance->GetData(DATA_CTHUN_PHASE))
+        switch (m_pInstance->GetData(DATA_CTHUN_PHASE))
         {
             //Transition phase
             case 2:
@@ -598,7 +598,7 @@ struct MANGOS_DLL_DECL cthunAI : public Scripted_NoMovementAI
                 if (PhaseTimer < diff)
                 {
                     //Switch
-                    pInstance->SetData(DATA_CTHUN_PHASE, 3);
+                    m_pInstance->SetData(DATA_CTHUN_PHASE, 3);
 
                     //Switch to c'thun model
                     m_creature->InterruptNonMeleeSpells(false);
@@ -656,7 +656,7 @@ struct MANGOS_DLL_DECL cthunAI : public Scripted_NoMovementAI
                 //Weaken
                 if (FleshTentaclesKilled > 1)
                 {
-                    pInstance->SetData(DATA_CTHUN_PHASE, 4);
+                    m_pInstance->SetData(DATA_CTHUN_PHASE, 4);
 
                     DoScriptText(EMOTE_WEAKENED, m_creature);
                     PhaseTimer = 45000;
@@ -831,7 +831,7 @@ struct MANGOS_DLL_DECL cthunAI : public Scripted_NoMovementAI
                 if (PhaseTimer < diff)
                 {
                     //Switch
-                    pInstance->SetData(DATA_CTHUN_PHASE, 3);
+                    m_pInstance->SetData(DATA_CTHUN_PHASE, 3);
 
                     //Remove red coloration
                     m_creature->RemoveAurasDueToSpell(SPELL_RED_COLORATION);
@@ -866,17 +866,17 @@ struct MANGOS_DLL_DECL cthunAI : public Scripted_NoMovementAI
     void JustDied(Unit* pKiller)
     {
         //Switch
-        if (pInstance)
-            pInstance->SetData(DATA_CTHUN_PHASE, 5);
+        if (m_pInstance)
+            m_pInstance->SetData(DATA_CTHUN_PHASE, 5);
     }
 
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
         //No instance
-        if (!pInstance)
+        if (!m_pInstance)
             return;
 
-        switch (pInstance->GetData(DATA_CTHUN_PHASE))
+        switch (m_pInstance->GetData(DATA_CTHUN_PHASE))
         {
             case 3:
             {
@@ -915,9 +915,9 @@ struct MANGOS_DLL_DECL eye_tentacleAI : public Scripted_NoMovementAI
     eye_tentacleAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
         Reset();
-        Unit* p = DoSpawnCreature(MOB_SMALL_PORTAL,0,0,0,0,TEMPSUMMON_CORPSE_DESPAWN, 0);
-        if (p)
-            Portal = p->GetGUID();
+
+        if (Unit* pPortal = m_creature->SummonCreature(MOB_SMALL_PORTAL, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 0))
+            Portal = pPortal->GetGUID();
     }
 
     uint32 MindflayTimer;
@@ -978,8 +978,9 @@ struct MANGOS_DLL_DECL claw_tentacleAI : public Scripted_NoMovementAI
     claw_tentacleAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
         Reset();
-        if (Unit* p = DoSpawnCreature(MOB_SMALL_PORTAL,0.0f,0.0f,0.0f,0.0f,TEMPSUMMON_CORPSE_DESPAWN, 0))
-            Portal = p->GetGUID();
+
+        if (Unit* pPortal = m_creature->SummonCreature(MOB_SMALL_PORTAL, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 0))
+            Portal = pPortal->GetGUID();
     }
 
     uint32 GroundRuptureTimer;
@@ -1033,8 +1034,8 @@ struct MANGOS_DLL_DECL claw_tentacleAI : public Scripted_NoMovementAI
             {
                 m_creature->GetMap()->CreatureRelocation(m_creature, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0);
 
-                if (Unit* p = DoSpawnCreature(MOB_SMALL_PORTAL,0.0f,0.0f,0.0f,0.0f,TEMPSUMMON_CORPSE_DESPAWN, 0))
-                    Portal = p->GetGUID();
+                if (Unit* pPortal = m_creature->SummonCreature(MOB_SMALL_PORTAL, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    Portal = pPortal->GetGUID();
 
                 GroundRuptureTimer = 500;
                 HamstringTimer = 2000;
@@ -1069,8 +1070,9 @@ struct MANGOS_DLL_DECL giant_claw_tentacleAI : public Scripted_NoMovementAI
     giant_claw_tentacleAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
         Reset();
-        if (Unit* p = DoSpawnCreature(MOB_GIANT_PORTAL,0.0f,0.0f,0.0f,0.0f,TEMPSUMMON_CORPSE_DESPAWN, 0))
-            Portal = p->GetGUID();
+
+        if (Unit* pPortal = m_creature->SummonCreature(MOB_GIANT_PORTAL, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 0))
+            Portal = pPortal->GetGUID();
     }
 
     uint32 GroundRuptureTimer;
@@ -1127,8 +1129,8 @@ struct MANGOS_DLL_DECL giant_claw_tentacleAI : public Scripted_NoMovementAI
             {
                 m_creature->GetMap()->CreatureRelocation(m_creature, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0);
 
-                if (Unit* p = DoSpawnCreature(MOB_GIANT_PORTAL,0.0f,0.0f,0.0f,0.0f,TEMPSUMMON_CORPSE_DESPAWN, 0))
-                    Portal = p->GetGUID();
+                if (Unit* pPortal = m_creature->SummonCreature(MOB_GIANT_PORTAL, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    Portal = pPortal->GetGUID();
 
                 GroundRuptureTimer = 500;
                 HamstringTimer = 2000;
@@ -1171,8 +1173,9 @@ struct MANGOS_DLL_DECL giant_eye_tentacleAI : public Scripted_NoMovementAI
     giant_eye_tentacleAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
         Reset();
-        if (Unit* p = DoSpawnCreature(MOB_GIANT_PORTAL,0.0f,0.0f,0.0f,0.0f,TEMPSUMMON_CORPSE_DESPAWN, 0))
-            Portal = p->GetGUID();
+
+        if (Unit* pPortal = m_creature->SummonCreature(MOB_GIANT_PORTAL, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 0))
+            Portal = pPortal->GetGUID();
     }
 
     uint32 BeamTimer;
