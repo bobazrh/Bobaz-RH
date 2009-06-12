@@ -29,8 +29,8 @@
 #include "sockets/ListenSocket.h"
 #include "AuthSocket.h"
 #include "SystemConfig.h"
-#include "revision.h"
 #include "revision_nr.h"
+#include "revision.h"
 #include "Util.h"
 #include <openssl/opensslv.h>
 #include <openssl/crypto.h>
