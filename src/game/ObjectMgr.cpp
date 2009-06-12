@@ -119,6 +119,7 @@ ObjectMgr::ObjectMgr()
     m_hiPetNumber       = 1;
     m_ItemTextId        = 1;
     m_mailid            = 1;
+    m_equipmentSetGuid  = 1;
     m_guildId           = 1;
     m_arenaTeamId       = 1;
     m_auctionid         = 1;
@@ -550,6 +551,34 @@ void ObjectMgr::LoadCreatureTemplates()
         if(!factionTemplate)
             sLog.outErrorDb("Creature (Entry: %u) has non-existing faction_H template (%u)", cInfo->Entry, cInfo->faction_H);
 
+        // used later for scale
+        CreatureDisplayInfoEntry const* displayEntryA = cInfo->DisplayID_A ? sCreatureDisplayInfoStore.LookupEntry(cInfo->DisplayID_A) : NULL;
+        if(cInfo->DisplayID_A && !displayEntryA)
+            sLog.outErrorDb("Creature (Entry: %u) has non-existing DisplayID_A id (%u), can crash client", cInfo->Entry, cInfo->DisplayID_A);
+
+        if(cInfo->DisplayID_A2)
+        {
+            if(CreatureDisplayInfoEntry const* displayEntry = sCreatureDisplayInfoStore.LookupEntry(cInfo->DisplayID_A2))
+            {
+                sLog.outErrorDb("Creature (Entry: %u) has non-existing DisplayID_A2 id (%u), can crash client", cInfo->Entry, cInfo->DisplayID_A2);
+                const_cast<CreatureInfo*>(cInfo)->DisplayID_A2 = 0;
+            }
+        }
+
+        // used later for scale
+        CreatureDisplayInfoEntry const* displayEntryH = cInfo->DisplayID_H ? sCreatureDisplayInfoStore.LookupEntry(cInfo->DisplayID_H) : NULL;
+        if(cInfo->DisplayID_H && !displayEntryH)
+            sLog.outErrorDb("Creature (Entry: %u) has non-existing DisplayID_H id (%u), can crash client", cInfo->Entry, cInfo->DisplayID_H);
+
+        if(cInfo->DisplayID_H2)
+        {
+            if(CreatureDisplayInfoEntry const* displayEntry = sCreatureDisplayInfoStore.LookupEntry(cInfo->DisplayID_H2))
+            {
+                sLog.outErrorDb("Creature (Entry: %u) has non-existing DisplayID_H2 id (%u), can crash client", cInfo->Entry, cInfo->DisplayID_H2);
+                const_cast<CreatureInfo*>(cInfo)->DisplayID_H2 = 0;
+            }
+        }
+
         CreatureModelInfo const* minfo = sCreatureModelStorage.LookupEntry<CreatureModelInfo>(cInfo->DisplayID_A);
         if (!minfo)
             sLog.outErrorDb("Creature (Entry: %u) has non-existing modelId_A (%u)", cInfo->Entry, cInfo->DisplayID_A);
@@ -628,8 +657,12 @@ void ObjectMgr::LoadCreatureTemplates()
         /// if not set custom creature scale then load scale from CreatureDisplayInfo.dbc
         if(cInfo->scale <= 0.0f)
         {
-            CreatureDisplayInfoEntry const* ScaleEntry = sCreatureDisplayInfoStore.LookupEntry(cInfo->DisplayID_A);
-            const_cast<CreatureInfo*>(cInfo)->scale = ScaleEntry ? ScaleEntry->scale : 1.0f;
+            if(displayEntryA)
+                const_cast<CreatureInfo*>(cInfo)->scale = displayEntryA->scale;
+            else if(displayEntryH)
+                const_cast<CreatureInfo*>(cInfo)->scale = displayEntryH->scale;
+            else
+                const_cast<CreatureInfo*>(cInfo)->scale = 1.0f;
         }
     }
 }
@@ -726,7 +759,10 @@ void ObjectMgr::LoadCreatureAddons()
         if (addon->mount)
         {
             if (!sCreatureDisplayInfoStore.LookupEntry(addon->mount))
+            {
                 sLog.outErrorDb("Creature (Entry %u) have invalid displayInfoId for mount (%u) defined in `creature_template_addon`.",addon->guidOrEntry, addon->mount);
+                const_cast<CreatureDataAddon*>(addon)->mount = 0;
+            }
         }
 
         if (!sEmotesStore.LookupEntry(addon->emote))
@@ -753,7 +789,10 @@ void ObjectMgr::LoadCreatureAddons()
         if (addon->mount)
         {
             if (!sCreatureDisplayInfoStore.LookupEntry(addon->mount))
+            {
                 sLog.outErrorDb("Creature (GUID %u) have invalid displayInfoId for mount (%u) defined in `creature_addon`.",addon->guidOrEntry, addon->mount);
+                const_cast<CreatureDataAddon*>(addon)->mount = 0;
+            }
         }
 
         if (!sEmotesStore.LookupEntry(addon->emote))
@@ -1080,6 +1119,12 @@ void ObjectMgr::LoadGameobjects()
         if(!gInfo)
         {
             sLog.outErrorDb("Table `gameobject` has gameobject (GUID: %u) with non existing gameobject entry %u, skipped.", guid, entry);
+            continue;
+        }
+
+        if(gInfo->displayId && !sGameObjectDisplayInfoStore.LookupEntry(gInfo->displayId))
+        {
+            sLog.outErrorDb("Gameobject (GUID: %u Entry %u GoType: %u) have invalid displayId (%u), not loaded.",guid, entry, gInfo->type, gInfo->displayId);
             continue;
         }
 
@@ -1687,11 +1732,17 @@ void ObjectMgr::LoadItemPrototypes()
         {
             for (int j = 0; j < MAX_ITEM_PROTO_SPELLS; ++j)
             {
-                if(proto->Spells[j].SpellTrigger >= MAX_ITEM_SPELLTRIGGER || proto->Spells[j].SpellTrigger == ITEM_SPELLTRIGGER_LEARN_SPELL_ID)
+                if (proto->Spells[j].SpellTrigger >= MAX_ITEM_SPELLTRIGGER || proto->Spells[j].SpellTrigger == ITEM_SPELLTRIGGER_LEARN_SPELL_ID)
                 {
                     sLog.outErrorDb("Item (Entry: %u) has wrong item spell trigger value in spelltrigger_%d (%u)",i,j+1,proto->Spells[j].SpellTrigger);
                     const_cast<ItemPrototype*>(proto)->Spells[j].SpellId = 0;
                     const_cast<ItemPrototype*>(proto)->Spells[j].SpellTrigger = ITEM_SPELLTRIGGER_ON_USE;
+                }
+                // on hit can be sued only at weapon
+                else if (proto->Spells[j].SpellTrigger == ITEM_SPELLTRIGGER_CHANCE_ON_HIT)
+                {
+                    if(proto->Class != ITEM_CLASS_WEAPON)
+                        sLog.outErrorDb("Item (Entry: %u) isn't weapon (Class: %u) but has on hit spelltrigger_%d (%u), it will not triggered.",i,proto->Class,j+1,proto->Spells[j].SpellTrigger);
                 }
 
                 if(proto->Spells[j].SpellId)
@@ -1862,14 +1913,19 @@ void ObjectMgr::LoadItemRequiredTarget()
                     if (lower != upper)
                         break;
 
-                    if (pSpellInfo->EffectImplicitTargetA[i] == TARGET_CHAIN_DAMAGE ||
-                        pSpellInfo->EffectImplicitTargetB[i] == TARGET_CHAIN_DAMAGE ||
-                        pSpellInfo->EffectImplicitTargetA[i] == TARGET_DUELVSPLAYER ||
-                        pSpellInfo->EffectImplicitTargetB[i] == TARGET_DUELVSPLAYER)
+                    for (int j = 0; j < 3; ++j)
                     {
-                        bIsItemSpellValid = true;
-                        break;
+                        if (pSpellInfo->EffectImplicitTargetA[j] == TARGET_CHAIN_DAMAGE ||
+                            pSpellInfo->EffectImplicitTargetB[j] == TARGET_CHAIN_DAMAGE ||
+                            pSpellInfo->EffectImplicitTargetA[j] == TARGET_DUELVSPLAYER ||
+                            pSpellInfo->EffectImplicitTargetB[j] == TARGET_DUELVSPLAYER)
+                        {
+                            bIsItemSpellValid = true;
+                            break;
+                        }
                     }
+                    if (bIsItemSpellValid)
+                        break;
                 }
             }
         }
@@ -5265,6 +5321,13 @@ void ObjectMgr::SetHighestGuids()
         delete result;
     }
 
+    result = CharacterDatabase.Query("SELECT MAX(setguid) FROM character_equipmentsets");
+    if (result)
+    {
+        m_equipmentSetGuid = (*result)[0].GetUInt64()+1;
+        delete result;
+    }
+
     result = CharacterDatabase.Query( "SELECT MAX(guildid) FROM guild" );
     if (result)
     {
@@ -5291,6 +5354,16 @@ uint32 ObjectMgr::GenerateAuctionID()
         World::StopNow(ERROR_EXIT_CODE);
     }
     return m_auctionid++;
+}
+
+uint64 ObjectMgr::GenerateEquipmentSetGuid()
+{
+    if(m_equipmentSetGuid>=0xFFFFFFFFFFFFFFFEll)
+    {
+        sLog.outError("EquipmentSet guid overflow!! Can't continue, shutting down server. ");
+        World::StopNow(ERROR_EXIT_CODE);
+    }
+    return m_equipmentSetGuid++;
 }
 
 uint32 ObjectMgr::GenerateGuildId()
@@ -5551,6 +5624,8 @@ void ObjectMgr::LoadGameobjectInfo()
         GameObjectInfo const* goInfo = sGOStorage.LookupEntry<GameObjectInfo>(id);
         if (!goInfo)
             continue;
+
+        // some GO types have unused go template, check goInfo->displayId at GO spawn data loading or ignore
 
         switch(goInfo->type)
         {
