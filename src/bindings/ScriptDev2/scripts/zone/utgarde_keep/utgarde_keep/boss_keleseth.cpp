@@ -27,34 +27,28 @@ EndScriptData */
 
 float SkeletonSpawnPoint[5][5]=
 {
+    {156.4559, 259.2093},
+    {156.2559, 259.0093},
+    {156.3559, 259.2093},
     {156.2559, 259.2093},
-    {156.2559, 259.2093},
-    {156.2559, 259.2093},
-    {156.2559, 259.2093},
-    {156.2559, 259.2093},
+    {156.2559, 259.3093},
 };
 
 float AttackLoc[3]={197.636, 194.046, 40.8164};
 
 struct MANGOS_DLL_DECL mob_frost_tombAI : public ScriptedAI
 {
-    mob_frost_tombAI(Creature *c) : ScriptedAI(c)
+    mob_frost_tombAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
-<<<<<<< .mine
         FrostTombGUID = 0;
-=======
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsHeroicMode = pCreature->GetMap()->IsHeroic();
->>>>>>> .r1134
         Reset();
     }
 
-<<<<<<< .mine
     uint64 FrostTombGUID;
-=======
     ScriptedInstance* m_pInstance;
     bool m_bIsHeroicMode;
->>>>>>> .r1134
 
     void SetPrisoner(Unit* uPrisoner)
     {
