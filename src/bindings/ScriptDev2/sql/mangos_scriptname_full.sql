@@ -138,7 +138,7 @@ UPDATE creature_template SET ScriptName='boss_ambassador_hellmaw' WHERE entry=18
 
 
 /* AZJOL-NERUB */
-
+UPDATE instance_template SET script='instance_azjol-nerub' WHERE map=601;
 
 /* AZSHARA */
 UPDATE creature_template SET ScriptName='npc_rizzle_sprysprocket' WHERE entry=23002;
@@ -424,6 +424,11 @@ UPDATE creature_template SET ScriptName='mobs_ghoul_flayer' WHERE entry IN (8530
 UPDATE creature_template SET ScriptName='npc_augustus_the_touched' WHERE entry=12384;
 UPDATE creature_template SET ScriptName='npc_darrowshire_spirit' WHERE entry=11064;
 UPDATE creature_template SET ScriptName='npc_tirion_fordring' WHERE entry=1855;
+
+/* EBON HOLD */
+UPDATE creature_template SET ScriptName='npc_unworthy_initiate_anchor' WHERE entry=29521;
+UPDATE creature_template SET ScriptName='npc_unworthy_initiate' WHERE entry IN (29519,29520,29565,29566,29567);
+UPDATE gameobject_template SET ScriptName='go_acherus_soul_prison' WHERE entry IN (191577,191580,191581,191582,191583,191584,191585,191586,191587,191588,191589,191590);
 
 /* ELWYNN FOREST */
 UPDATE creature_template SET ScriptName='npc_henze_faulk' WHERE entry=6172;

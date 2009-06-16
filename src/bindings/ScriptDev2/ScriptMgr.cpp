@@ -106,6 +106,10 @@ extern void AddSC_boss_grandmaster_vorpil();
 extern void AddSC_boss_murmur();
 extern void AddSC_instance_shadow_labyrinth();
 
+//Azjol-Nerub
+//--Azjol-Nerub
+extern void AddSC_instance_azjol_nerub();
+
 //Azshara
 extern void AddSC_boss_azuregos();
 extern void AddSC_azshara();
@@ -251,6 +255,8 @@ extern void AddSC_dun_morogh();
 //Duskwood
 //Dustwallow marsh
 extern void AddSC_dustwallow_marsh();
+
+extern void AddSC_ebon_hold();
 
 //Eversong Woods
 extern void AddSC_eversong_woods();
@@ -980,6 +986,10 @@ void ScriptsInit()
     AddSC_boss_murmur();
     AddSC_instance_shadow_labyrinth();
 
+    //Azjol-Nerub
+    //--Azjol-Nerub
+    AddSC_instance_azjol_nerub();
+
     //Azshara
     AddSC_boss_azuregos();
     AddSC_azshara();
@@ -1124,6 +1134,8 @@ void ScriptsInit()
     //Duskwood
     //Dustwallow marsh
     AddSC_dustwallow_marsh();
+
+    AddSC_ebon_hold();
 
     //Eversong Woods
     AddSC_eversong_woods();
