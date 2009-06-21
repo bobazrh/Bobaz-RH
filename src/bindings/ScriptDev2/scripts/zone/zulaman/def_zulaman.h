@@ -45,14 +45,14 @@ enum InstanceZA
     DATA_ZULJIN             = 15,
     DATA_HARRISON           = 16,
 
-    DATA_J_EGGSLEFT         = 17,
-    DATA_J_EGGSRIGHT        = 18,
-    DATA_J_HATCHLEFT        = 19,
-    DATA_J_HATCHRIGHT       = 20,
+    DATA_J_EGGS_RIGHT       = 19,
+    DATA_J_EGGS_LEFT        = 20,
 
     DATA_GO_GONG            = 21,
     DATA_GO_MALACRASS_GATE  = 22,
-    DATA_GO_ENTRANCE        = 23
+    DATA_GO_ENTRANCE        = 23,
+
+    NPC_EGG                 = 23817
 };
 
 #endif

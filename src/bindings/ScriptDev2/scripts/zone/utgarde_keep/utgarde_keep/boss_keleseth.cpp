@@ -13,6 +13,7 @@ EndScriptData */
 #define SPELL_FROST_TOMB                         48400
 #define SPELL_FROST_TOMB_SUMMON                  42714
 #define SPELL_DECREPIFY                          42702
+#define SPELL_BONE_ARMOR			 59386
 #define SPELL_SCOURGE_RESSURRECTION              42704
 #define CREATURE_FROSTTOMB                       23965
 #define CREATURE_SKELETON                        23970
@@ -204,13 +205,15 @@ struct MANGOS_DLL_DECL  mob_vrykul_skeletonAI : public ScriptedAI
     uint32 Respawn_Time;
     uint64 Target_Guid;
     uint32 Decrepify_Timer;
+    uint32 BoneArmor_Timer;
 
     bool isDead;
 
     void Reset()
     {
-        Respawn_Time = 12000;
-        Decrepify_Timer = 10000 + rand()%20000;
+        Respawn_Time = 11000+rand()%2000;
+        Decrepify_Timer = 1000 + rand()%5000;
+	BoneArmor_Timer = 2000 + rand()%2000;
         isDead = false;
     }
 
@@ -268,13 +271,19 @@ struct MANGOS_DLL_DECL  mob_vrykul_skeletonAI : public ScriptedAI
                 if(Respawn_Time < diff)
                 {
                     Resurrect();
-                    Respawn_Time = 12000;
+                    Respawn_Time = 12000+rand()%4000;
                 }else Respawn_Time -= diff;
             }
             else
             {
                 if(!m_creature->SelectHostilTarget() || !m_creature->getVictim())
                     return;
+
+		if(BoneArmor_Timer < diff)
+		{
+		   DoCast(m_creature,SPELL_BONE_ARMOR);
+		   BoneArmor_Timer = 8000 + rand()%6000;
+		}else BoneArmor_Timer -= diff;
 
                 if(Decrepify_Timer < diff)
                 {

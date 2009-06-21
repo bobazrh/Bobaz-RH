@@ -46,8 +46,9 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
     uint64 m_uiMassiveGateGUID;
     uint64 m_uiMalacrassEntranceGUID;
 
-    uint32 m_uiJanalaiEggCntL;
-    uint32 m_uiJanalaiEggCntR;
+    std::list<uint64> m_lEggsGUIDList;
+    uint32 m_uiEggsRemainingCount_Left;
+    uint32 m_uiEggsRemainingCount_Right;
 
     uint32 m_uiEncounter[ENCOUNTERS];
     uint32 m_uiRandVendor[RAND_VENDOR];
@@ -71,8 +72,9 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
         m_uiMassiveGateGUID = 0;
         m_uiMalacrassEntranceGUID = 0;
 
-        m_uiJanalaiEggCntL = 20;
-        m_uiJanalaiEggCntR = 20;
+        m_lEggsGUIDList.clear();
+        m_uiEggsRemainingCount_Left = 20;
+        m_uiEggsRemainingCount_Right = 20;
 
         for(uint8 i = 0; i < ENCOUNTERS; i++)
             m_uiEncounter[i] = NOT_STARTED;
@@ -111,6 +113,10 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
             case 23863: m_uiZuljinGUID      = pCreature->GetGUID(); break;
             case 24239: m_uiMalacrassGUID   = pCreature->GetGUID(); break;
             case 24358: m_uiHarrisonGUID    = pCreature->GetGUID(); break;
+            case NPC_EGG:
+                if (m_uiEncounter[3] != DONE)
+                    m_lEggsGUIDList.push_back(pCreature->GetGUID());
+                break;
         }
     }
 
@@ -176,9 +182,24 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
             case TYPE_JANALAI:
                 if (uiData == NOT_STARTED)
                 {
-                    m_uiJanalaiEggCntL = 20;
-                    m_uiJanalaiEggCntR = 20;
+                    m_uiEggsRemainingCount_Left = 20;
+                    m_uiEggsRemainingCount_Right = 20;
+
+                    if (!m_lEggsGUIDList.empty())
+                    {
+                        for(std::list<uint64>::iterator itr = m_lEggsGUIDList.begin(); itr != m_lEggsGUIDList.end(); ++itr)
+                        {
+                            if (Creature* pEgg = instance->GetCreature(*itr))
+                            {
+                                if (!pEgg->isAlive())
+                                    pEgg->Respawn();
+                            }
+                        }
+                    }
                 }
+                if (uiData == DONE)
+                    m_lEggsGUIDList.clear();
+
                 m_uiEncounter[3] = uiData;
                 break;
             case TYPE_HALAZZI:
@@ -190,12 +211,14 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
             case TYPE_MALACRASS:
                 m_uiEncounter[6] = uiData;
                 break;
-            case DATA_J_HATCHLEFT:
-                m_uiJanalaiEggCntL -= uiData;
+
+            case DATA_J_EGGS_RIGHT:
+                --m_uiEggsRemainingCount_Right;
                 break;
-            case DATA_J_HATCHRIGHT:
-                m_uiJanalaiEggCntR -= uiData;
+            case DATA_J_EGGS_LEFT:
+                --m_uiEggsRemainingCount_Left;
                 break;
+
             case TYPE_RAND_VENDOR_1:
                 m_uiRandVendor[0] = uiData;
                 break;
@@ -270,10 +293,10 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
             case TYPE_MALACRASS:
                 return m_uiEncounter[6];
 
-            case DATA_J_EGGSLEFT:
-                return m_uiJanalaiEggCntL;
-            case DATA_J_EGGSRIGHT:
-                return m_uiJanalaiEggCntR;
+            case DATA_J_EGGS_LEFT:
+                return m_uiEggsRemainingCount_Left;
+            case DATA_J_EGGS_RIGHT:
+                return m_uiEggsRemainingCount_Right;
 
             case TYPE_RAND_VENDOR_1:
                 return m_uiRandVendor[0];
