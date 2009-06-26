@@ -162,10 +162,9 @@ struct MANGOS_DLL_DECL  boss_kelesethAI : public ScriptedAI
                     Skeleton = m_creature->SummonCreature(CREATURE_SKELETON, SkeletonSpawnPoint[i][0], SkeletonSpawnPoint[i][1] , SKELETONSPAWN_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN,20000);
                     if(Skeleton)
                     {
-                        Skeleton->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                        Skeleton->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
                         Skeleton->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY() , m_creature->GetPositionZ());
                         Skeleton->AddThreat(m_creature->getVictim(), 0.0f);
-                        //DoZoneInCombat(Skeleton);
 			m_creature->SetInCombatWithZone();
                     }
                 }
