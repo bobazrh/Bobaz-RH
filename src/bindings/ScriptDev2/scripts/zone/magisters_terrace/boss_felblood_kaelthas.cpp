@@ -198,7 +198,7 @@ struct MANGOS_DLL_DECL boss_felblood_kaelthasAI : public ScriptedAI
     {
         float x = KaelLocations[0][0];
         float y = KaelLocations[0][1];
-        m_creature->Relocate(x, y, LOCATION_Z, 0);
+        m_creature->GetMap()->CreatureRelocation(m_creature, x, y, LOCATION_Z, 0.0f);
         //m_creature->SendMonsterMove(x, y, LOCATION_Z, 0, 0, 0); // causes some issues...
         std::list<HostilReference*>::iterator i = m_creature->getThreatManager().getThreatList().begin();
         for (i = m_creature->getThreatManager().getThreatList().begin(); i!= m_creature->getThreatManager().getThreatList().end();++i)
@@ -469,8 +469,8 @@ struct MANGOS_DLL_DECL mob_felkael_phoenixAI : public ScriptedAI
     void Reset()
     {
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE + UNIT_FLAG_NON_ATTACKABLE);
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
         m_creature->CastSpell(m_creature,SPELL_PHOENIX_BURN,true);
+
         BurnTimer = 2000;
         Death_Timer = 2700;
         Rebirth = false;
@@ -600,8 +600,7 @@ struct MANGOS_DLL_DECL mob_arcane_sphereAI : public ScriptedAI
         ChangeTargetTimer = 6000 + rand()%6000;
 
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
-        m_creature->setFaction(14);
+
         DoCast(m_creature, SPELL_ARCANE_SPHERE_PASSIVE, true);
     }
 

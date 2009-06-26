@@ -215,13 +215,12 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
             return;
         }
 
-        Unit* Sathrovarr = Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_SATHROVARR));
-        if (Sathrovarr)
+        if (Creature* pSathrovarr = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_SATHROVARR)))
         {
-            Sathrovarr->DealDamage(Sathrovarr, Sathrovarr->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            pSathrovarr->DealDamage(pSathrovarr, pSathrovarr->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
-            Sathrovarr->Relocate(KALECGOS_ARENA_X, KALECGOS_ARENA_Y, KALECGOS_ARENA_Z);
-            Sathrovarr->SendMonsterMove(KALECGOS_ARENA_X, KALECGOS_ARENA_Y, KALECGOS_ARENA_Z, 0, 0, 0);
+            pSathrovarr->GetMap()->CreatureRelocation(pSathrovarr, KALECGOS_ARENA_X, KALECGOS_ARENA_Y, KALECGOS_ARENA_Z, 0.0f);
+            pSathrovarr->SendMonsterMove(KALECGOS_ARENA_X, KALECGOS_ARENA_Y, KALECGOS_ARENA_Z, 0, MONSTER_MOVE_NONE, 0);
         }
 
         Creature* Kalec = ((Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_KALECGOS_HUMAN)));
@@ -291,7 +290,6 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
                 debug_log("SD2: KALEC: Exiting the arena");
                 DoScriptText(SAY_GOOD_PLRWIN, m_creature);
 
-                m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
                 float x, y, z;
                 float iniX, iniY, iniZ;
                 m_creature->GetPosition(iniX, iniY, iniZ);
