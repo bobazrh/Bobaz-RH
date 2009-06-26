@@ -36,7 +36,9 @@ enum
     SPELL_RIFT_SHIELD       = 47748,
 
     SPELL_SPARK             = 47751,
-    SPELL_SPARK_H           = 57062
+    SPELL_SPARK_H           = 57062,
+
+    CREATURE_RIFT	    = 26918
 };
 
 /*######
@@ -55,8 +57,20 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     bool m_bIsHeroicMode;
 
+    uint32 m_uiShieldTimer;
+    uint32 m_uiSparkTimer;
+    uint32 m_uiRiftTimer;
+    uint32 m_uiShieldCounter;
+    bool m_bShield;
+
     void Reset() 
     {
+	m_uiShieldTimer=45000;
+	m_uiChargeTimer=2000;
+	m_uiSparkTimer=6000+rand()%2000;
+	m_uiRiftTimer=10000+rand()%2000;
+	m_uiShieldCounter = 0;
+	m_bShield = false;
     }
 
     void Aggro(Unit* pWho)
@@ -79,8 +93,68 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     {
         if (!m_creature->SelectHostilTarget() || !m_creature->getVictim())
             return;
+	if(!m_bShield){
+		if (m_uiSparkTimer < uiDiff){
+			DoCast(m_creature->getVictim(),HeroicMode ? SPELL_SPARK_H : SPELL_SPARK);
+			m_uiSparkTimer = 12000 + rand()%4000;
+		} else m_uiSparkTimer -= uiDiff;
 
-        DoMeleeAttackIfReady();
+		if (m_uiRiftTimer < uiDiff){
+			// Summon Rift
+			m_uiRiftTimer = 25000 + rand()%10000;
+                        pCreature = m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
+                        if(pCreature){
+                                 pCreature->AI()->AttackStart(target);
+                        }
+		} else m_uiRiftTimer -= uiDiff;
+
+		if (m_uiShieldCounter < 3 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < (75 - 25*m_uiShieldCounter)){
+			m_uiShieldCounter++;
+			m_bShield = true;
+			m_uiShieldTimer=45000;
+			m_uiChargeTimer=2000;
+			//Stop Movement
+			if(m_creature->isInCombat())
+                    		if(Unit* victim = m_creature->getVictim())
+                        		m_creature->SendMeleeAttackStop(victim);
+                	if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == TARGETED_MOTION_TYPE)
+                	{
+                   		m_creature->GetMotionMaster()->Clear(false);
+                    		m_creature->GetMotionMaster()->MoveIdle();
+                    		m_creature->StopMoving();
+                	}
+
+			DoScriptText(SAY_SHIELD, m_creature);
+			DoCast(m_creature,SPELL_RIFT_SHIELD);
+			Creature* pCreature = NULL;
+			
+			// Summon Rift
+			pCreature = m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
+			if(pCreature){
+				 pCreature->AI()->AttackStart(target);
+			}
+		}
+        	DoMeleeAttackIfReady();
+	} else {
+		if(m_uiChargeTimer < uiDiff){
+			
+			DoCast(m_creature,SPELL_CHARGE_RIFT);
+			m_uiChargeTimer=50000;
+		} else m_uiChargeTimer -= uiDiff;
+		if(m_uiShieldTimer < uiDiff){
+			m_bShield = false;
+			//start movement
+			if(action.combat_movement.melee && m_creature->isInCombat())
+                    		if(Unit* victim = m_creature->getVictim())
+                        		m_creature->SendMeleeAttackStart(victim);
+                	if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
+                	{
+                    		m_creature->GetMotionMaster()->Clear(false);
+                    		m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), AttackDistance, AttackAngle);
+                	}
+		}
+	}
+
     }
 };
 

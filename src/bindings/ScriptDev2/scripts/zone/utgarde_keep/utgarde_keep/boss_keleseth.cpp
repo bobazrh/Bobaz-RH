@@ -132,7 +132,7 @@ struct MANGOS_DLL_DECL  boss_kelesethAI : public ScriptedAI
             pInstance->SetData(DATA_PRINCEKELESETH, IN_PROGRESS);
 
         DoScriptText(SAY_AGGRO, m_creature);
-        DoZoneInCombat();
+	m_creature->SetInCombatWithZone();
     }
 
     void ResetTimer(uint32 inc = 0)
@@ -165,7 +165,8 @@ struct MANGOS_DLL_DECL  boss_kelesethAI : public ScriptedAI
                         Skeleton->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
                         Skeleton->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY() , m_creature->GetPositionZ());
                         Skeleton->AddThreat(m_creature->getVictim(), 0.0f);
-                        DoZoneInCombat(Skeleton);
+                        //DoZoneInCombat(Skeleton);
+			m_creature->SetInCombatWithZone();
                     }
                 }
                 Skeletons = true;
