@@ -1787,7 +1787,7 @@ void Spell::EffectDummy(uint32 i)
 			float y = m_caster->GetPositionY(); 
 			float z = m_caster->GetPositionZ()+1;
 			float orientation = unitTarget->GetOrientation();
-			unitTarget->SendMonsterMove(x,y,z,orientation,MOVEMENTFLAG_JUMPING,1);
+			unitTarget->SendMonsterMove(x,y,z,orientation,MONSTER_MOVE_FLY,1);
                 }
                 else
                 {   // unitTarget is Player

@@ -61,6 +61,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     uint32 m_uiSparkTimer;
     uint32 m_uiRiftTimer;
     uint32 m_uiShieldCounter;
+    uint32 m_uiChargeTimer;
     bool m_bShield;
 
     void Reset() 
@@ -95,17 +96,14 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
             return;
 	if(!m_bShield){
 		if (m_uiSparkTimer < uiDiff){
-			DoCast(m_creature->getVictim(),HeroicMode ? SPELL_SPARK_H : SPELL_SPARK);
+			DoCast(m_creature->getVictim(),m_bIsHeroicMode ? SPELL_SPARK_H : SPELL_SPARK);
 			m_uiSparkTimer = 12000 + rand()%4000;
 		} else m_uiSparkTimer -= uiDiff;
 
 		if (m_uiRiftTimer < uiDiff){
 			// Summon Rift
 			m_uiRiftTimer = 25000 + rand()%10000;
-                        pCreature = m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
-                        if(pCreature){
-                                 pCreature->AI()->AttackStart(target);
-                        }
+                        m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
 		} else m_uiRiftTimer -= uiDiff;
 
 		if (m_uiShieldCounter < 3 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < (75 - 25*m_uiShieldCounter)){
@@ -126,13 +124,9 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 
 			DoScriptText(SAY_SHIELD, m_creature);
 			DoCast(m_creature,SPELL_RIFT_SHIELD);
-			Creature* pCreature = NULL;
 			
 			// Summon Rift
-			pCreature = m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
-			if(pCreature){
-				 pCreature->AI()->AttackStart(target);
-			}
+			m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
 		}
         	DoMeleeAttackIfReady();
 	} else {
@@ -144,13 +138,13 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 		if(m_uiShieldTimer < uiDiff){
 			m_bShield = false;
 			//start movement
-			if(action.combat_movement.melee && m_creature->isInCombat())
+			if(m_creature->isInCombat())
                     		if(Unit* victim = m_creature->getVictim())
                         		m_creature->SendMeleeAttackStart(victim);
                 	if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
                 	{
                     		m_creature->GetMotionMaster()->Clear(false);
-                    		m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), AttackDistance, AttackAngle);
+                    		m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), 0.0f, 0.0f);
                 	}
 		}
 	}
