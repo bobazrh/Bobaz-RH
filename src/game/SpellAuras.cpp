@@ -1872,10 +1872,10 @@ void Aura::TriggerSpell()
                 break;
             }
 
-//            case SPELLFAMILY_HUNTER:
-//            {
-//                switch(auraId)
-//                {
+            case SPELLFAMILY_HUNTER:
+            {
+                switch(auraId)
+                {
 //                    //Frost Trap Aura
 //                    case 13810:
 //                        return;
@@ -1901,12 +1901,15 @@ void Aura::TriggerSpell()
 //                    case 30647:         // Tame Barbed Crawler
 //                    case 30648:         // Tame Greater Timberstrider
 //                    case 30652:         // Tame Nightstalker
-//                        return;
-//                    default:
-//                        break;
-//                }
-//                break;
-//            }
+		    case 53302:		// Sniper training 1
+		    case 53303:		// Sniper training 2
+		    case 53304:		// Sniper training 3 - ignore for a while, needs 6s no movement check.
+                        return;
+                    default:
+                        break;
+                }
+                break;
+            }
             case SPELLFAMILY_SHAMAN:
             {
                 switch(auraId)

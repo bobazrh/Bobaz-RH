@@ -57,6 +57,8 @@ Makefile
 *.patch
 callgrind.out.*
 
+build/*
+
 #
 # Git stuff
 #

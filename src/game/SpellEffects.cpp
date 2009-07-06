@@ -1772,6 +1772,40 @@ void Spell::EffectDummy(uint32 i)
                 }
                 return;
             }
+            // Death Grip
+            if( m_spellInfo->SpellFamilyFlags & 0x02000000LL )
+            {
+                if(!unitTarget || !m_caster)
+                    return;
+
+                // unitTarget is Creature
+                if(unitTarget->GetTypeId()!=TYPEID_PLAYER)
+                {
+			float x = m_caster->GetPositionX();
+			float y = m_caster->GetPositionY(); 
+			float z = m_caster->GetPositionZ()+1;
+			float orientation = unitTarget->GetOrientation();
+			unitTarget->SendMonsterMove(x,y,z,orientation,MONSTER_MOVE_FLY,1);
+                }
+                else
+                {   // unitTarget is Player
+                    float vsin = sin(unitTarget->GetAngle(m_caster));
+                    float vcos = cos(unitTarget->GetAngle(m_caster));
+
+                    WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
+                    data.append(unitTarget->GetPackGUID());
+                    data << uint32(0);                                      // Sequence
+                    data << float(vcos);                                    // x direction
+                    data << float(vsin);                                    // y direction
+                                                                        // Horizontal speed
+                    data << float(damage ? damage : unitTarget->GetDistance2d(m_caster));
+                    data << float(-10.0);                                   // Z Movement speed
+
+                    ((Player*)unitTarget)->GetSession()->SendPacket(&data);
+                }
+                m_caster->CastSpell(unitTarget,51399,true);    //Taunt
+                return;
+            }
             break;
     }
 

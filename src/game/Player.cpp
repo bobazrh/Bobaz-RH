@@ -16424,7 +16424,7 @@ void Player::TextEmote(const std::string& text)
 {
     WorldPacket data(SMSG_MESSAGECHAT, 200);
     BuildPlayerChat(&data, CHAT_MSG_EMOTE, text, LANG_UNIVERSAL);
-    SendMessageToSetInRange(&data,sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE),true, !sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHAT) );
+    SendMessageToSetInRange(&data,sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE),true, false );
 }
 
 void Player::Whisper(const std::string& text, uint32 language,uint64 receiver)
