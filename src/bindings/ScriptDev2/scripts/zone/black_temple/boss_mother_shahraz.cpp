@@ -117,32 +117,22 @@ struct MANGOS_DLL_DECL boss_shahrazAI : public ScriptedAI
         ExplosionCount = 0;
 
         Enraged = false;
-
-        if (m_pInstance)
-        {
-            if (m_creature->isAlive())
-            {
-                m_pInstance->SetData(DATA_MOTHERSHAHRAZEVENT, NOT_STARTED);
-            }else OpenDoors();
-        }
-    }
-
-    void OpenDoors()
-    {
-        if (GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_POST_SHAHRAZ_DOOR)))
-            pDoor->SetGoState(GO_STATE_ACTIVE);
-        if (GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_COUNCIL_DOOR)))
-            pDoor->SetGoState(GO_STATE_ACTIVE);
     }
 
     void Aggro(Unit* pWho)
     {
         if (m_pInstance)
-            m_pInstance->SetData(DATA_MOTHERSHAHRAZEVENT, IN_PROGRESS);
+            m_pInstance->SetData(TYPE_SHAHRAZ, IN_PROGRESS);
 
         m_creature->SetInCombatWithZone();
 
         DoScriptText(SAY_AGGRO, m_creature);
+    }
+
+    void JustReachedHome()
+    {
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_SHAHRAZ, NOT_STARTED);
     }
 
     void KilledUnit(Unit *victim)
@@ -157,10 +147,7 @@ struct MANGOS_DLL_DECL boss_shahrazAI : public ScriptedAI
     void JustDied(Unit *victim)
     {
         if (m_pInstance)
-        {
-            m_pInstance->SetData(DATA_MOTHERSHAHRAZEVENT, DONE);
-            OpenDoors();
-        }
+            m_pInstance->SetData(TYPE_SHAHRAZ, DONE);
 
         DoScriptText(SAY_DEATH, m_creature);
     }

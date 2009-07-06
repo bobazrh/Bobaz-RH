@@ -158,12 +158,11 @@ struct MANGOS_DLL_DECL boss_shade_of_akamaAI : public ScriptedAI
         {
             for(std::list<uint64>::iterator itr = Sorcerers.begin(); itr != Sorcerers.end(); ++itr)
             {
-                if (Creature* Sorcerer = ((Creature*)Unit::GetUnit(*m_creature, *itr)))
-                    if (Sorcerer->isAlive())
-                    {
-                        Sorcerer->SetVisibility(VISIBILITY_OFF);
-                        Sorcerer->DealDamage(Sorcerer, Sorcerer->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                    }
+                if (Creature* pSorcerer = (Creature*)Unit::GetUnit(*m_creature, *itr))
+                {
+                    if (pSorcerer->isAlive())
+                        pSorcerer->ForcedDespawn();
+                }
             }
         }
 
@@ -190,19 +189,11 @@ struct MANGOS_DLL_DECL boss_shade_of_akamaAI : public ScriptedAI
         if (m_pInstance)
         {
             if (m_creature->isAlive())
-            {
-                m_pInstance->SetData(DATA_SHADEOFAKAMAEVENT, NOT_STARTED);
-            } else OpenMotherDoor();
+                m_pInstance->SetData(TYPE_SHADE, NOT_STARTED);
 
             if (Unit* pAkama = Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_AKAMA_SHADE)))
                 pAkama->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
         }
-    }
-
-    void OpenMotherDoor()
-    {
-        if (GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_PRE_SHAHRAZ_DOOR)))
-            pDoor->SetGoState(GO_STATE_ACTIVE);
     }
 
     void AttackStart(Unit* who)
@@ -299,10 +290,7 @@ struct MANGOS_DLL_DECL boss_shade_of_akamaAI : public ScriptedAI
     void JustDied(Unit *killer)
     {
         if (m_pInstance)
-        {
-            m_pInstance->SetData(DATA_SHADEOFAKAMAEVENT, DONE);
-            OpenMotherDoor();
-        }
+            m_pInstance->SetData(TYPE_SHADE, DONE);
     }
 
     void UpdateAI(const uint32 diff)
@@ -461,7 +449,7 @@ struct MANGOS_DLL_DECL npc_akamaAI : public ScriptedAI
             ((boss_shade_of_akamaAI*)pShade->AI())->Reset();
 
             // Prevent players from trying to restart event
-            m_pInstance->SetData(DATA_SHADEOFAKAMAEVENT, IN_PROGRESS);
+            m_pInstance->SetData(TYPE_SHADE, IN_PROGRESS);
             m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
             ((boss_shade_of_akamaAI*)pShade->AI())->SetSelectableChannelers();

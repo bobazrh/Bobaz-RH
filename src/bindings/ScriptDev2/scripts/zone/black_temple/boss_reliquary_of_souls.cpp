@@ -176,35 +176,27 @@ struct MANGOS_DLL_DECL boss_reliquary_of_soulsAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE,0);
         m_creature->GetMotionMaster()->Clear(false);
+    }
 
+    void JustReachedHome()
+    {
         if (m_pInstance)
-        {
-            if (m_creature->isAlive())
-            {
-                m_pInstance->SetData(DATA_RELIQUARYOFSOULSEVENT, NOT_STARTED);
-            }else OpenMotherDoor();
-        }
+            m_pInstance->SetData(TYPE_RELIQUIARY, NOT_STARTED);
     }
 
     void DespawnEssences()
     {
-        Unit* Essence = NULL;
+        Creature* pEssence = NULL;
 
         if (SufferingGUID)
-            Essence = ((Creature*)Unit::GetUnit((*m_creature), SufferingGUID));
+            pEssence = (Creature*)Unit::GetUnit((*m_creature), SufferingGUID);
         else if (DesireGUID)
-            Essence = ((Creature*)Unit::GetUnit((*m_creature), DesireGUID));
+            pEssence = (Creature*)Unit::GetUnit((*m_creature), DesireGUID);
         else if (AngerGUID)
-            Essence = ((Creature*)Unit::GetUnit((*m_creature), AngerGUID));
+            pEssence = (Creature*)Unit::GetUnit((*m_creature), AngerGUID);
 
-        if (Essence && Essence->isAlive())
-            Essence->setDeathState(JUST_DIED);
-    }
-
-    void OpenMotherDoor()
-    {
-        if (GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_PRE_SHAHRAZ_DOOR)))
-            pDoor->SetGoState(GO_STATE_ACTIVE);
+        if (pEssence && pEssence->isAlive())
+            pEssence->ForcedDespawn();
     }
 
     void AttackStart(Unit* who) { }
@@ -221,7 +213,7 @@ struct MANGOS_DLL_DECL boss_reliquary_of_soulsAI : public ScriptedAI
                 if (!m_creature->getVictim())
                 {
                     if (m_pInstance)
-                        m_pInstance->SetData(DATA_RELIQUARYOFSOULSEVENT, IN_PROGRESS);
+                        m_pInstance->SetData(TYPE_RELIQUIARY, IN_PROGRESS);
 
                     Phase = 1;
 
@@ -275,10 +267,7 @@ struct MANGOS_DLL_DECL boss_reliquary_of_soulsAI : public ScriptedAI
     void JustDied(Unit* killer)
     {
         if (m_pInstance)
-        {
-            m_pInstance->SetData(DATA_RELIQUARYOFSOULSEVENT, DONE);
-            OpenMotherDoor();
-        }
+            m_pInstance->SetData(TYPE_RELIQUIARY, DONE);
     }
 
     void UpdateAI(const uint32 diff)

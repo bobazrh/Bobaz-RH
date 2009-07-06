@@ -77,8 +77,8 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
 
     void Reset()
     {
-        m_uiStaticDisruptTimer = 10000 + rand()%10000;
-        m_uiCallLightTimer = 15000 + rand()%15000;
+        m_uiStaticDisruptTimer = 7000 + rand()%7000;
+        m_uiCallLightTimer = 15000 + rand()%10000;
         m_uiGustOfWindTimer = 20000 + rand()%10000;
         m_uiStormTimer = 50000;
         m_uiSummonEagleTimer = 65000;
@@ -136,7 +136,7 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
         if (m_uiCallLightTimer < uiDiff)
         {
             m_creature->CastSpell(m_creature->getVictim(), SPELL_CALL_LIGHTNING, false);
-            m_uiCallLightTimer = 15000 + rand()%15000;
+            m_uiCallLightTimer = 15000 + rand()%10000;
         }else m_uiCallLightTimer -= uiDiff;
 
         if (m_uiStaticDisruptTimer < uiDiff)
@@ -144,7 +144,7 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1))
                 m_creature->CastSpell(pTarget, SPELL_STATIC_DISRUPTION, false);
 
-            m_uiStaticDisruptTimer = 10000 + rand()%10000;
+            m_uiStaticDisruptTimer = 7000 + rand()%7000;
         }else m_uiStaticDisruptTimer -= uiDiff;
 
         if (m_uiStormTimer < uiDiff)
@@ -195,8 +195,7 @@ CreatureAI* GetAI_boss_akilzon(Creature* pCreature)
 enum
 {
     SPELL_EAGLE_SWOOP       = 44732,
-    POINT_ID_RANDOM         = 1,
-    TIMER_RETURN            = 750
+    POINT_ID_RANDOM         = 1
 };
 
 struct MANGOS_DLL_DECL mob_soaring_eagleAI : public ScriptedAI
@@ -217,9 +216,10 @@ struct MANGOS_DLL_DECL mob_soaring_eagleAI : public ScriptedAI
     void Reset()
     {
         m_uiEagleSwoopTimer = 2000 + rand()%4000;
-        m_uiReturnTimer = TIMER_RETURN;
+        m_uiReturnTimer = 800;
         m_bCanMoveToRandom = false;
         m_bCanCast = true;
+
     }
 
     void AttackStart(Unit* pWho)
@@ -253,6 +253,9 @@ struct MANGOS_DLL_DECL mob_soaring_eagleAI : public ScriptedAI
             float fX, fY, fZ;
             pAzkil->GetRandomPoint(pAzkil->GetPositionX(), pAzkil->GetPositionY(), pAzkil->GetPositionZ()+15.0f, 30.0f, fX, fY, fZ);
 
+            if (m_creature->HasMonsterMoveFlag(MONSTER_MOVE_WALK))
+                m_creature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+
             m_creature->GetMotionMaster()->MovePoint(POINT_ID_RANDOM, fX, fY, fZ);
 
             m_bCanMoveToRandom = false;
@@ -269,7 +272,7 @@ struct MANGOS_DLL_DECL mob_soaring_eagleAI : public ScriptedAI
             if (m_uiReturnTimer < uiDiff)
             {
                 DoMoveToRandom();
-                m_uiReturnTimer = TIMER_RETURN;
+                m_uiReturnTimer = 800;
             }else m_uiReturnTimer -= uiDiff;
         }
 
@@ -282,19 +285,11 @@ struct MANGOS_DLL_DECL mob_soaring_eagleAI : public ScriptedAI
             {
                 DoCast(pTarget,SPELL_EAGLE_SWOOP);
 
-                //below here is just a hack and must be removed
-                //use for research about SPELL_EFFECT_149, not implemented in time of writing script.
-                //cast -> move to target -> return to random point at same Z as original location?
-                //is spellInfo->Speed releted to TIMER_RETURN -value?
-                float fX, fY, fZ;
-                pTarget->GetContactPoint(m_creature, fX, fY, fZ);
-                m_creature->SendMonsterMove(fX, fY, fZ, 0, MONSTER_MOVE_WALK, TIMER_RETURN);
-                m_creature->GetMap()->CreatureRelocation(m_creature, fX, fY, fZ, m_creature->GetAngle(pTarget));
+                m_bCanMoveToRandom = true;
+                m_bCanCast = false;
             }
 
             m_uiEagleSwoopTimer = 4000 + rand()%2000;
-            m_bCanMoveToRandom = true;
-            m_bCanCast = false;
         }else m_uiEagleSwoopTimer -= uiDiff;
     }
 };

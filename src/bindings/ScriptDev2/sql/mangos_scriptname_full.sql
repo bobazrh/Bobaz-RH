@@ -417,6 +417,7 @@ UPDATE creature_template SET ScriptName='mobs_risen_husk_spirit' WHERE entry IN 
 UPDATE creature_template SET ScriptName='npc_deserter_agitator' WHERE entry=23602;
 UPDATE creature_template SET ScriptName='npc_lady_jaina_proudmoore' WHERE entry=4968;
 UPDATE creature_template SET ScriptName='npc_nat_pagle' WHERE entry=12919;
+UPDATE creature_template SET ScriptName='npc_cassa_crimsonwing' WHERE entry=23704;
 UPDATE creature_template SET ScriptName='npc_restless_apparition' WHERE entry=23861;
 
 /* EASTERN PLAGUELANDS */
@@ -430,6 +431,7 @@ UPDATE creature_template SET ScriptName='npc_death_knight_initiate' WHERE entry=
 UPDATE creature_template SET ScriptName='npc_unworthy_initiate_anchor' WHERE entry=29521;
 UPDATE creature_template SET ScriptName='npc_unworthy_initiate' WHERE entry IN (29519,29520,29565,29566,29567);
 UPDATE gameobject_template SET ScriptName='go_acherus_soul_prison' WHERE entry IN (191577,191580,191581,191582,191583,191584,191585,191586,191587,191588,191589,191590);
+UPDATE creature_template SET ScriptName='npc_a_special_surprise' WHERE entry IN (29032,29061,29065,29067,29068,29070,29074,29072,29073,29071);
 
 /* ELWYNN FOREST */
 UPDATE creature_template SET ScriptName='npc_henze_faulk' WHERE entry=6172;
@@ -837,7 +839,13 @@ UPDATE gameobject_template SET ScriptName='go_gauntlet_gate' WHERE entry=175357;
 
 
 /* SUNWELL PLATEAU */
-
+UPDATE instance_template SET script='instance_sunwell_plateau' WHERE map=580;
+UPDATE creature_template SET ScriptName='boss_kalecgos' WHERE entry=24850;
+UPDATE creature_template SET ScriptName='boss_kalecgos_humanoid' WHERE entry=24891;
+UPDATE creature_template SET ScriptName='boss_sathrovarr' WHERE entry=24892;
+UPDATE gameobject_template SET ScriptName='go_spectral_rift' WHERE entry=187055;
+DELETE FROM areatrigger_scripts WHERE entry=4853;
+INSERT INTO areatrigger_scripts VALUES (4853,'at_madrigosa');
 
 /* SWAMP OF SORROWS */
 
@@ -929,6 +937,7 @@ UPDATE creature_template SET ScriptName='mob_rotting_forest_rager' WHERE entry=2
 UPDATE creature_template SET ScriptName='mob_unkor_the_ruthless' WHERE entry=18262;
 UPDATE creature_template SET ScriptName='npc_floon' WHERE entry=18588;
 UPDATE creature_template SET ScriptName='npc_skyguard_handler_irena' WHERE entry=23413;
+UPDATE creature_template SET ScriptName='npc_slim' WHERE entry=19679;
 
 /* THOUSAND NEEDLES */
 UPDATE creature_template SET ScriptName='npc_plucky_johnson' WHERE entry=6626;

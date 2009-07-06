@@ -1,4 +1,4 @@
-# Copyright © 2005,2006,2007 MaNGOS <http://www.mangosproject.org/>
+# Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -7,13 +7,12 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ## Process this file with automake to produce Makefile.in
 
 ## Sub-directories to parse
@@ -383,11 +382,12 @@ scripts/zone/tirisfal_glades/tirisfal_glades.cpp \
 scripts/zone/uldaman/boss_ironaya.cpp \
 scripts/zone/uldaman/uldaman.cpp \
 scripts/zone/undercity/undercity.cpp \
-scripts/zone/utgarde_keep/utgarde_keep/boss_ingvar_the_plunderer.cpp \
+scripts/zone/utgarde_keep/utgarde_keep/boss_ingvar.cpp \
 scripts/zone/utgarde_keep/utgarde_keep/boss_keleseth.cpp \
-scripts/zone/utgarde_keep/utgarde_keep/boss_skarvald_dalronn.cpp \
+scripts/zone/utgarde_keep/utgarde_keep/boss_skarvald_and_dalronn.cpp \
 scripts/zone/utgarde_keep/utgarde_keep/def_utgarde_keep.h \
 scripts/zone/utgarde_keep/utgarde_keep/instance_utgarde_keep.cpp \
+scripts/zone/utgarde_keep/utgarde_keep/utgarde_keep.cpp \
 scripts/zone/wailing_caverns/instance_wailing_caverns.cpp \
 scripts/zone/western_plaguelands/western_plaguelands.cpp \
 scripts/zone/westfall/westfall.cpp \
