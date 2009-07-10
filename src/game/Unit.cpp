@@ -5408,7 +5408,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
             if (dummySpell->SpellFamilyFlags & UI64LIT(0x4000000000000))
             {
                 uint32 maxmana = GetMaxPower(POWER_MANA);
-                basepoints0 = maxmana* GetAttackTime(RANGED_ATTACK)/1000.0f/100.0f;
+                basepoints0 = int32(maxmana* GetAttackTime(RANGED_ATTACK)/1000.0f/100.0f);
 
                 target = this;
                 triggered_spell_id = 34075;
@@ -5521,6 +5521,17 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     }
                     return true;
                 }
+                // Judgements of the Wise
+                case 31876:
+                case 31877:
+                case 31878:
+                    target = this;
+                    basepoints0 = GetCreatePowers(POWER_MANA) * 25 / 100;
+                    triggered_spell_id = 31930;
+
+                    // Replenishment
+                    CastSpell(this, 57669, true, NULL, triggeredByAura);
+                    break;
                 // Holy Power (Redemption Armor set)
                 case 28789:
                 {
