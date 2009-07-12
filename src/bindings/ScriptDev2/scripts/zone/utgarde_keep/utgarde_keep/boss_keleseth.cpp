@@ -13,6 +13,7 @@ EndScriptData */
 #define SPELL_FROST_TOMB                         48400
 #define SPELL_FROST_TOMB_SUMMON                  42714
 #define SPELL_DECREPIFY                          42702
+#define SPELL_BONE_ARMOR			 59386
 #define SPELL_SCOURGE_RESSURRECTION              42704
 #define CREATURE_FROSTTOMB                       23965
 #define CREATURE_SKELETON                        23970
@@ -27,24 +28,28 @@ EndScriptData */
 
 float SkeletonSpawnPoint[5][5]=
 {
-    {156.3559, 259.2093},
-    {156.1559, 259.3093},
     {156.4559, 259.2093},
-    {156.2559, 259.4093},
-    {156.1559, 259.2093},
+    {156.2559, 259.0093},
+    {156.3559, 259.2093},
+    {156.2559, 259.2093},
+    {156.2559, 259.3093},
 };
 
 float AttackLoc[3]={197.636, 194.046, 40.8164};
 
 struct MANGOS_DLL_DECL mob_frost_tombAI : public ScriptedAI
 {
-    mob_frost_tombAI(Creature *c) : ScriptedAI(c)
+    mob_frost_tombAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         FrostTombGUID = 0;
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsHeroicMode = pCreature->GetMap()->IsHeroic();
         Reset();
     }
 
     uint64 FrostTombGUID;
+    ScriptedInstance* m_pInstance;
+    bool m_bIsHeroicMode;
 
     void SetPrisoner(Unit* uPrisoner)
     {
@@ -127,7 +132,7 @@ struct MANGOS_DLL_DECL  boss_kelesethAI : public ScriptedAI
             pInstance->SetData(DATA_PRINCEKELESETH, IN_PROGRESS);
 
         DoScriptText(SAY_AGGRO, m_creature);
-        DoZoneInCombat();
+	m_creature->SetInCombatWithZone();
     }
 
     void ResetTimer(uint32 inc = 0)
@@ -157,10 +162,10 @@ struct MANGOS_DLL_DECL  boss_kelesethAI : public ScriptedAI
                     Skeleton = m_creature->SummonCreature(CREATURE_SKELETON, SkeletonSpawnPoint[i][0], SkeletonSpawnPoint[i][1] , SKELETONSPAWN_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN,20000);
                     if(Skeleton)
                     {
-                        Skeleton->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                        Skeleton->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
                         Skeleton->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY() , m_creature->GetPositionZ());
                         Skeleton->AddThreat(m_creature->getVictim(), 0.0f);
-                        DoZoneInCombat(Skeleton);
+			m_creature->SetInCombatWithZone();
                     }
                 }
                 Skeletons = true;
@@ -200,13 +205,15 @@ struct MANGOS_DLL_DECL  mob_vrykul_skeletonAI : public ScriptedAI
     uint32 Respawn_Time;
     uint64 Target_Guid;
     uint32 Decrepify_Timer;
+    uint32 BoneArmor_Timer;
 
     bool isDead;
 
     void Reset()
     {
-        Respawn_Time = 12000;
-        Decrepify_Timer = 10000 + rand()%20000;
+        Respawn_Time = 11000+rand()%2000;
+        Decrepify_Timer = 1000 + rand()%5000;
+	BoneArmor_Timer = 2000 + rand()%2000;
         isDead = false;
     }
 
@@ -264,13 +271,19 @@ struct MANGOS_DLL_DECL  mob_vrykul_skeletonAI : public ScriptedAI
                 if(Respawn_Time < diff)
                 {
                     Resurrect();
-                    Respawn_Time = 12000;
+                    Respawn_Time = 12000+rand()%4000;
                 }else Respawn_Time -= diff;
             }
             else
             {
                 if(!m_creature->SelectHostilTarget() || !m_creature->getVictim())
                     return;
+
+		if(BoneArmor_Timer < diff)
+		{
+		   DoCast(m_creature,SPELL_BONE_ARMOR);
+		   BoneArmor_Timer = 8000 + rand()%6000;
+		}else BoneArmor_Timer -= diff;
 
                 if(Decrepify_Timer < diff)
                 {
