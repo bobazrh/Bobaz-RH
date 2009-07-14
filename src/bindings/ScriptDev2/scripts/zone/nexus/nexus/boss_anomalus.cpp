@@ -41,6 +41,76 @@ enum
     CREATURE_RIFT	    = 26918
 };
 
+enum
+{
+	SPELL_AURA				= 47687,
+	SPELL_CHARGED_AURA		= 47733,
+	SPELL_SUMMON			= 47732,
+	SPELL_CHARGED_SUMMON	= 47742
+};
+
+/*######
+## mob_chaotic_rift
+######*/
+
+struct MANGOS_DLL_DECL mob_chaotic_riftAI : public ScriptedAI
+{
+	mob_chaotic_riftAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsHeroicMode = pCreature->GetMap()->IsHeroic();
+		Reset();
+	}
+
+	ScriptedInstance* m_pInstance;
+    bool m_bIsHeroicMode;
+	bool m_bIsCharged;
+
+	friend class boss_anomalusAI;
+
+	void Reset() 
+    {
+		m_bIsCharged = false;
+	}
+
+	void Aggro(Unit* pWho)
+    {
+		DoCast(m_creature,SPELL_AURA);
+		DoCast(m_creature,SPELL_SUMMON);
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+
+    }
+
+    void KilledUnit(Unit* pVictim)
+    {
+    }
+
+	void SpellHit(Unit* pUnit, const SpellEntry* pSpell) 
+	{
+		if(pSpell->Id == SPELL_CHARGE_RIFT){
+			m_creature->RemoveAllAuras();
+			DoCast(m_creature,SPELL_CHARGED_AURA);
+			DoCast(m_creature,SPELL_CHARGED_SUMMON);
+		}
+	}
+
+	void UnCharge()
+	{
+		m_creature->RemoveAllAuras();
+		DoCast(m_creature,SPELL_AURA);
+		DoCast(m_creature,SPELL_SUMMON);
+	}
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		
+	}
+
+}
+
 /*######
 ## boss_anomalus
 ######*/
@@ -62,10 +132,12 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     uint32 m_uiRiftTimer;
     uint32 m_uiShieldCounter;
     uint32 m_uiChargeTimer;
+	std::list<Creature*> m_lRifts; 
     bool m_bShield;
 
     void Reset() 
     {
+	m_lRifts.clear();
 	m_uiShieldTimer=45000;
 	m_uiChargeTimer=2000;
 	m_uiSparkTimer=6000+rand()%2000;
@@ -103,7 +175,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 		if (m_uiRiftTimer < uiDiff){
 			// Summon Rift
 			m_uiRiftTimer = 25000 + rand()%10000;
-                        m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
+			m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
 		} else m_uiRiftTimer -= uiDiff;
 
 		if (m_uiShieldCounter < 3 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < (75 - 25*m_uiShieldCounter)){
@@ -126,21 +198,25 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 			DoCast(m_creature,SPELL_RIFT_SHIELD);
 			
 			// Summon Rift
-			m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
+			m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
 		}
         	DoMeleeAttackIfReady();
 	} else {
 		if(m_uiChargeTimer < uiDiff){
-			
-			DoCast(m_creature,SPELL_CHARGE_RIFT);
+			for(std::list<Creature*>::iterator itr = m_lRifts.begin(); itr != m_lRifts.end(); ++itr)
+			{
+				if ((*itr)->isAlive()){
+					DoCast(*itr,SPELL_CHARGE_RIFT);
+				}
+			}
 			m_uiChargeTimer=50000;
 		} else m_uiChargeTimer -= uiDiff;
 		if(m_uiShieldTimer < uiDiff){
 			m_bShield = false;
 			//start movement
 			if(m_creature->isInCombat())
-                    		if(Unit* victim = m_creature->getVictim())
-                        		m_creature->SendMeleeAttackStart(victim);
+                    if(Unit* victim = m_creature->getVictim())
+                      		m_creature->SendMeleeAttackStart(victim);
                 	if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
                 	{
                     		m_creature->GetMotionMaster()->Clear(false);
@@ -157,6 +233,11 @@ CreatureAI* GetAI_boss_anomalus(Creature* pCreature)
     return new boss_anomalusAI(pCreature);
 }
 
+CreatureAI* GetAI_mob_chaotic_rift(Creature* pCreature)
+{
+    return new mob_chaotic_riftAI(pCreature);
+}
+
 void AddSC_boss_anomalus()
 {
     Script *newscript;
@@ -164,5 +245,10 @@ void AddSC_boss_anomalus()
     newscript = new Script;
     newscript->Name = "boss_anomalus";
     newscript->GetAI = &GetAI_boss_anomalus;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_chaotic_rift";
+    newscript->GetAI = &GetAI_mob_chaotic_rift;
     newscript->RegisterSelf();
 }
