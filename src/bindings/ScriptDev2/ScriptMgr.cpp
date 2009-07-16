@@ -394,6 +394,7 @@ extern void AddSC_netherstorm();
 //Eye of Eternety
 
 //Nexus
+extern void AddSC_instance_nexus();
 extern void AddSC_boss_anomalus();
 extern void AddSC_boss_keristrasza();
 extern void AddSC_boss_ormorok();
@@ -1278,6 +1279,7 @@ void ScriptsInit()
     //Eye of Eternety
 
     //Nexus
+    AddSC_instance_nexus();
     AddSC_boss_anomalus();
     AddSC_boss_keristrasza();
     AddSC_boss_ormorok();
