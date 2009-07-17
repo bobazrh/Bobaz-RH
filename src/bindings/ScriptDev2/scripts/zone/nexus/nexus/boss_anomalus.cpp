@@ -44,10 +44,9 @@ enum
 
 enum
 {
-	SPELL_AURA				= 47687,
-	SPELL_CHARGED_AURA		= 47733,
-	SPELL_SUMMON			= 47732,
-	SPELL_CHARGED_SUMMON	= 47742
+	SPELL_BURST				= 47688,
+	SPELL_CHARGED_BURST		= 47737,
+	SPELL_SUMMON			= 47692,
 };
 
 /*######
@@ -72,6 +71,8 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     uint32 m_uiShieldCounter;
     uint32 m_uiChargeTimer;
 	std::list<Creature*> m_lRifts; 
+	SpellEntry * chargeInfo;
+		
     bool m_bShield;
 
     void Reset() 
@@ -82,6 +83,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 	m_uiSparkTimer=6000+rand()%2000;
 	m_uiRiftTimer=10000+rand()%2000;
 	m_uiShieldCounter = 0;
+	chargeInfo = sSpellStore.LookupEntry(SPELL_CHARGE_RIFT); 
 	m_bShield = false;
     }
 
@@ -113,21 +115,17 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     }
 
     void SummonRift(){
-	Creature *pCreature = m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-	if(pCreature){
-		m_lRifts.push_front(pCreature);
-		if(m_bShield){
-			pCreature->CastSpell(pCreature,SPELL_AURA,true);
-			pCreature->CastSpell(pCreature,SPELL_SUMMON,true);
-		} else {
-			pCreature->CastSpell(pCreature,SPELL_CHARGED_AURA,true);
-			pCreature->CastSpell(pCreature,SPELL_CHARGED_SUMMON,true);
+		Creature *pCreature = m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
+		if(pCreature){
+			m_lRifts.push_front(pCreature);
+			if(m_bShield){
+				Aura *Aur = CreateAura(chargeInfo, i, NULL,pCreature,m_creature);
+				pCreature->AddAura(Aur);
+			} 
+			pCreature->Attack(m_creature->getVictim(), false);
+            pCreature->setFaction(m_creature->getFaction());
 		}
-	}
     }
-
-
-
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostilTarget() || !m_creature->getVictim())
@@ -150,19 +148,11 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 			m_uiShieldTimer=45000;
 			m_uiChargeTimer=2000;
 			//Stop Movement
-			if(m_creature->isInCombat())
-                    		if(Unit* victim = m_creature->getVictim())
-                        		m_creature->SendMeleeAttackStop(victim);
-                	if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == TARGETED_MOTION_TYPE)
-                	{
-                   		m_creature->GetMotionMaster()->Clear(false);
-                    		m_creature->GetMotionMaster()->MoveIdle();
-                    		m_creature->StopMoving();
-                	}
-
+			m_creature->InterruptNonMeleeSpells(false);
+			m_creature->GetMotionMaster()->MoveIdle();
+			m_creature->StopMoving();
+			       
 			DoScriptText(SAY_SHIELD, m_creature);
-			DoCast(m_creature,SPELL_RIFT_SHIELD);
-			
 			SummonRift();
 		}
         	DoMeleeAttackIfReady();
@@ -171,10 +161,8 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 			for(std::list<Creature*>::iterator itr = m_lRifts.begin(); itr != m_lRifts.end(); ++itr)
 			{
 				if ((*itr)->isAlive()){
-					DoCast(*itr,SPELL_CHARGE_RIFT);
-					(*itr)->RemoveAllAuras();
-					(*itr)->CastSpell(*itr,SPELL_CHARGED_AURA,true);
-					(*itr)->CastSpell(*itr,SPELL_CHARGED_SUMMON,true);
+					Aura *Aur = CreateAura(chargeInfo, i, NULL,(*itr),m_creature);
+					(*itr)->AddAura(Aur);
 				}
 			}
 			m_uiChargeTimer=50000;
@@ -183,23 +171,11 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 			m_bShield = false;
 			//start movement
 			if(m_creature->isInCombat())
-                    	if(Unit* victim = m_creature->getVictim())
+                    if(Unit* victim = m_creature->getVictim())
                       		m_creature->SendMeleeAttackStart(victim);
-                	if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
-                	{
-                    		m_creature->GetMotionMaster()->Clear(false);
-                    		m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), 0.0f, 0.0f);
-                	}
-			for(std::list<Creature*>::iterator itr = m_lRifts.begin(); itr != m_lRifts.end(); ++itr)
-			{
-				if ((*itr)->isAlive()){
-					(*itr)->RemoveAllAuras();
-					(*itr)->CastSpell(*itr,SPELL_AURA,true);
-					(*itr)->CastSpell(*itr,SPELL_SUMMON,true);
-				}
-			}
-
-		}
+			m_creature->GetMotionMaster()->MoveChase(SelectUnit(SELECT_TARGET_TOPAGGRO,1));
+			m_creature->Attack(SelectUnit(SELECT_TARGET_TOPAGGRO,1));
+         }
 	}
 
     }
@@ -209,7 +185,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 ## mob_chaotic_rift
 ######*/
 
-struct MANGOS_DLL_DECL mob_chaotic_riftAI : public ScriptedAI
+struct MANGOS_DLL_DECL mob_chaotic_riftAI : public Scripted_NoMovementAI
 {
 	mob_chaotic_riftAI(Creature* pCreature) : ScriptedAI(pCreature)
 	{
@@ -220,11 +196,17 @@ struct MANGOS_DLL_DECL mob_chaotic_riftAI : public ScriptedAI
 
 	ScriptedInstance* m_pInstance;
     bool m_bIsHeroicMode;
+	bool m_bIsCharged;
+	uint32 m_uiBurstTimer;
+	uint32 m_uiSpawnTimer;
 
 	friend class boss_anomalusAI;
 
 	void Reset() 
     {
+		m_uiBurstTimer = 700+rand()%600;
+		m_uiSpawnTimer = 14500 + rand()%2000;
+		m_bIsCharged = false;
 	}
 
 	void Aggro(Unit* pWho)
@@ -243,7 +225,18 @@ struct MANGOS_DLL_DECL mob_chaotic_riftAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-		
+		if (m_uiBurstTimer < uiDiff){
+			if(m_creature->HasAura(SPELL_CHARGE_RIFT)){
+				m_bIsCharged = true;
+			} else m_bIsCharged = false;
+			DoCast(m_creature->getVictim(),m_bIsCharged ? SPELL_CHARGED_BURST : SPELL_BURST);
+			m_uiBurstTimer = 700 + rand()%600;
+		} else m_uiBurstTimer -= uiDiff;
+
+		if (m_uiSpawnTimer < uiDiff){
+			DoCast(m_creature->getVictim(),SPELL_SUMMON);
+			m_uiSpawnTimer = m_bIsCharged ? 14000 + rand()%4000 : 5000 + rand()%2000;
+		} else m_uiSpawnTimer -= uiDiff;
 	}
 
 };
