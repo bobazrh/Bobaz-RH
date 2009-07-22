@@ -3,6 +3,8 @@
 /* AREATRIGGER */
 DELETE FROM areatrigger_scripts WHERE entry=4560;
 INSERT INTO areatrigger_scripts VALUES (4560,'at_legion_teleporter');
+DELETE FROM areatrigger_scripts WHERE entry=3066;
+INSERT INTO areatrigger_scripts VALUES (3066,'at_ravenholdt');
 
 /* WORLD BOSS */
 UPDATE creature_template SET ScriptName='boss_ysondre' WHERE entry=14887;
@@ -88,7 +90,7 @@ UPDATE creature_template SET ScriptName='npc_sayge' WHERE entry=14822;
 /* */
 
 /* ALTERAC MOUNTAINS */
-UPDATE creature_template SET ScriptName='npc_ravenholdt' WHERE entry=13936;
+
 
 /* ALTERAC VALLEY */
 
@@ -432,6 +434,7 @@ UPDATE creature_template SET ScriptName='npc_unworthy_initiate_anchor' WHERE ent
 UPDATE creature_template SET ScriptName='npc_unworthy_initiate' WHERE entry IN (29519,29520,29565,29566,29567);
 UPDATE gameobject_template SET ScriptName='go_acherus_soul_prison' WHERE entry IN (191577,191580,191581,191582,191583,191584,191585,191586,191587,191588,191589,191590);
 UPDATE creature_template SET ScriptName='npc_a_special_surprise' WHERE entry IN (29032,29061,29065,29067,29068,29070,29074,29072,29073,29071);
+UPDATE creature_template SET ScriptName='npc_koltira_deathweaver' WHERE entry=28912;
 
 /* ELWYNN FOREST */
 UPDATE creature_template SET ScriptName='npc_henze_faulk' WHERE entry=6172;
@@ -804,6 +807,7 @@ UPDATE creature_template SET ScriptName='npc_deathstalker_erland' WHERE entry=19
 
 /* STONETALON MOUNTAINS */
 UPDATE creature_template SET ScriptName='npc_braug_dimspirit' WHERE entry=4489;
+UPDATE creature_template SET ScriptName='npc_kaya' WHERE entry=11856;
 
 /* STORM PEAKS */
 
@@ -840,6 +844,7 @@ UPDATE gameobject_template SET ScriptName='go_gauntlet_gate' WHERE entry=175357;
 
 /* SUNWELL PLATEAU */
 UPDATE instance_template SET script='instance_sunwell_plateau' WHERE map=580;
+UPDATE creature_template SET ScriptName='boss_brutallus' WHERE entry=24882;
 UPDATE creature_template SET ScriptName='boss_kalecgos' WHERE entry=24850;
 UPDATE creature_template SET ScriptName='boss_kalecgos_humanoid' WHERE entry=24891;
 UPDATE creature_template SET ScriptName='boss_sathrovarr' WHERE entry=24892;
@@ -941,6 +946,8 @@ UPDATE creature_template SET ScriptName='npc_slim' WHERE entry=19679;
 
 /* THOUSAND NEEDLES */
 UPDATE creature_template SET ScriptName='npc_plucky_johnson' WHERE entry=6626;
+UPDATE creature_template SET ScriptName='npc_paoka_swiftmountain' WHERE entry=10427;
+UPDATE creature_template SET ScriptName='npc_lakota_windsong' WHERE entry=10646;
 
 /* THUNDER BLUFF */
 UPDATE creature_template SET ScriptName='npc_cairne_bloodhoof' WHERE entry=3057;
@@ -960,6 +967,15 @@ UPDATE creature_template SET ScriptName='npc_lore_keeper_of_norgannon' WHERE ent
 /*  */
 
 /* HALLS OF LIGHTNING */
+UPDATE instance_template SET script='instance_halls_of_lightning' WHERE map=602;
+UPDATE creature_template SET ScriptName='boss_bjarngrim' WHERE entry=28586;
+UPDATE creature_template SET ScriptName='mob_stormforged_lieutenant' WHERE entry=29240;
+UPDATE creature_template SET ScriptName='boss_volkhan' WHERE entry=28587;
+UPDATE creature_template SET ScriptName='mob_molten_golem' WHERE entry=28695;
+UPDATE creature_template SET ScriptName='npc_volkhan_anvil' WHERE entry=28823;
+UPDATE creature_template SET ScriptName='boss_ionar' WHERE entry=28546;
+UPDATE creature_template SET ScriptName='mob_spark_of_ionar' WHERE entry=28926;
+UPDATE creature_template SET ScriptName='boss_loken' WHERE entry=28923;
 
 /* HALLS OF STONE */
 
@@ -1064,6 +1080,7 @@ UPDATE creature_template SET ScriptName='boss_jindo' WHERE entry=11380;
 UPDATE creature_template SET ScriptName='boss_hakkar' WHERE entry=14834;
 UPDATE creature_template SET ScriptName='boss_thekal' WHERE entry=14509;
 UPDATE creature_template SET ScriptName='boss_arlokk' WHERE entry=14515;
+UPDATE gameobject_template SET ScriptName='go_gong_of_bethekk' WHERE entry=180526;
 UPDATE creature_template SET ScriptName='boss_grilek' WHERE entry=15082;
 UPDATE creature_template SET ScriptName='boss_hazzarah' WHERE entry=15083;
 UPDATE creature_template SET ScriptName='boss_renataki' WHERE entry=15084;

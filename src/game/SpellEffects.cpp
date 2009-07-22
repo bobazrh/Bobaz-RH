@@ -1853,7 +1853,7 @@ void Spell::EffectDummy(uint32 i)
                 return;
             }
             // Death Grip
-            if( m_spellInfo->SpellFamilyFlags & 0x02000000LL )
+            else if( m_spellInfo->SpellFamilyFlags & 0x02000000LL )
             {
                 if(!unitTarget || !m_caster)
                     return;
@@ -1884,6 +1884,7 @@ void Spell::EffectDummy(uint32 i)
                     ((Player*)unitTarget)->GetSession()->SendPacket(&data);
                 }
                 m_caster->CastSpell(unitTarget,51399,true);    //Taunt
+	    }
             // Hungering Cold
             else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000100000000000))
             {

@@ -194,10 +194,9 @@ struct MANGOS_DLL_DECL npc_custodian_of_timeAI : public npc_escortAI
             if (((Player*)who)->HasAura(34877,1) && ((Player*)who)->GetQuestStatus(10277) == QUEST_STATUS_INCOMPLETE)
             {
                 float Radius = 10.0;
+
                 if (m_creature->IsWithinDistInMap(who, Radius))
-                {
-                    ((npc_escortAI*)(m_creature->AI()))->Start(false, false, false, who->GetGUID());
-                }
+                    Start(false, false, who->GetGUID());
             }
         }
     }
@@ -268,13 +267,7 @@ enum
 
 struct MANGOS_DLL_DECL npc_oox17tnAI : public npc_escortAI
 {
-    npc_oox17tnAI(Creature* pCreature) : npc_escortAI(pCreature)
-    {
-        normFaction = pCreature->getFaction();
-        Reset();
-    }
-
-    uint32 normFaction;
+    npc_oox17tnAI(Creature* pCreature) : npc_escortAI(pCreature) { Reset(); }
 
     void WaypointReached(uint32 i)
     {
@@ -312,11 +305,7 @@ struct MANGOS_DLL_DECL npc_oox17tnAI : public npc_escortAI
         }
     }
 
-    void Reset()
-    {
-        if (!IsBeingEscorted)
-            m_creature->setFaction(normFaction);
-    }
+    void Reset() { }
 
     void Aggro(Unit* who)
     {
@@ -331,24 +320,6 @@ struct MANGOS_DLL_DECL npc_oox17tnAI : public npc_escortAI
     void JustSummoned(Creature* summoned)
     {
         summoned->AI()->AttackStart(m_creature);
-    }
-
-    void JustDied(Unit* killer)
-    {
-        if (!IsBeingEscorted)
-            return;
-
-        if (Unit* pPlayer = Unit::GetUnit(*m_creature, PlayerGUID))
-        {
-            // If NPC dies, player fails the quest
-            if (pPlayer && pPlayer->GetTypeId() == TYPEID_PLAYER)
-                ((Player*)pPlayer)->FailQuest(QUEST_RESCUE_OOX_17TN);
-        }
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        npc_escortAI::UpdateAI(diff);
     }
 };
 
@@ -375,7 +346,8 @@ bool QuestAccept_npc_oox17tn(Player* pPlayer, Creature* pCreature, const Quest* 
         if (pPlayer->GetTeam() == HORDE)
             pCreature->setFaction(FACTION_ESCORTEE_H);
 
-        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID());
+        if (npc_oox17tnAI* pEscortAI = dynamic_cast<npc_oox17tnAI*>(pCreature->AI()))
+            pEscortAI->Start(true, false, pPlayer->GetGUID(), pQuest);
     }
     return true;
 }

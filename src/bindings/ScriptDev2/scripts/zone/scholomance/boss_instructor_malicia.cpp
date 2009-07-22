@@ -57,9 +57,9 @@ struct MANGOS_DLL_DECL boss_instructormaliciaAI : public ScriptedAI
     {
         if (ScriptedInstance* pInstance = (ScriptedInstance*)m_creature->GetInstanceData())
         {
-            pInstance->SetData(DATA_INSTRUCTORMALICIA_DEATH, 0);
+            pInstance->SetData(TYPE_MALICIA, DONE);
 
-            if (pInstance->GetData(TYPE_GANDLING) == IN_PROGRESS)
+            if (pInstance->GetData(TYPE_GANDLING) == SPECIAL)
                 m_creature->SummonCreature(1853, 180.73, -9.43856, 75.507, 1.61399, TEMPSUMMON_DEAD_DESPAWN, 0);
         }
     }
@@ -102,7 +102,7 @@ struct MANGOS_DLL_DECL boss_instructormaliciaAI : public ScriptedAI
             if (FlashCounter < 2)
             {
                 FlashHeal_Timer = 5000;
-                FlashCounter++;
+                ++FlashCounter;
             }
             else
             {
@@ -120,7 +120,7 @@ struct MANGOS_DLL_DECL boss_instructormaliciaAI : public ScriptedAI
             if (HealingTouch_Timer < 2)
             {
                 HealingTouch_Timer = 5500;
-                TouchCounter++;
+                ++TouchCounter;
             }
             else
             {

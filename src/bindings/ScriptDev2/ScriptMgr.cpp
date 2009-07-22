@@ -79,7 +79,7 @@ extern void AddSC_npcs_special();
 //------ ZONE --------
 
 //Alterac Mountains
-extern void AddSC_alterac_mountains();
+//extern void AddSC_alterac_mountains();
 
 //Arathi Highlands
 extern void AddSC_arathi_highlands();
@@ -147,7 +147,6 @@ extern void AddSC_boss_gorosh_the_dervish();
 extern void AddSC_boss_grizzle();
 extern void AddSC_boss_high_interrogator_gerstahn();
 extern void AddSC_boss_magmus();
-extern void AddSC_boss_moira_bronzebeard();
 extern void AddSC_boss_tomb_of_seven();
 extern void AddSC_instance_blackrock_depths();
 
@@ -497,6 +496,7 @@ extern void AddSC_stratholme();
 //Sunken Temple
 
 //Sunwell Plateau
+extern void AddSC_boss_brutallus();
 extern void AddSC_boss_kalecgos();
 extern void AddSC_instance_sunwell_plateau();
 
@@ -556,6 +556,13 @@ extern void AddSC_tirisfal_glades();
 //Uldaman
 extern void AddSC_boss_ironaya();
 extern void AddSC_uldaman();
+
+//Ulduar
+extern void AddSC_boss_bjarngrim();
+extern void AddSC_boss_ionar();
+extern void AddSC_boss_loken();
+extern void AddSC_boss_volkhan();
+extern void AddSC_instance_halls_of_lightning();
 
 //Undercity
 extern void AddSC_undercity();
@@ -871,7 +878,7 @@ void ScriptsFree()
     delete []SpellSummary;
 
     // Free resources before library unload
-    for(int i=0;i<MAX_SCRIPTS;i++)
+    for(int i=0; i<MAX_SCRIPTS; ++i)
         delete m_scripts[i];
 
     num_sc_scripts = 0;
@@ -917,7 +924,7 @@ void ScriptsInit()
     bar.step();
     outstring_log("");
 
-    for(int i=0;i<MAX_SCRIPTS;i++)
+    for(int i=0; i<MAX_SCRIPTS; ++i)
         m_scripts[i]=NULL;
 
     FillSpellSummary();
@@ -964,7 +971,7 @@ void ScriptsInit()
     //------ ZONE --------
 
     //Alterac Mountains
-    AddSC_alterac_mountains();
+    //AddSC_alterac_mountains();
 
     //Arathi Highlands
     AddSC_arathi_highlands();
@@ -1033,7 +1040,6 @@ void ScriptsInit()
     AddSC_boss_grizzle();
     AddSC_boss_high_interrogator_gerstahn();
     AddSC_boss_magmus();
-    AddSC_boss_moira_bronzebeard();
     AddSC_boss_tomb_of_seven();
     AddSC_instance_blackrock_depths();
 
@@ -1382,6 +1388,7 @@ void ScriptsInit()
     //Sunken Temple
 
     //Sunwell Plateau
+    AddSC_boss_brutallus();
     AddSC_boss_kalecgos();
     AddSC_instance_sunwell_plateau();
 
@@ -1441,6 +1448,13 @@ void ScriptsInit()
     //Uldaman
     AddSC_boss_ironaya();
     AddSC_uldaman();
+
+    //Ulduar
+    AddSC_boss_bjarngrim();
+    AddSC_boss_ionar();
+    AddSC_boss_loken();
+    AddSC_boss_volkhan();
+    AddSC_instance_halls_of_lightning();
 
     //Undercity
     AddSC_undercity();

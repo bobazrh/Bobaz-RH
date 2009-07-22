@@ -44,13 +44,7 @@ enum
 
 struct MANGOS_DLL_DECL npc_ruul_snowhoofAI : public npc_escortAI
 {
-    npc_ruul_snowhoofAI(Creature* pCreature) : npc_escortAI(pCreature)
-    {
-        normFaction = pCreature->getFaction();
-        Reset();
-    }
-
-    uint32 normFaction;
+    npc_ruul_snowhoofAI(Creature* pCreature) : npc_escortAI(pCreature) { Reset(); }
 
     void WaypointReached(uint32 i)
     {
@@ -76,29 +70,11 @@ struct MANGOS_DLL_DECL npc_ruul_snowhoofAI : public npc_escortAI
         }
     }
 
-    void Reset()
-    {
-        if (!IsBeingEscorted)
-            m_creature->setFaction(normFaction);
-    }
+    void Reset() { }
 
     void JustSummoned(Creature* summoned)
     {
         summoned->AI()->AttackStart(m_creature);
-    }
-
-    void JustDied(Unit* killer)
-    {
-        if (PlayerGUID)
-        {
-            if (Unit* pPlayer = Unit::GetUnit((*m_creature), PlayerGUID))
-                ((Player*)pPlayer)->FailQuest(QUEST_FREEDOM_TO_RUUL);
-        }
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        npc_escortAI::UpdateAI(diff);
     }
 };
 
@@ -108,7 +84,9 @@ bool QuestAccept_npc_ruul_snowhoof(Player* pPlayer, Creature* pCreature, const Q
     {
         pCreature->setFaction(FACTION_R_ESCORTEE);
         pCreature->SetStandState(UNIT_STAND_STATE_STAND);
-        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID());
+
+        if (npc_ruul_snowhoofAI* pEscortAI = dynamic_cast<npc_ruul_snowhoofAI*>(pCreature->AI()))
+            pEscortAI->Start(true, false, pPlayer->GetGUID(), pQuest);
     }
     return true;
 }
@@ -192,18 +170,6 @@ struct MANGOS_DLL_DECL npc_torekAI : public npc_escortAI
         summoned->AI()->AttackStart(m_creature);
     }
 
-    void JustDied(Unit* killer)
-    {
-        if (killer->GetEntry() == m_creature->GetEntry())
-            return;
-
-        if (PlayerGUID)
-        {
-            if (Unit* pPlayer = Unit::GetUnit((*m_creature), PlayerGUID))
-                ((Player*)pPlayer)->FailQuest(QUEST_TOREK_ASSULT);
-        }
-    }
-
     void UpdateAI(const uint32 diff)
     {
         npc_escortAI::UpdateAI(diff);
@@ -230,8 +196,10 @@ bool QuestAccept_npc_torek(Player* pPlayer, Creature* pCreature, const Quest* pQ
     if (pQuest->GetQuestId() == QUEST_TOREK_ASSULT)
     {
         //TODO: find companions, make them follow Torek, at any time (possibly done by mangos/database in future?)
-        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, true, pPlayer->GetGUID());
         DoScriptText(SAY_READY, pCreature, pPlayer);
+
+        if (npc_torekAI* pEscortAI = dynamic_cast<npc_torekAI*>(pCreature->AI()))
+            pEscortAI->Start(true, true, pPlayer->GetGUID(), pQuest);
     }
 
     return true;

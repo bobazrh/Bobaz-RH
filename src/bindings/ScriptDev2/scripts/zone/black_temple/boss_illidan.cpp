@@ -368,7 +368,7 @@ struct MANGOS_DLL_DECL demonfireAI : public ScriptedAI
 };
 
 /******* Functions and vars for Akama's AI ******/
-struct MANGOS_DLL_SPEC npc_akama_illidanAI : public ScriptedAI
+struct MANGOS_DLL_DECL npc_akama_illidanAI : public ScriptedAI
 {
     npc_akama_illidanAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
@@ -716,14 +716,14 @@ struct MANGOS_DLL_SPEC npc_akama_illidanAI : public ScriptedAI
                             if (GameObject* pGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_ILLIDAN_GATE)))
                                 pGate->SetGoState(GO_STATE_ACTIVE);
 
-                            ChannelCount++;
+                            ++ChannelCount;
                             ChannelTimer = 5000;
                         }
                         break;
                     case 4:
                         m_creature->HandleEmoteCommand(EMOTE_ONESHOT_SALUTE);
                         ChannelTimer = 2000;
-                        ChannelCount++;
+                        ++ChannelCount;
                         break;
                     case 5:
                         DoScriptText(SAY_AKAMA_BEWARE, m_creature);
@@ -744,7 +744,7 @@ struct MANGOS_DLL_SPEC npc_akama_illidanAI : public ScriptedAI
                             }
                         }
                         ChannelTimer = 6000;
-                        ChannelCount++;
+                        ++ChannelCount;
                         break;
                     case 6:
                         StartChanneling = false;
@@ -789,7 +789,7 @@ struct MANGOS_DLL_SPEC npc_akama_illidanAI : public ScriptedAI
                                     }
                                 }
                                 if (ChannelCount < 3)
-                                    ChannelCount++;
+                                    ++ChannelCount;
                                 ChannelTimer = 10000;
                             }
                         }
@@ -834,13 +834,13 @@ struct MANGOS_DLL_SPEC npc_akama_illidanAI : public ScriptedAI
 };
 
 /************************************** Illidan's AI ***************************************/
-struct MANGOS_DLL_SPEC boss_illidan_stormrageAI : public ScriptedAI
+struct MANGOS_DLL_DECL boss_illidan_stormrageAI : public ScriptedAI
 {
     boss_illidan_stormrageAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 
-        for(uint8 i = 0; i < 2; i++)
+        for(uint8 i = 0; i < 2; ++i)
         {
             FlameGUID[i] = 0;
             GlaiveGUID[i] = 0;
@@ -1424,7 +1424,7 @@ struct MANGOS_DLL_SPEC boss_illidan_stormrageAI : public ScriptedAI
             }
         }
         IsTalking = true;
-        TalkCount++;
+        ++TalkCount;
     }
 
     void UpdateAI(const uint32 diff)
@@ -1527,7 +1527,7 @@ struct MANGOS_DLL_SPEC boss_illidan_stormrageAI : public ScriptedAI
 
                 // This function does most of the talking
                 Talk(TalkCount);
-                TalkCount++;
+                ++TalkCount;
             }else TalkTimer -= diff;
         }
 
@@ -1661,7 +1661,7 @@ struct MANGOS_DLL_SPEC boss_illidan_stormrageAI : public ScriptedAI
                     if (CheckFlamesTimer <= diff)
                     {
                         // Check if flames are dead or non-existant. If so, set GUID to 0.
-                        for(uint8 i = 0; i < 2; i++)
+                        for(uint8 i = 0; i < 2; ++i)
                         {
                             if (FlameGUID[i])
                             {
@@ -1690,7 +1690,7 @@ struct MANGOS_DLL_SPEC boss_illidan_stormrageAI : public ScriptedAI
                     {
                                                             // Interrupt any spells we might be doing *cough* DArk Barrage *cough*
                         m_creature->InterruptNonMeleeSpells(false);
-                        for(uint8 i = 0; i < 2; i++)
+                        for(uint8 i = 0; i < 2; ++i)
                         {
                             if (GlaiveGUID[i])
                             {
@@ -1814,7 +1814,7 @@ struct MANGOS_DLL_SPEC boss_illidan_stormrageAI : public ScriptedAI
             {
                 m_creature->InterruptNonMeleeSpells(false);
                 Creature* ShadowDemon = NULL;
-                for(uint8 i = 0; i < 4; i++)
+                for(uint8 i = 0; i < 4; ++i)
                 {
                     Unit* target = NULL;
                     target = SelectUnit(SELECT_TARGET_RANDOM,0);
@@ -1898,7 +1898,7 @@ struct MANGOS_DLL_SPEC boss_illidan_stormrageAI : public ScriptedAI
             if (AnimationTimer < diff)
             {
                 HandleDemonTransformAnimation(DemonFormSequence);
-                DemonFormSequence++;
+                ++DemonFormSequence;
             }else AnimationTimer -= diff;
         }
     }
@@ -1975,7 +1975,7 @@ bool GossipSelect_npc_akama_at_illidan(Player* pPlayer, Creature* pCreature, uin
     return true;
 }
 
-struct MANGOS_DLL_SPEC boss_maievAI : public ScriptedAI
+struct MANGOS_DLL_DECL boss_maievAI : public ScriptedAI
 {
     boss_maievAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
@@ -2270,7 +2270,7 @@ struct MANGOS_DLL_DECL flamecrashAI : public ScriptedAI
 };
 
 // Shadowfiends interact with Illidan, setting more targets in Illidan's hashmap
-struct MANGOS_DLL_SPEC mob_parasitic_shadowfiendAI : public ScriptedAI
+struct MANGOS_DLL_DECL mob_parasitic_shadowfiendAI : public ScriptedAI
 {
     mob_parasitic_shadowfiendAI(Creature* pCreature) : ScriptedAI(pCreature)
     {

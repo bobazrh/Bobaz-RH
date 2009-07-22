@@ -71,7 +71,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     uint32 m_uiShieldCounter;
     uint32 m_uiChargeTimer;
 	std::list<Creature*> m_lRifts; 
-	SpellEntry * chargeInfo;
+	SpellEntry const * chargeInfo;
 		
     bool m_bShield;
 
@@ -115,14 +115,15 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     }
 
     void SummonRift(){
+		DoScriptText(SAY_RIFT, m_creature);
 		Creature *pCreature = m_creature->SummonCreature(CREATURE_RIFT, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
 		if(pCreature){
 			m_lRifts.push_front(pCreature);
 			if(m_bShield){
-				Aura *Aur = CreateAura(chargeInfo, i, NULL,pCreature,m_creature);
+				Aura *Aur = CreateAura(chargeInfo, 0, NULL,pCreature,m_creature);
 				pCreature->AddAura(Aur);
 			} 
-			pCreature->Attack(m_creature->getVictim(), false);
+			pCreature->Attack(m_creature->getVictim(),false);
             pCreature->setFaction(m_creature->getFaction());
 		}
     }
@@ -150,10 +151,11 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 			//Stop Movement
 			m_creature->InterruptNonMeleeSpells(false);
 			m_creature->GetMotionMaster()->MoveIdle();
-			m_creature->StopMoving();
-			       
+		
 			DoScriptText(SAY_SHIELD, m_creature);
 			SummonRift();
+			DoCast(m_creature,SPELL_RIFT_SHIELD,false);
+			return;
 		}
         	DoMeleeAttackIfReady();
 	} else {
@@ -161,7 +163,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 			for(std::list<Creature*>::iterator itr = m_lRifts.begin(); itr != m_lRifts.end(); ++itr)
 			{
 				if ((*itr)->isAlive()){
-					Aura *Aur = CreateAura(chargeInfo, i, NULL,(*itr),m_creature);
+					Aura *Aur = CreateAura(chargeInfo, 0, NULL,(*itr),m_creature);
 					(*itr)->AddAura(Aur);
 				}
 			}
@@ -169,12 +171,15 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 		} else m_uiChargeTimer -= uiDiff;
 		if(m_uiShieldTimer < uiDiff){
 			m_bShield = false;
+			m_creature->RemoveAurasDueToSpell(SPELL_RIFT_SHIELD, NULL);
 			//start movement
-			if(m_creature->isInCombat())
-                    if(Unit* victim = m_creature->getVictim())
+			Unit * victim;
+                    	if(victim = m_creature->getVictim()) 
+			{
                       		m_creature->SendMeleeAttackStart(victim);
-			m_creature->GetMotionMaster()->MoveChase(SelectUnit(SELECT_TARGET_TOPAGGRO,1));
-			m_creature->Attack(SelectUnit(SELECT_TARGET_TOPAGGRO,1));
+				m_creature->GetMotionMaster()->MoveChase(victim);
+				m_creature->Attack(victim, false);
+			} 
          }
 	}
 
@@ -187,7 +192,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 
 struct MANGOS_DLL_DECL mob_chaotic_riftAI : public Scripted_NoMovementAI
 {
-	mob_chaotic_riftAI(Creature* pCreature) : ScriptedAI(pCreature)
+	mob_chaotic_riftAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
 	{
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsHeroicMode = pCreature->GetMap()->IsHeroic();
@@ -203,9 +208,9 @@ struct MANGOS_DLL_DECL mob_chaotic_riftAI : public Scripted_NoMovementAI
 	friend class boss_anomalusAI;
 
 	void Reset() 
-    {
-		m_uiBurstTimer = 700+rand()%600;
-		m_uiSpawnTimer = 14500 + rand()%2000;
+    	{
+		m_uiBurstTimer = 300+rand()%600;
+		m_uiSpawnTimer = 5500 + rand()%10000;
 		m_bIsCharged = false;
 	}
 
@@ -235,7 +240,7 @@ struct MANGOS_DLL_DECL mob_chaotic_riftAI : public Scripted_NoMovementAI
 
 		if (m_uiSpawnTimer < uiDiff){
 			DoCast(m_creature->getVictim(),SPELL_SUMMON);
-			m_uiSpawnTimer = m_bIsCharged ? 14000 + rand()%4000 : 5000 + rand()%2000;
+			m_uiSpawnTimer = m_bIsCharged ?  5000 + rand()%2000 : 14000 + rand()%4000;
 		} else m_uiSpawnTimer -= uiDiff;
 	}
 

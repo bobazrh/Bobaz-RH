@@ -114,7 +114,7 @@ struct MANGOS_DLL_DECL npc_grimstoneAI : public npc_escortAI
         MobCount = 0;
         MobDeath_Timer = 0;
 
-        for(uint8 i = 0; i < MOB_AMOUNT; i++)
+        for(uint8 i = 0; i < MOB_AMOUNT; ++i)
             RingMobGUID[i] = 0;
 
         RingBossGUID = 0;
@@ -210,7 +210,7 @@ struct MANGOS_DLL_DECL npc_grimstoneAI : public npc_escortAI
                     return;
                 }
 
-                for(uint8 i = 0; i < MOB_AMOUNT; i++)
+                for(uint8 i = 0; i < MOB_AMOUNT; ++i)
                 {
                     Creature *mob = (Creature*)Unit::GetUnit(*m_creature,RingMobGUID[i]);
                     if (mob && !mob->isAlive() && mob->isDead())
@@ -638,7 +638,9 @@ bool ChooseReward_npc_rocknot(Player* pPlayer, Creature* pCreature, const Quest*
         {
             DoScriptText(SAY_GOT_BEER, pCreature);
             pCreature->CastSpell(pCreature,SPELL_DRUNKEN_RAGE,false);
-            ((npc_escortAI*)(pCreature->AI()))->Start(false, false, false);
+
+            if (npc_rocknotAI* pEscortAI = dynamic_cast<npc_rocknotAI*>(pCreature->AI()))
+                pEscortAI->Start(false, false, 0, NULL, true);
         }
     }
 

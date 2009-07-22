@@ -130,7 +130,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				AdditionalIncludeDirectories="..\..\..\..\dep\include\;..\..\..\shared\;..\..\..\framework\;..\..\..\game\;..\include\;..\..\..\..\dep\ACE_wrappers\"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;SCRIPT"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;SCRIPT;_SECURE_SCL=0"
 				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -298,7 +298,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				AdditionalIncludeDirectories="..\..\..\..\dep\include\;..\..\..\shared\;..\..\..\framework\;..\..\..\game\;..\include\;..\..\..\..\dep\ACE_wrappers\"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;SCRIPT"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;SCRIPT;_SECURE_SCL=0"
 				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -2298,10 +2298,6 @@
 						>
 					</File>
 					<File
-						RelativePath="..\scripts\zone\blackrock_depths\boss_moira_bronzebeard.cpp"
-						>
-					</File>
-					<File
 						RelativePath="..\scripts\zone\blackrock_depths\boss_tomb_of_seven.cpp"
 						>
 					</File>
@@ -2451,6 +2447,34 @@
 					</Filter>
 					<Filter
 						Name="Halls of Lightning"
+						>
+						<File
+							RelativePath="..\scripts\zone\ulduar\halls_of_lightning\boss_bjarngrim.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\zone\ulduar\halls_of_lightning\boss_ionar.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\zone\ulduar\halls_of_lightning\boss_loken.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\zone\ulduar\halls_of_lightning\boss_volkhan.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\zone\ulduar\halls_of_lightning\def_halls_of_lightning.h"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\zone\ulduar\halls_of_lightning\instance_halls_of_lightning.cpp"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Ulduar"
 						>
 					</Filter>
 				</Filter>

@@ -37,21 +37,27 @@ EndContentData */
 ## npc_beaten_corpse
 ######*/
 
+enum
+{
+    QUEST_LOST_IN_BATTLE    = 4921
+};
+
 bool GossipHello_npc_beaten_corpse(Player* pPlayer, Creature* pCreature)
 {
-    if (pPlayer->GetQuestStatus(4921) == QUEST_STATUS_INCOMPLETE || pPlayer->GetQuestStatus(4921) == QUEST_STATUS_COMPLETE)
+    if (pPlayer->GetQuestStatus(QUEST_LOST_IN_BATTLE) == QUEST_STATUS_INCOMPLETE ||
+        pPlayer->GetQuestStatus(QUEST_LOST_IN_BATTLE) == QUEST_STATUS_COMPLETE)
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT,"Examine corpse in detail...",GOSSIP_SENDER_MAIN,GOSSIP_ACTION_INFO_DEF+1);
 
     pPlayer->SEND_GOSSIP_MENU(3557, pCreature->GetGUID());
     return true;
 }
 
-bool GossipSelect_npc_beaten_corpse(Player* pPlayer, Creature* pCreature, uint32 sender, uint32 action)
+bool GossipSelect_npc_beaten_corpse(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
 {
-    if (action == GOSSIP_ACTION_INFO_DEF +1)
+    if (uiAction == GOSSIP_ACTION_INFO_DEF +1)
     {
         pPlayer->SEND_GOSSIP_MENU(3558, pCreature->GetGUID());
-        pPlayer->KilledMonster(10668, pCreature->GetGUID());
+        pPlayer->TalkedToCreature(pCreature->GetEntry(), pCreature->GetGUID());
     }
     return true;
 }
@@ -226,7 +232,7 @@ struct MANGOS_DLL_DECL npc_twiggy_flatheadAI : public ScriptedAI
         PlayerGUID = 0;
         BigWillGUID = 0;
 
-        for(uint8 i = 0; i < 6; i++)
+        for(uint8 i = 0; i < 6; ++i)
             AffrayChallenger[i] = 0;
     }
 
@@ -246,7 +252,7 @@ struct MANGOS_DLL_DECL npc_twiggy_flatheadAI : public ScriptedAI
 
     void SetChallengers()
     {
-        for(uint8 i = 0; i < 6; i++)
+        for(uint8 i = 0; i < 6; ++i)
         {
             Creature* pCreature = m_creature->SummonCreature(NPC_AFFRAY_CHALLENGER, AffrayChallengerLoc[i][0], AffrayChallengerLoc[i][1], AffrayChallengerLoc[i][2], AffrayChallengerLoc[i][3], TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 600000);
             if (!pCreature)
@@ -279,7 +285,7 @@ struct MANGOS_DLL_DECL npc_twiggy_flatheadAI : public ScriptedAI
         {
             if (ChallengerDeath_Timer < diff)
             {
-                for(uint8 i = 0; i < 6; i++)
+                for(uint8 i = 0; i < 6; ++i)
                 {
                     Creature *challenger = (Creature*)Unit::GetUnit(*m_creature,AffrayChallenger[i]);
                     if (challenger && !challenger->isAlive() && challenger->isDead())
@@ -405,13 +411,7 @@ enum
 
 struct MANGOS_DLL_DECL npc_wizzlecranks_shredderAI : public npc_escortAI
 {
-    npc_wizzlecranks_shredderAI(Creature* pCreature) : npc_escortAI(pCreature)
-    {
-        uiNormFaction = pCreature->getFaction();
-        Reset();
-    }
-
-    uint32 uiNormFaction;
+    npc_wizzlecranks_shredderAI(Creature* pCreature) : npc_escortAI(pCreature) { Reset(); }
 
     void MoveInLineOfSight(Unit* pUnit)
     {
@@ -468,7 +468,6 @@ struct MANGOS_DLL_DECL npc_wizzlecranks_shredderAI : public npc_escortAI
     {
         if (!IsBeingEscorted)
         {
-            m_creature->setFaction(uiNormFaction);
             if (m_creature->getStandState() == UNIT_STAND_STATE_DEAD)
                 m_creature->SetStandState(UNIT_STAND_STATE_STAND);
         }
@@ -484,20 +483,6 @@ struct MANGOS_DLL_DECL npc_wizzlecranks_shredderAI : public npc_escortAI
     {
         m_creature->SetStandState(UNIT_STAND_STATE_DEAD);
     }
-
-    void JustDied(Unit* killer)
-    {
-        if (Unit* pUnit = Unit::GetUnit(*m_creature, PlayerGUID))
-        {
-            if (((Player*)pUnit)->GetQuestStatus(QUEST_ESCAPE) == QUEST_STATUS_INCOMPLETE)
-                ((Player*)pUnit)->FailQuest(QUEST_ESCAPE);
-        }
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        npc_escortAI::UpdateAI(diff);
-    }
 };
 
 bool QuestAccept_npc_wizzlecranks_shredder(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
@@ -506,7 +491,9 @@ bool QuestAccept_npc_wizzlecranks_shredder(Player* pPlayer, Creature* pCreature,
     {
         DoScriptText(SAY_START, pCreature);
         pCreature->setFaction(FACTION_RATCHET);
-        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, true, pPlayer->GetGUID());
+
+        if (npc_wizzlecranks_shredderAI* pEscortAI = dynamic_cast<npc_wizzlecranks_shredderAI*>(pCreature->AI()))
+            pEscortAI->Start(true, true, pPlayer->GetGUID(), pQuest);
     }
     return true;
 }
@@ -552,7 +539,7 @@ void AddSC_the_barrens()
     newscript->RegisterSelf();
 
     newscript = new Script;
-    newscript->Name="npc_wizzlecranks_shredder";
+    newscript->Name = "npc_wizzlecranks_shredder";
     newscript->GetAI = &GetAI_npc_wizzlecranks_shredder;
     newscript->pQuestAccept = &QuestAccept_npc_wizzlecranks_shredder;
     newscript->RegisterSelf();

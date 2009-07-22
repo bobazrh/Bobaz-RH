@@ -343,11 +343,7 @@ struct MANGOS_DLL_DECL npc_wounded_blood_elfAI : public npc_escortAI
         }
     }
 
-    void Reset()
-    {
-        if (!IsBeingEscorted)
-            m_creature->setFaction(1604);
-    }
+    void Reset() { }
 
     void Aggro(Unit* who)
     {
@@ -358,25 +354,6 @@ struct MANGOS_DLL_DECL npc_wounded_blood_elfAI : public npc_escortAI
     void JustSummoned(Creature* summoned)
     {
         summoned->AI()->AttackStart(m_creature);
-    }
-
-    void JustDied(Unit* killer)
-    {
-        if (!IsBeingEscorted)
-            return;
-
-        if (PlayerGUID)
-        {
-            // If NPC dies, player fails the quest
-            Unit* pPlayer = Unit::GetUnit((*m_creature), PlayerGUID);
-            if (pPlayer && pPlayer->GetTypeId() == TYPEID_PLAYER)
-                ((Player*)pPlayer)->FailQuest(QUEST_ROAD_TO_FALCON_WATCH);
-        }
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        npc_escortAI::UpdateAI(diff);
     }
 };
 
@@ -393,9 +370,11 @@ bool QuestAccept_npc_wounded_blood_elf(Player* pPlayer, Creature* pCreature, con
 {
     if (pQuest->GetQuestId() == QUEST_ROAD_TO_FALCON_WATCH)
     {
-        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID());
         // Change faction so mobs attack
         pCreature->setFaction(775);
+
+        if (npc_wounded_blood_elfAI* pEscortAI = dynamic_cast<npc_wounded_blood_elfAI*>(pCreature->AI()))
+            pEscortAI->Start(true, false, pPlayer->GetGUID(), pQuest);
     }
 
     return true;

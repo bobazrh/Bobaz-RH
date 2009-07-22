@@ -37,9 +37,9 @@ EndScriptData */
 #define SAY_RAND_1      -1999920
 #define SAY_RAND_2      -1999921
 
-#define GOSSIP_ITEM_1   "Click to Test Escort(Attack, Defend, Run)"
-#define GOSSIP_ITEM_2   "Click to Test Escort(NoAttack, NoDefend, Walk)"
-#define GOSSIP_ITEM_3   "Click to Test Escort(NoAttack, Defend, Walk)"
+#define GOSSIP_ITEM_1   "Click to Test Escort(Attack, Run)"
+#define GOSSIP_ITEM_2   "Click to Test Escort(NoAttack, Walk)"
+#define GOSSIP_ITEM_3   "Click to Test Escort(NoAttack, Run)"
 
 struct MANGOS_DLL_DECL example_escortAI : public npc_escortAI
 {
@@ -180,28 +180,36 @@ bool GossipHello_example_escort(Player* pPlayer, Creature* pCreature)
     return true;
 }
 
-bool GossipSelect_example_escort(Player* pPlayer, Creature* pCreature, uint32 sender, uint32 action)
+bool GossipSelect_example_escort(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
 {
-    if (action == GOSSIP_ACTION_INFO_DEF+1)
+    example_escortAI* pEscortAI = dynamic_cast<example_escortAI*>(pCreature->AI());
+
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
     {
         pPlayer->CLOSE_GOSSIP_MENU();
-        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, true, pPlayer->GetGUID());
+
+        if (pEscortAI)
+            pEscortAI->Start(true, true, pPlayer->GetGUID());
 
         return true;                                        // prevent mangos core handling
     }
 
-    if (action == GOSSIP_ACTION_INFO_DEF+2)
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+2)
     {
         pPlayer->CLOSE_GOSSIP_MENU();
-        ((npc_escortAI*)(pCreature->AI()))->Start(false, false, false, pPlayer->GetGUID());
+
+        if (pEscortAI)
+            pEscortAI->Start(false, false, pPlayer->GetGUID());
 
         return true;                                        // prevent mangos core handling
     }
 
-    if (action == GOSSIP_ACTION_INFO_DEF+3)
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+3)
     {
         pPlayer->CLOSE_GOSSIP_MENU();
-        ((npc_escortAI*)(pCreature->AI()))->Start(false, true, false, pPlayer->GetGUID());
+
+        if (pEscortAI)
+            pEscortAI->Start(false, true, pPlayer->GetGUID());
 
         return true;                                        // prevent mangos core handling
     }

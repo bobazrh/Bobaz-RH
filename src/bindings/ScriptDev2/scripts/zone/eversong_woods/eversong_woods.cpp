@@ -92,7 +92,7 @@ struct MANGOS_DLL_DECL npc_kelerun_bloodmournAI : public ScriptedAI
 
         m_uiPlayerGUID = 0;
 
-        for(uint8 i = 0; i < MAX_CHALLENGER; i++)
+        for(uint8 i = 0; i < MAX_CHALLENGER; ++i)
             uiChallengerGUID[i] = 0;
 
         m_uiChallengerCount = 0;
@@ -126,7 +126,7 @@ struct MANGOS_DLL_DECL npc_kelerun_bloodmournAI : public ScriptedAI
 
     void DoSpawnChallengers()
     {
-        for(uint8 i = 0; i < MAX_CHALLENGER; i++)
+        for(uint8 i = 0; i < MAX_CHALLENGER; ++i)
         {
             if (Creature* pCreature = m_creature->SummonCreature(uiChallengerId[i],
                 fChallengerLoc[i][0], fChallengerLoc[i][1],
@@ -324,8 +324,10 @@ bool GossipSelect_npc_prospector_anvilward(Player* pPlayer, Creature* pCreature,
             break;
         case GOSSIP_ACTION_INFO_DEF+2:
             pPlayer->CLOSE_GOSSIP_MENU();
-            //attack,defend,walk
-            ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID());
+
+            if (npc_prospector_anvilwardAI* pEscortAI = dynamic_cast<npc_prospector_anvilwardAI*>(pCreature->AI()))
+                pEscortAI->Start(false, false, pPlayer->GetGUID());
+
             break;
     }
     return true;
@@ -336,7 +338,7 @@ void AddSC_eversong_woods()
     Script *newscript;
 
     newscript = new Script;
-    newscript->Name= "npc_kelerun_bloodmourn";
+    newscript->Name = "npc_kelerun_bloodmourn";
     newscript->GetAI = &GetAI_npc_kelerun_bloodmourn;
     newscript->pQuestAccept = &QuestAccept_npc_kelerun_bloodmourn;
     newscript->RegisterSelf();
@@ -347,7 +349,7 @@ void AddSC_eversong_woods()
     newscript->RegisterSelf();
 
     newscript = new Script;
-    newscript->Name= "npc_prospector_anvilward";
+    newscript->Name = "npc_prospector_anvilward";
     newscript->GetAI = &GetAI_npc_prospector_anvilward;
     newscript->pGossipHello =  &GossipHello_npc_prospector_anvilward;
     newscript->pGossipSelect = &GossipSelect_npc_prospector_anvilward;

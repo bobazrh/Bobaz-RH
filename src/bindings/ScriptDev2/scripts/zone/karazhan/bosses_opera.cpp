@@ -88,7 +88,7 @@ EndScriptData */
 
 void SummonCroneIfReady(ScriptedInstance* pInstance, Creature* pCreature)
 {
-    pInstance->SetData(DATA_OPERA_OZ_DEATHCOUNT, 0);        // Increment DeathCount
+    pInstance->SetData(DATA_OPERA_OZ_DEATHCOUNT, SPECIAL);  // Increment DeathCount
 
     if (pInstance->GetData(DATA_OPERA_OZ_DEATHCOUNT) == 4)
     {
@@ -453,7 +453,7 @@ struct MANGOS_DLL_DECL boss_tinheadAI : public ScriptedAI
         {
             if (RustTimer < diff)
             {
-                RustCount++;
+                ++RustCount;
                 DoScriptText(EMOTE_RUST, m_creature);
                 DoCast(m_creature, SPELL_RUST);
                 RustTimer = 6000;
@@ -604,11 +604,11 @@ struct MANGOS_DLL_DECL boss_croneAI : public ScriptedAI
 
         if (m_pInstance)
         {
-            m_pInstance->SetData(DATA_OPERA_EVENT, DONE);
+            m_pInstance->SetData(TYPE_OPERA, DONE);
 
-            if (GameObject* pLDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
+            if (GameObject* pLDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_STAGEDOORLEFT)))
                 pLDoor->SetGoState(GO_STATE_ACTIVE);
-            if (GameObject* pRDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORRIGHT)))
+            if (GameObject* pRDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_STAGEDOORRIGHT)))
                 pRDoor->SetGoState(GO_STATE_ACTIVE);
             if (GameObject* pSideEntrance = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_SIDE_ENTRANCE_DOOR)))
                 pSideEntrance->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_LOCKED);
@@ -797,11 +797,11 @@ struct MANGOS_DLL_DECL boss_bigbadwolfAI : public ScriptedAI
 
         if (m_pInstance)
         {
-            m_pInstance->SetData(DATA_OPERA_EVENT, DONE);
+            m_pInstance->SetData(TYPE_OPERA, DONE);
 
-            if (GameObject* pLDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
+            if (GameObject* pLDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_STAGEDOORLEFT)))
                 pLDoor->SetGoState(GO_STATE_ACTIVE);
-            if (GameObject* pRDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORRIGHT)))
+            if (GameObject* pRDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_STAGEDOORRIGHT)))
                 pRDoor->SetGoState(GO_STATE_ACTIVE);
             if (GameObject* pSideEntrance = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_SIDE_ENTRANCE_DOOR)))
                 pSideEntrance->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_LOCKED);
@@ -1042,11 +1042,11 @@ struct MANGOS_DLL_DECL boss_julianneAI : public ScriptedAI
 
         if (m_pInstance)
         {
-            m_pInstance->SetData(DATA_OPERA_EVENT, DONE);
+            m_pInstance->SetData(TYPE_OPERA, DONE);
 
-            if (GameObject* pLDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
+            if (GameObject* pLDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_STAGEDOORLEFT)))
                 pLDoor->SetGoState(GO_STATE_ACTIVE);
-            if (GameObject* pRDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORRIGHT)))
+            if (GameObject* pRDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_STAGEDOORRIGHT)))
                 pRDoor->SetGoState(GO_STATE_ACTIVE);
             if (GameObject* pSideEntrance = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_SIDE_ENTRANCE_DOOR)))
                 pSideEntrance->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_LOCKED);
@@ -1137,11 +1137,11 @@ struct MANGOS_DLL_DECL boss_romuloAI : public ScriptedAI
 
         if (m_pInstance)
         {
-            m_pInstance->SetData(DATA_OPERA_EVENT, DONE);
+            m_pInstance->SetData(TYPE_OPERA, DONE);
 
-            if (GameObject* pLDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
+            if (GameObject* pLDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_STAGEDOORLEFT)))
                 pLDoor->SetGoState(GO_STATE_ACTIVE);
-            if (GameObject* pRDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORRIGHT)))
+            if (GameObject* pRDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_STAGEDOORRIGHT)))
                 pRDoor->SetGoState(GO_STATE_ACTIVE);
             if (GameObject* pSideEntrance = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_GO_SIDE_ENTRANCE_DOOR)))
                 pSideEntrance->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_LOCKED);

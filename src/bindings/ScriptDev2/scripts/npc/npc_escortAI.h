@@ -29,8 +29,9 @@ struct MANGOS_DLL_DECL npc_escortAI : public ScriptedAI
 {
     public:
         explicit npc_escortAI(Creature* pCreature) : ScriptedAI(pCreature),
-            IsBeingEscorted(false), IsOnHold(false), PlayerGUID(0), m_uiPlayerCheckTimer(1000), m_uiWPWaitTimer(0),
-            m_bIsReturning(false), m_bIsActiveAttacker(true), m_bCanDefendSelf(true), m_bIsRunning(false) {}
+            IsBeingEscorted(false), IsOnHold(false), PlayerGUID(0), m_uiPlayerCheckTimer(1000), m_uiWPWaitTimer(2500),
+            m_bIsReturning(false), m_bIsActiveAttacker(true), m_bIsRunning(false),
+            m_pQuestForEscort(NULL), m_bCanInstantRespawn(false), m_bCanReturnToStart(false) {}
         ~npc_escortAI() {}
 
         // Pure Virtual Functions
@@ -49,6 +50,8 @@ struct MANGOS_DLL_DECL npc_escortAI : public ScriptedAI
 
         void MoveInLineOfSight(Unit*);
 
+        void JustDied(Unit*);
+
         void JustRespawned();
 
         void EnterEvadeMode();
@@ -62,7 +65,7 @@ struct MANGOS_DLL_DECL npc_escortAI : public ScriptedAI
 
         void FillPointMovementListForCreature();
 
-        void Start(bool bIsActiveAttacker = true, bool bCanDefendSelf = true, bool bRun = false, uint64 uiPlayerGUID = 0);
+        void Start(bool bIsActiveAttacker = true, bool bRun = false, uint64 uiPlayerGUID = 0, const Quest* pQuest = NULL, bool bInstantRespawn = false, bool bCanLoopPath = false);
 
         void SetRun(bool bRun = true);
 
@@ -75,13 +78,16 @@ struct MANGOS_DLL_DECL npc_escortAI : public ScriptedAI
     private:
         uint32 m_uiWPWaitTimer;
         uint32 m_uiPlayerCheckTimer;
+
+        const Quest* m_pQuestForEscort;                     //generally passed in Start() when regular escort script.
  
         std::list<Escort_Waypoint> WaypointList;
         std::list<Escort_Waypoint>::iterator CurrentWP;
 
         bool m_bIsActiveAttacker;                           //possible obsolete, and should be determined with db only (civilian)
-        bool m_bCanDefendSelf;                              //rarely used, is true in 99%
         bool m_bIsReturning;                                //in use when creature leave combat, and are returning to combat start position
         bool m_bIsRunning;                                  //all creatures are walking by default (has flag MONSTER_MOVE_WALK)
+        bool m_bCanInstantRespawn;                          //if creature should respawn instantly after escort over (if not, database respawntime are used)
+        bool m_bCanReturnToStart;                           //if creature can walk same path (loop) without despawn. Not for regular escort quests.
 };
 #endif

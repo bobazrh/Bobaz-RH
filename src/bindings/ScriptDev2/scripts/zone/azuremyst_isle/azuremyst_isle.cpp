@@ -369,26 +369,7 @@ struct MANGOS_DLL_DECL npc_magwinAI : public npc_escortAI
         DoScriptText(SAY_AGGRO, m_creature, who);
     }
 
-    void Reset()
-    {
-        if (!IsBeingEscorted)
-            m_creature->setFaction(80);
-    }
-
-    void JustDied(Unit* killer)
-    {
-        if (PlayerGUID)
-        {
-            Unit* pPlayer = Unit::GetUnit((*m_creature), PlayerGUID);
-            if (pPlayer)
-                ((Player*)pPlayer)->FailQuest(QUEST_A_CRY_FOR_HELP);
-        }
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        npc_escortAI::UpdateAI(diff);
-    }
+    void Reset() { }
 };
 
 bool QuestAccept_npc_magwin(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
@@ -396,7 +377,9 @@ bool QuestAccept_npc_magwin(Player* pPlayer, Creature* pCreature, const Quest* p
     if (pQuest->GetQuestId() == QUEST_A_CRY_FOR_HELP)
     {
         pCreature->setFaction(10);
-        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID());
+
+        if (npc_magwinAI* pEscortAI = dynamic_cast<npc_magwinAI*>(pCreature->AI()))
+            pEscortAI->Start(true, false, pPlayer->GetGUID(), pQuest);
     }
     return true;
 }

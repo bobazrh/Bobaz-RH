@@ -79,7 +79,7 @@ struct MANGOS_DLL_DECL boss_venoxisAI : public ScriptedAI
         DoScriptText(SAY_DEATH, m_creature);
 
         if (m_pInstance)
-            m_pInstance->SetData(DATA_VENOXIS_DEATH, 0);
+            m_pInstance->SetData(TYPE_VENOXIS, DONE);
     }
 
     void UpdateAI(const uint32 diff)
@@ -110,11 +110,11 @@ struct MANGOS_DLL_DECL boss_venoxisAI : public ScriptedAI
             if (HolyNova_Timer < diff)
             {
                 TargetInRange = 0;
-                for(int i=0; i<10; i++)
+                for(int i=0; i<10; ++i)
                 {
                     if (Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO,i))
                         if (m_creature->IsWithinDistInMap(target, ATTACK_DISTANCE))
-                            TargetInRange++;
+                            ++TargetInRange;
                 }
 
                 if (TargetInRange > 1)
@@ -179,6 +179,7 @@ struct MANGOS_DLL_DECL boss_venoxisAI : public ScriptedAI
         DoMeleeAttackIfReady();
     }
 };
+
 CreatureAI* GetAI_boss_venoxis(Creature* pCreature)
 {
     return new boss_venoxisAI(pCreature);

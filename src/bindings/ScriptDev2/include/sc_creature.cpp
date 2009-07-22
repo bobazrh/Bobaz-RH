@@ -58,8 +58,8 @@ void ScriptedAI::AttackStart(Unit* who)
         m_creature->SetInCombatWith(who);
         who->SetInCombatWith(m_creature);
 
-        if (bCombatMovement)
-            DoStartMovement(who);
+        if (IsCombatMovement())
+            m_creature->GetMotionMaster()->MoveChase(who);
     }
 }
 
@@ -268,7 +268,7 @@ SpellEntry const* ScriptedAI::SelectSpell(Unit* Target, int32 School, int32 Mech
     SpellRangeEntry const* TempRange;
 
     //Check if each spell is viable(set it to null if not)
-    for (uint32 i = 0; i < 4; i++)
+    for (uint32 i = 0; i < 4; ++i)
     {
         TempSpell = GetSpellStore()->LookupEntry(m_creature->m_spells[i]);
 
@@ -323,7 +323,7 @@ SpellEntry const* ScriptedAI::SelectSpell(Unit* Target, int32 School, int32 Mech
 
         //All good so lets add it to the spell list
         Spell[SpellCount] = TempSpell;
-        SpellCount++;
+        ++SpellCount;
     }
 
     //We got our usable spells so now lets randomly pick one
@@ -368,7 +368,7 @@ void FillSpellSummary()
 
     SpellEntry const* TempSpell;
 
-    for (int i=0; i < GetSpellStore()->GetNumRows(); i++)
+    for (int i=0; i < GetSpellStore()->GetNumRows(); ++i)
     {
         SpellSummary[i].Effects = 0;
         SpellSummary[i].Targets = 0;
@@ -378,7 +378,7 @@ void FillSpellSummary()
         if (!TempSpell)
             continue;
 
-        for (int j=0; j<3; j++)
+        for (int j=0; j<3; ++j)
         {
             //Spell targets self
             if (TempSpell->EffectImplicitTargetA[j] == TARGET_SELF)
@@ -582,7 +582,7 @@ void ScriptedAI::SetEquipmentSlots(bool bLoadDefault, int32 uiMainHand, int32 ui
 
 void ScriptedAI::SetCombatMovement(bool bCombatMove)
 {
-    bCombatMovement = bCombatMove;
+    m_bCombatMovement = bCombatMove;
 }
 
 // Hacklike storage used for misc creatures that are expected to evade of outside of a certain area.
@@ -629,31 +629,6 @@ bool ScriptedAI::EnterEvadeIfOutOfCombatArea(const uint32 uiDiff)
 
     EnterEvadeMode();
     return true;
-}
-
-void Scripted_NoMovementAI::MoveInLineOfSight(Unit *who)
-{
-    if (!m_creature->hasUnitState(UNIT_STAT_STUNNED) && who->isTargetableForAttack() &&
-        m_creature->IsHostileTo(who) && who->isInAccessablePlaceFor(m_creature))
-    {
-        if (!m_creature->canFly() && m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
-            return;
-
-        float attackRadius = m_creature->GetAttackDistance(who);
-        if (m_creature->IsWithinDistInMap(who, attackRadius) && m_creature->IsWithinLOSInMap(who))
-        {
-            if (!m_creature->getVictim())
-            {
-                who->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
-                AttackStart(who);
-            }
-            else if (m_creature->GetMap()->IsDungeon())
-            {
-                who->SetInCombatWith(m_creature);
-                m_creature->AddThreat(who, 0.0f);
-            }
-        }
-    }
 }
 
 void Scripted_NoMovementAI::AttackStart(Unit* who)

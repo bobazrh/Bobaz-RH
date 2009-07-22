@@ -114,13 +114,11 @@ struct MANGOS_DLL_DECL npc_ranger_lilathaAI : public npc_escortAI
 {
     npc_ranger_lilathaAI(Creature* pCreature) : npc_escortAI(pCreature)
     {
-        m_uiNormFaction = pCreature->getFaction();
         m_uiGoCageGUID = 0;
         m_uiHeliosGUID = 0;
         Reset();
     }
 
-    uint32 m_uiNormFaction;
     uint64 m_uiGoCageGUID;
     uint64 m_uiHeliosGUID;
 
@@ -199,24 +197,9 @@ struct MANGOS_DLL_DECL npc_ranger_lilathaAI : public npc_escortAI
     {
         if (!IsBeingEscorted)
         {
-            m_creature->setFaction(m_uiNormFaction);
             m_uiGoCageGUID = 0;
             m_uiHeliosGUID = 0;
         }
-    }
-
-    void JustDied(Unit* killer)
-    {
-        if (IsBeingEscorted && PlayerGUID)
-        {
-            if (Unit* pPlayer = Unit::GetUnit((*m_creature), PlayerGUID))
-                ((Player*)pPlayer)->FailQuest(QUEST_CATACOMBS);
-        }
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        npc_escortAI::UpdateAI(diff);
     }
 };
 
@@ -234,7 +217,9 @@ bool QuestAccept_npc_ranger_lilatha(Player* pPlayer, Creature* pCreature, const 
     if (pQuest->GetQuestId() == QUEST_CATACOMBS)
     {
         pCreature->setFaction(FACTION_SMOON_E);
-        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID());
+
+        if (npc_ranger_lilathaAI* pEscortAI = dynamic_cast<npc_ranger_lilathaAI*>(pCreature->AI()))
+            pEscortAI->Start(true, false, pPlayer->GetGUID(), pQuest);
     }
     return true;
 }

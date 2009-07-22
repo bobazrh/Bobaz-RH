@@ -28,7 +28,7 @@ EndScriptData */
 
 struct MANGOS_DLL_DECL instance_sethekk_halls : public ScriptedInstance
 {
-    instance_sethekk_halls(Map *map) : ScriptedInstance(map) {Initialize();};
+    instance_sethekk_halls(Map* pMap) : ScriptedInstance(pMap) {Initialize();};
 
     uint64 m_uiIkissDoorGUID;
 
@@ -43,21 +43,21 @@ struct MANGOS_DLL_DECL instance_sethekk_halls : public ScriptedInstance
             m_uiIkissDoorGUID = pGo->GetGUID();
     }
 
-    void SetData(uint32 type, uint32 data)
+    void SetData(uint32 uiType, uint32 uiData)
     {
-        switch(type)
+        switch(uiType)
         {
             case DATA_IKISSDOOREVENT:
-                if (data == DONE)
+                if (uiData == DONE)
                     DoUseDoorOrButton(m_uiIkissDoorGUID,DAY*IN_MILISECONDS);
                 break;
         }
     }
 };
 
-InstanceData* GetInstanceData_instance_sethekk_halls(Map* map)
+InstanceData* GetInstanceData_instance_sethekk_halls(Map* pMap)
 {
-    return new instance_sethekk_halls(map);
+    return new instance_sethekk_halls(pMap);
 }
 
 void AddSC_instance_sethekk_halls()
