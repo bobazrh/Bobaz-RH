@@ -65,6 +65,8 @@ enum
 ## boss_telestra
 ######*/
 
+uint32 Splits = {50,15};
+
 struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 {
     boss_telestraAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -76,9 +78,30 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 
     ScriptedInstance* m_pInstance;
     bool m_bIsHeroicMode;
+	bool m_bIsNotCasting;
+	bool m_bIsSplit;
+	uint32 m_uiCastBar;
+	uint32 m_uiFireBomb;
+	uint32 m_uiFrostNova;
+	uint32 m_uiGravityWell;
+
+	uint32 m_uiAdds;
+	uint32 m_uiSplitCount;
+
+	Creature * pArcaneAdd = NULL;
+	Creature * pFrostAdd = NULL;
+	Creature * pFireAdd = NULL;
 
     void Reset() 
     {
+		m_uiFireBomb = 1000+rand()%1000;
+		m_uiFrostNova = 10000+rand()%1000;
+		m_uiGravityWell = 18000+rand()%4000;
+		m_uiCastBar = 2000;
+		m_bIsNotCasting = true;
+		m_bIsSplit = false;
+		m_uiAdds=0;
+		m_uiSplitCount = (m_bIsHeroicMode) ? 1 : 0;
     }
 
     void Aggro(Unit* pWho)
@@ -101,9 +124,154 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
     {
         if (!m_creature->SelectHostilTarget() || !m_creature->getVictim())
             return;
+		
+		if(m_bIsSplit)
+		{
+			CheckAddDied();
+			if(m_uiAdds <= 0)
+			{
+				DoUnSplit();
+				m_bIsSplit = false;
+			}
+			return;
+		}
 
-        DoMeleeAttackIfReady();
+		if(bIsNotCasting)
+		{
+			if (m_uiFireBomb < uiDiff)
+			{
+				DoCast(m_creature->getVictim(),m_bIsHeroicMode ? SPELL_FIREBOMB_H : SPELL_FIREBOMB);
+				m_uiFireBomb = 4000 + rand()%2000;
+				m_bIsNotCasting = false;
+				m_creature->GetMotionMaster()->MoveIdle();
+			} else m_uiFireBomb -= uiDiff;
+
+			if (m_uiFrostNova < uiDiff)
+			{
+				DoCast(m_creature->getVictim(),m_bIsHeroicMode ? SPELL_ICE_NOVA_H : SPELL_ICE_NOVA);
+				m_uiFrostNova = 6000 + rand()%4000;
+				m_bIsNotCasting = false;
+				m_creature->GetMotionMaster()->MoveIdle();
+			} else m_uiFrostNova -= uiDiff;
+
+			if (m_uiGravityWell < uiDiff)
+			{
+				DoCast(m_creature,SPELL_GRAVITY_WELL);
+				m_uiGravityWell = 17000 + rand()%4000;
+				m_bIsNotCasting = false;
+				m_uiCastBar = 6000;
+				m_creature->GetMotionMaster()->MoveIdle();
+			} else m_uiGravityWell -= uiDiff;
+
+			if(m_uiSplitCount>=0 && 
+				m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < Splits[m_uiSplitCount])
+			{
+				m_bIsSplit = true;
+				m_uiSplitCount--;
+				DoSplit();
+			}
+			
+			DoMeleeAttackIfReady();
+		} else {
+			if (m_uiCastBar < uiDiff)
+			{
+				m_uiCastBar = 2000;
+				m_bIsNotCasting = true;
+				DoMove();
+			} else m_uiCastBar -= uiDiff;
+		}
     }
+
+	void CheckAddDied(Creature * pAdd)
+	{
+		if(pArcaneAdd && !pArcaneAdd->isAlive())
+		{
+			pArcaneAdd = NULL;
+			m_uiAdds--;
+		}
+		if(pFireAdd && !pFireAdd->isAlive())
+		{
+			pFireAdd = NULL;
+			m_uiAdds--;
+		}
+		if(pFireAdd && !pFireAdd->isAlive())
+		{
+			pFireAdd = NULL;
+			m_uiAdds--;
+		}
+	}
+
+	void DoSplit()
+	{
+		if(rand()%2)
+			DoScriptText(SAY_SPLIT_1, m_creature);
+		else
+			DoScriptText(SAY_SPLIT_2, m_creature);
+
+		DoUnTarget();
+		m_creature->RemoveAllAuras();
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        m_creature->SetVisibility(VISIBILITY_OFF);
+		m_creature->GetMotionMaster()->MoveIdle();
+		
+		DoResetThreat();
+        DoStopAttack();
+		
+		float x,y,z=0.0f;
+		
+		m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),2.0f);
+		pArcaneAdd=m_creature->SummonCreature(NPC_TELEST_ARCANE, x,y,z TEMPSUMMON_CORPSE_DESPAWN, 30000);
+		
+		m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),2.0f);
+		pFireAdd=m_creature->SummonCreature(NPC_TELEST_FIRE, x,y,z TEMPSUMMON_CORPSE_DESPAWN, 30000);
+		
+		m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),2.0f);
+		pFrostAdd=m_creature->SummonCreature(NPC_TELEST_FROST, x,y,z TEMPSUMMON_CORPSE_DESPAWN, 30000);
+	}
+
+	void DoUnSplit()
+	{
+		m_creature->SetVisibility(VISIBILITY_ON);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+		DoMove();
+		DoCast(m_creature,SPELL_SPAWN_BACK_IN,true);
+		
+		DoScriptText(SAY_MERGE, m_creature);
+	}
+
+	// helpers
+
+	void DoUnTarget()
+	{
+		for (int tryi = 0; tryi < 41; ++tryi)
+        {
+            Unit *targetpl = SelectUnit(SELECT_TARGET_RANDOM, 0);
+			if(!targetpl)break;
+            if (targetpl->GetTypeId() == TYPEID_PLAYER)
+            {
+                Group *grp = ((Player *)targetpl)->GetGroup();
+                if (grp)
+                {
+                    for (int ici = 0; ici < TARGETICONCOUNT; ++ici)
+                    {
+                        grp->SetTargetIcon(ici, 0);
+                    }
+                }
+                break;
+            }
+        }
+	}
+
+	void DoMove()
+	{
+		Unit * victim;
+        if(victim = m_creature->getVictim()) 
+		{
+			m_creature->SendMeleeAttackStart(victim);
+			m_creature->GetMotionMaster()->MoveChase(victim);
+			m_creature->Attack(victim, false);
+		} 
+	}
 };
 
 CreatureAI* GetAI_boss_telestra(Creature* pCreature)
