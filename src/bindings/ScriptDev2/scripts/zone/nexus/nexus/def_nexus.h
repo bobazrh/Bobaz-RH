@@ -2,12 +2,10 @@
 #define DEF_NEXUS_H
 
 enum NexusInstance{
-        NPC_ANOMALUS=26763
+        NPC_ANOMALUS=26763,
+		NPC_TELESTRA=26731,
+		NPC_ORMOROK=26794,
+		NPC_KERISTRASZA=26723
 };
 
-
-enum{
- 	DATA_ORMOROK=1,
-	DATA_ANOMALUS=2
-};
 #endif

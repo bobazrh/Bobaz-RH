@@ -22,6 +22,7 @@ SDCategory: Nexus
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_nexus.h"
 
 enum
 {
@@ -70,19 +71,25 @@ struct MANGOS_DLL_DECL boss_ormorokAI : public ScriptedAI
 
     void Reset() 
     {
-	m_TrampleTimer=1000 + rand()%2000;
-	m_SpikeTimer=15000+rand()%5000;
-	m_SpellReflectionTimer=10000+rand()%5000;
-	m_Enraged = false;
+		m_TrampleTimer=1000 + rand()%2000;
+		m_SpikeTimer=15000+rand()%5000;
+		m_SpellReflectionTimer=10000+rand()%5000;
+		m_Enraged = false;
+		if(m_pInstance)
+				m_pInstance->SetData(NPC_ORMOROK, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
+		if(m_pInstance)
+			m_pInstance->SetData(NPC_ORMOROK, IN_PROGRESS);
         DoScriptText(SAY_AGGRO, m_creature);
     }
 
     void JustDied(Unit* pKiller)
     {
+		if(m_pInstance)
+			m_pInstance->SetData(NPC_ORMOROK, DONE);
         DoScriptText(SAY_DEATH, m_creature);
     }
 

@@ -22,6 +22,7 @@ SDCategory: Nexus
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_nexus.h"
 
 enum
 {
@@ -104,17 +105,24 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 		m_uiSplitCount = 0;
 
 		pArcaneAdd = NULL;
-        	pFrostAdd = NULL;
-        	pFireAdd = NULL;
+        pFrostAdd = NULL;
+        pFireAdd = NULL;
+
+		if(m_pInstance)
+            m_pInstance->SetData(NPC_TELESTRA, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
+		if(m_pInstance)
+            m_pInstance->SetData(NPC_TELESTRA, IN_PROGRESS);
         DoScriptText(SAY_AGGRO, m_creature);
     }
 
     void JustDied(Unit* pKiller)
     {
+		if(m_pInstance)
+            m_pInstance->SetData(NPC_TELESTRA, DONE);
         DoScriptText(SAY_DEATH, m_creature);
     }
 

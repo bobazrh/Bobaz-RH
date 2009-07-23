@@ -100,6 +100,14 @@ struct MANGOS_DLL_DECL  instance_nexus : public ScriptedInstance
 
     void SetData(uint32 type, uint32 data)
     {
+		switch(type)
+        {
+			case NPC_ORMOROK:					 Encounters[0]=data;
+			case NPC_ANOMALUS:            	     Encounters[1]=data;
+			case NPC_TELESTRA:					 Encounters[2]=data;
+			case NPC_KERISTRASZA:				 Encounters[4]=data;
+        }
+
         if (data == DONE)
         {
             SaveToDB();
@@ -110,7 +118,10 @@ struct MANGOS_DLL_DECL  instance_nexus : public ScriptedInstance
     {
         switch(type)
         {
-        case NPC_ANOMALUS:            	     return Encounters[1];
+			case NPC_ORMOROK:					 return Encounters[0];
+			case NPC_ANOMALUS:            	     return Encounters[1];
+			case NPC_TELESTRA:					 return Encounters[2];
+			case NPC_KERISTRASZA:				 return Encounters[4];
         }
 
         return 0;

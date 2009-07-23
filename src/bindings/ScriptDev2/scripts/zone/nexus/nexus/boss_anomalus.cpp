@@ -81,19 +81,23 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 
     void Reset() 
     {
-	m_lRifts.clear();
-	m_uiShieldTimer=45000;
-	m_uiChargeTimer=2000;
-	m_uiSparkTimer=6000+rand()%2000;
-	m_uiRiftTimer=10000+rand()%2000;
-	m_uiShieldCounter = 0;
-	chargeInfo = sSpellStore.LookupEntry(SPELL_CHARGE_RIFT); 
-	m_bShield = false;
-	m_bRiftKilled = false;
+		m_lRifts.clear();
+		m_uiShieldTimer=45000;
+		m_uiChargeTimer=2000;
+		m_uiSparkTimer=6000+rand()%2000;
+		m_uiRiftTimer=10000+rand()%2000;
+		m_uiShieldCounter = 0;
+		chargeInfo = sSpellStore.LookupEntry(SPELL_CHARGE_RIFT); 
+		m_bShield = false;
+		m_bRiftKilled = false;
+		if(m_pInstance)
+				m_pInstance->SetData(NPC_ANOMALUS, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
+		if(m_pInstance)
+				m_pInstance->SetData(NPC_ANOMALUS, IN_PROGRESS);
         DoScriptText(SAY_AGGRO, m_creature);
     }
 
@@ -103,6 +107,8 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 		if(!m_bRiftKilled && m_bIsHeroicMode){
 			//TODO: Reward Chaos Theory
 		}
+		if(m_pInstance)
+				m_pInstance->SetData(NPC_ANOMALUS, DONE);
     }
 
     void KilledUnit(Unit* pVictim)
