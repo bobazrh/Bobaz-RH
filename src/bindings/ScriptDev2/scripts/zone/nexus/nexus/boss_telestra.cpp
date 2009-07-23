@@ -65,7 +65,7 @@ enum
 ## boss_telestra
 ######*/
 
-uint32 Splits = {50,15};
+uint32 Splits[2] = {50,15};
 
 struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 {
@@ -88,9 +88,9 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 	uint32 m_uiAdds;
 	uint32 m_uiSplitCount;
 
-	Creature * pArcaneAdd = NULL;
-	Creature * pFrostAdd = NULL;
-	Creature * pFireAdd = NULL;
+	Creature * pArcaneAdd;
+	Creature * pFrostAdd;
+	Creature * pFireAdd;
 
     void Reset() 
     {
@@ -101,7 +101,11 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 		m_bIsNotCasting = true;
 		m_bIsSplit = false;
 		m_uiAdds=0;
-		m_uiSplitCount = (m_bIsHeroicMode) ? 1 : 0;
+		m_uiSplitCount = 0;
+
+		pArcaneAdd = NULL;
+        	pFrostAdd = NULL;
+        	pFireAdd = NULL;
     }
 
     void Aggro(Unit* pWho)
@@ -136,7 +140,7 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 			return;
 		}
 
-		if(bIsNotCasting)
+		if(m_bIsNotCasting)
 		{
 			if (m_uiFireBomb < uiDiff)
 			{
@@ -163,11 +167,12 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 				m_creature->GetMotionMaster()->MoveIdle();
 			} else m_uiGravityWell -= uiDiff;
 
-			if(m_uiSplitCount>=0 && 
+			if(m_uiSplitCount<((m_bIsHeroicMode) ? 2 : 1 )&& 
 				m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < Splits[m_uiSplitCount])
 			{
 				m_bIsSplit = true;
-				m_uiSplitCount--;
+				m_uiSplitCount++;
+				m_uiAdds=3;
 				DoSplit();
 			}
 			
@@ -182,14 +187,14 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 		}
     }
 
-	void CheckAddDied(Creature * pAdd)
+	void CheckAddDied()
 	{
 		if(pArcaneAdd && !pArcaneAdd->isAlive())
 		{
 			pArcaneAdd = NULL;
 			m_uiAdds--;
 		}
-		if(pFireAdd && !pFireAdd->isAlive())
+		if(pFrostAdd && !pFrostAdd->isAlive())
 		{
 			pFireAdd = NULL;
 			m_uiAdds--;
@@ -219,14 +224,24 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 		
 		float x,y,z=0.0f;
 		
-		m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),2.0f);
-		pArcaneAdd=m_creature->SummonCreature(NPC_TELEST_ARCANE, x,y,z TEMPSUMMON_CORPSE_DESPAWN, 30000);
+		m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),3.5f);
+		pArcaneAdd=m_creature->SummonCreature(NPC_TELEST_ARCANE, x,y,z,2.0f, TEMPSUMMON_CORPSE_DESPAWN, 30000);
+		if(pArcaneAdd){
+			pArcaneAdd->CastSpell(pArcaneAdd,SPELL_ARCANE_VISUAL,true);
+		}
 		
-		m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),2.0f);
-		pFireAdd=m_creature->SummonCreature(NPC_TELEST_FIRE, x,y,z TEMPSUMMON_CORPSE_DESPAWN, 30000);
+		m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),3.5f);
+		pFireAdd=m_creature->SummonCreature(NPC_TELEST_FIRE, x,y,z,0.0f, TEMPSUMMON_CORPSE_DESPAWN, 30000);
+		if(pFireAdd){
+			pFireAdd->CastSpell(pFireAdd,SPELL_FIRE_VISUAL,true);	
+		}
 		
-		m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),2.0f);
-		pFrostAdd=m_creature->SummonCreature(NPC_TELEST_FROST, x,y,z TEMPSUMMON_CORPSE_DESPAWN, 30000);
+		m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),3.5f);
+		pFrostAdd=m_creature->SummonCreature(NPC_TELEST_FROST, x,y,z,4.0f, TEMPSUMMON_CORPSE_DESPAWN, 30000);
+		if(pFrostAdd){
+                       pFrostAdd->CastSpell(pFrostAdd,SPELL_FROST_VISUAL,true); 
+                }
+
 	}
 
 	void DoUnSplit()
