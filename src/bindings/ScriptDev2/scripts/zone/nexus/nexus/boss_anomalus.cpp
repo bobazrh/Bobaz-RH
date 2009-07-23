@@ -47,6 +47,9 @@ enum
 	SPELL_BURST				= 47688,
 	SPELL_CHARGED_BURST		= 47737,
 	SPELL_SUMMON			= 47692,
+	SPELL_VISUAL			= 47686,
+
+	CHAOS_THEORY			= 2037,
 };
 
 /*######
@@ -70,6 +73,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     uint32 m_uiRiftTimer;
     uint32 m_uiShieldCounter;
     uint32 m_uiChargeTimer;
+	bool m_bRiftKilled;
 	std::list<Creature*> m_lRifts; 
 	SpellEntry const * chargeInfo;
 		
@@ -85,6 +89,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 	m_uiShieldCounter = 0;
 	chargeInfo = sSpellStore.LookupEntry(SPELL_CHARGE_RIFT); 
 	m_bShield = false;
+	m_bRiftKilled = false;
     }
 
     void Aggro(Unit* pWho)
@@ -95,6 +100,9 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         DoScriptText(SAY_DEATH, m_creature);
+		if(!m_bRiftKilled && m_bIsHeroicMode){
+			//TODO: Reward Chaos Theory
+		}
     }
 
     void KilledUnit(Unit* pVictim)
@@ -104,6 +112,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
     }
 
     void RiftDied(Creature * pRift){
+	m_bRiftKilled=true;
     	for(std::list<Creature*>::iterator itr = m_lRifts.begin(); itr != m_lRifts.end(); ++itr)
 	{
 		if (*itr == pRift);
@@ -134,7 +143,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 	if(!m_bShield){
 		if (m_uiSparkTimer < uiDiff){
 			DoCast(m_creature->getVictim(),m_bIsHeroicMode ? SPELL_SPARK_H : SPELL_SPARK);
-			m_uiSparkTimer = 12000 + rand()%4000;
+			m_uiSparkTimer = 8000 + rand()%4000;
 		} else m_uiSparkTimer -= uiDiff;
 
 		if (m_uiRiftTimer < uiDiff){
@@ -174,7 +183,7 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 			m_creature->RemoveAurasDueToSpell(SPELL_RIFT_SHIELD, NULL);
 			//start movement
 			Unit * victim;
-                    	if(victim = m_creature->getVictim()) 
+            if(victim = m_creature->getVictim()) 
 			{
                       		m_creature->SendMeleeAttackStart(victim);
 				m_creature->GetMotionMaster()->MoveChase(victim);
@@ -212,6 +221,7 @@ struct MANGOS_DLL_DECL mob_chaotic_riftAI : public Scripted_NoMovementAI
 		m_uiBurstTimer = 300+rand()%600;
 		m_uiSpawnTimer = 5500 + rand()%10000;
 		m_bIsCharged = false;
+		m_creature->SetVisibility(VISIBILITY_OFF);
 	}
 
 	void Aggro(Unit* pWho)
@@ -235,6 +245,7 @@ struct MANGOS_DLL_DECL mob_chaotic_riftAI : public Scripted_NoMovementAI
 				m_bIsCharged = true;
 			} else m_bIsCharged = false;
 			DoCast(m_creature->getVictim(),m_bIsCharged ? SPELL_CHARGED_BURST : SPELL_BURST);
+			DoCast(m_creature,SPELL_VISUAL);
 			m_uiBurstTimer = 700 + rand()%600;
 		} else m_uiBurstTimer -= uiDiff;
 
