@@ -227,7 +227,6 @@ struct MANGOS_DLL_DECL mob_chaotic_riftAI : public Scripted_NoMovementAI
 		m_uiBurstTimer = 300+rand()%600;
 		m_uiSpawnTimer = 5500 + rand()%10000;
 		m_bIsCharged = false;
-		m_creature->SetVisibility(VISIBILITY_OFF);
 	}
 
 	void Aggro(Unit* pWho)

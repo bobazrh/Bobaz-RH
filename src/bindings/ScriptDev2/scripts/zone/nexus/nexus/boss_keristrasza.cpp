@@ -45,7 +45,7 @@ enum
 
     SPELL_ENRAGE                = 8599,
 
-	SPELL_PRISON				= 47854
+    SPELL_PRISON		= 47854
 };
 
 /*######
@@ -80,23 +80,24 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 		m_uiNovaTimer = 20000+rand()%10000;
 		m_bEnraged = false;
 		if(m_pInstance)
-			m_pInstance->SetData(NPC_ORMOROK, NOT_STARTED);
+			m_pInstance->SetData(NPC_KERISTRASZA, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
 		if(m_pInstance)
 		{
-			if(!m_pInstance->GetData(NPC_ORMOROK) == DONE ||
-				!m_pInstance->GetData(NPC_ANOMALUS) == DONE ||
-				!m_pInstance->GetData(NPC_TELESTRA) == DONE)
+			if(	(m_pInstance->GetData(NPC_ORMOROK) != DONE) ||
+				(m_pInstance->GetData(NPC_ANOMALUS) != DONE)||
+				(m_pInstance->GetData(NPC_TELESTRA) != DONE)
+			  )
 			{
 				if (m_creature->getVictim())
 				{
 					DoCast(m_creature->getVictim(),64487);
 				} else {
 					if(m_pInstance)
-						m_pInstance->SetData(NPC_ORMOROK, IN_PROGRESS);
+						m_pInstance->SetData(NPC_KERISTRASZA, IN_PROGRESS);
 				}
 			}
 		}
@@ -106,7 +107,7 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
 		if(m_pInstance)
-			m_pInstance->SetData(NPC_ORMOROK, DONE);
+			m_pInstance->SetData(NPC_KERISTRASZA, DONE);
         DoScriptText(SAY_DEATH, m_creature);
     }
 
@@ -139,7 +140,7 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 			m_uiBreathTimer = 8000+rand()%4000;
 		} else m_uiBreathTimer -= uiDiff;
 
-		if (m_bIsHeroic && m_uiNovaTimer < uiDiff)
+		if (m_bIsHeroicMode && m_uiNovaTimer < uiDiff)
 		{
 			DoScriptText(SAY_CRYSTAL_NOVA,m_creature);
 			DoCast(m_creature->getVictim(),SPELL_CRYSTALLIZE);

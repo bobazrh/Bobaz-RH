@@ -140,7 +140,7 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 		if(m_bIsSplit)
 		{
 			CheckAddDied();
-			if(m_uiAdds <= 0)
+			if(m_uiAdds <= 0 && pFireAdd == NULL && pArcaneAdd == NULL && pFrostAdd == NULL)
 			{
 				DoUnSplit();
 				m_bIsSplit = false;
