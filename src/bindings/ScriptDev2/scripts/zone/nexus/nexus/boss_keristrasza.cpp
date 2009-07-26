@@ -71,6 +71,8 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 	uint32 m_uiChainsTimer;
 	uint32 m_uiNovaTimer;
 
+	SpellEntry const * m_IntenseColdInfo;
+
     void Reset() 
     {
 		m_uiIntenseColdTimer = 1000;
@@ -79,6 +81,9 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 		m_uiChainsTimer = 10000+rand()%5000;
 		m_uiNovaTimer = 20000+rand()%10000;
 		m_bEnraged = false;
+
+		m_IntenseColdInfo= sSpellStore.LookupEntry(SPELL_INTENSE_COLD);
+
 		if(m_pInstance)
 			m_pInstance->SetData(NPC_KERISTRASZA, NOT_STARTED);
     }
@@ -130,7 +135,7 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 
 		if (m_uiIntenseColdTimer < uiDiff)
 		{
-			DoCast(NULL,SPELL_INTENSE_COLD);
+			DoCastIntense();
 			m_uiIntenseColdTimer = 1000;
 		} else m_uiIntenseColdTimer -= uiDiff;
 
@@ -164,6 +169,19 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 
         DoMeleeAttackIfReady();
     }
+
+	void DoCastIntense()
+	{
+		Unit *pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0);
+		for(int i=1; pTarget && i<41;i++)
+		{
+			Aura *Aur = CreateAura(m_IntenseColdInfo, 0, NULL,pCreature,m_creature);
+			pTarget->AddAura(Aur);
+			Aur = CreateAura(m_IntenseColdInfo, 1, NULL,pCreature,m_creature);
+			pTarget->AddAura(Aur);
+			pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 1);
+		}
+	}
 };
 
 CreatureAI* GetAI_boss_keristrasza(Creature* pCreature)

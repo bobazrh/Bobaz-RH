@@ -730,6 +730,8 @@ bool Item::CanBeTraded(bool mail) const
 
 bool Item::IsBoundByEnchant() const
 {
+	// turn soulbounding enchants off -- yavi
+	return false;
     // Check all enchants for soulbound
     for(uint32 enchant_slot = PERM_ENCHANTMENT_SLOT; enchant_slot < MAX_ENCHANTMENT_SLOT; ++enchant_slot)
     {
