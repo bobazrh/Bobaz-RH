@@ -102,10 +102,10 @@ struct MANGOS_DLL_DECL  instance_nexus : public ScriptedInstance
     {
 		switch(type)
         {
-			case NPC_ORMOROK:					 Encounters[0]=data;
-			case NPC_ANOMALUS:            	     Encounters[1]=data;
-			case NPC_TELESTRA:					 Encounters[2]=data;
-			case NPC_KERISTRASZA:				 Encounters[4]=data;
+			case NPC_ORMOROK:					 Encounters[0]=data;break;
+			case NPC_ANOMALUS:            	     Encounters[1]=data;break;
+			case NPC_TELESTRA:					 Encounters[2]=data;break;
+			case NPC_KERISTRASZA:				 Encounters[4]=data;break;
         }
 
         if (data == DONE)
@@ -133,7 +133,7 @@ struct MANGOS_DLL_DECL  instance_nexus : public ScriptedInstance
 
         std::ostringstream saveStream;
         saveStream << "N X " << Encounters[0] << " " << Encounters[1] << " "
-            << Encounters[2] << Encounters[3] << " " << Encounters[4];
+            << Encounters[2] << " " << Encounters[3] << " " << Encounters[4];
 
         str_data = saveStream.str();
 

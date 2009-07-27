@@ -204,7 +204,7 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
 		}
 		if(pFrostAdd && !pFrostAdd->isAlive())
 		{
-			pFireAdd = NULL;
+			pFrostAdd = NULL;
 			m_uiAdds--;
 		}
 		if(pFireAdd && !pFireAdd->isAlive())

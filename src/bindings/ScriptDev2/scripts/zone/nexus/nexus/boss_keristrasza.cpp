@@ -41,7 +41,7 @@ enum
     SPELL_CRYSTAL_CHAINS_H      = 57050,
 
     SPELL_TAIL_SWEEP            = 50155,
-    SPELL_INTENSE_COLD          = 48094,
+    SPELL_INTENSE_COLD          = 48095,
 
     SPELL_ENRAGE                = 8599,
 
@@ -165,6 +165,7 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 		{
 			DoScriptText(SAY_ENRAGE, m_creature);
 			DoCast(m_creature,SPELL_ENRAGE);
+			m_bEnraged = true;
 		}
 
         DoMeleeAttackIfReady();
@@ -175,9 +176,9 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 		Unit *pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0);
 		for(int i=1; pTarget && i<41;i++)
 		{
-			Aura *Aur = CreateAura(m_IntenseColdInfo, 0, NULL,pCreature,m_creature);
+			Aura *Aur = CreateAura(m_IntenseColdInfo, 0, NULL,pTarget,m_creature);
 			pTarget->AddAura(Aur);
-			Aur = CreateAura(m_IntenseColdInfo, 1, NULL,pCreature,m_creature);
+			Aur = CreateAura(m_IntenseColdInfo, 1, NULL,pTarget,m_creature);
 			pTarget->AddAura(Aur);
 			pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 1);
 		}
