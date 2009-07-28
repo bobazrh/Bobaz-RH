@@ -4538,6 +4538,18 @@ void Spell::EffectWeaponDmg(uint32 i)
                 }
             }
         }
+		case SPELLFAMILY_DEATHKNIGHT
+		{
+			if(m_spellInfo->SpellFamilyFlags & 0x01000000000)
+			{
+				if(Aura * aur=m_caster->GetDummyAura(59336))
+				{
+					uint32 runicPowerMod = aur->GetModifier()->m_amount*m_caster->GetPower(POWER_RUNIC_POWER)/20;
+					if(runicPower > 25)runicPowerMod=25;
+					totalDamagePercentMod *= (100.0f + float(runicPowerMod))/100.0f;
+				}
+			}
+		}
     }
 
     int32 fixed_bonus = 0;
