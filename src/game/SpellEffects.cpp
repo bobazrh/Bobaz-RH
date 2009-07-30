@@ -4540,7 +4540,7 @@ void Spell::EffectWeaponDmg(uint32 i)
         }
 		case SPELLFAMILY_DEATHKNIGHT:
 		{
-			if(m_spellInfo->SpellFamilyFlags & 0x01000000000)
+			if(m_spellInfo->SpellFamilyFlags & 0x010)
 			{
 				if(Aura * aur=m_caster->GetDummyAura(59336))
 				{
@@ -4550,6 +4550,31 @@ void Spell::EffectWeaponDmg(uint32 i)
 				}
 				break;
 			}
+			if(m_spellInfo->SpellFamilyFlags & 0x0802000001000000LL)
+            		{
+                		uint32 diseases = 0;
+				Unit::AuraMap& allAuras = unitTarget->GetAuras();
+		                for(Unit::AuraMap::iterator iter = allAuras.begin(), next;iter != allAuras.end(); iter = next)
+                		{
+                    			next = iter;
+                    			++next;
+                    			SpellEntry const *aurSpellInfo = iter->second->GetSpellProto();
+                    			if(iter->second->GetEffIndex() == 0 && aurSpellInfo->Dispel == DISPEL_DISEASE && iter->second->GetCaster() == m_caster)
+                    			{
+                        			++diseases;
+					}
+				}
+				if(diseases)
+                		{
+                    			switch(m_spellInfo->SpellIconID)
+                    			{
+                        			case 2639: totalDamagePercentMod *= (1 + 0.125f * diseases); break;
+                        			case 3143: totalDamagePercentMod *= (1 + 0.110f * diseases); break;
+                        			case 3145: totalDamagePercentMod *= (1 + 0.100f * diseases); break;
+                        			default: break;
+					}
+                		}
+                	}
 			break;
 		}
     }
