@@ -24,31 +24,31 @@ EndScriptData */
 #include "precompiled.h"
 #include "hyjalAI.h"
 
-struct sHyjalSpawnLoc
+struct sHyjalLocation
 {
     eBaseArea m_pBaseArea;
     float m_fX, m_fY, m_fZ;
 };
 
 // Locations for summoning waves
-sHyjalSpawnLoc m_aHyjalSpawnLoc[]=
+sHyjalLocation m_aHyjalSpawnLoc[]=
 {
     {BASE_ALLY,  4979.010, -1709.134, 1339.674},
     {BASE_ALLY,  4969.123, -1705.904, 1341.363},
     {BASE_ALLY,  4970.260, -1698.546, 1341.200},
     {BASE_ALLY,  4975.262, -1698.239, 1341.427},
-    {BASE_HORDE, 5554.399, -2581.419, 1480.820},
-    {BASE_HORDE, 5538.996, -2577.742, 1479.790},
+    {BASE_HORDE, 5557.582, -2587.159, 1481.644},
+    {BASE_HORDE, 5545.901, -2582.246, 1479.256},
     {BASE_HORDE, 5565.642, -2565.666, 1481.635},
     {BASE_HORDE, 5547.218, -2574.589, 1479.194}
 };
 
-// used to inform the wave where to move and attack to
-/*float AttackArea[2][3]=
+// used to inform the wave where to move
+sHyjalLocation m_aHyjalWaveMoveTo[]=
 {
-    {5042.9189, -1776.2562, 1323.0621},                     // Alliance
-    {5510.4815, -2676.7112, 1480.4314}                      // Horde
-};*/
+    {BASE_ALLY,  5018.654, -1752.074, 1322.203},
+    {BASE_HORDE, 5504.569, -2688.489, 1479.991}
+};
 
 struct sHyjalYells
 {
@@ -88,8 +88,9 @@ void hyjalAI::Reset()
 
     // Timers
     m_uiNextWaveTimer = 10000;
+    m_uiWaveMoveTimer = 15000;
     m_uiCheckTimer = 0;
-    m_uiRetreatTimer = 1000;
+    m_uiRetreatTimer = 25000;
 
     // Misc
     m_uiWaveCount = 0;
@@ -109,8 +110,8 @@ void hyjalAI::Reset()
 
     // Bools
     m_bIsEventInProgress = false;
-
     m_bIsSummoningWaves = false;
+
     m_bIsRetreating = false;
     m_bDebugMode = false;
 
@@ -118,9 +119,9 @@ void hyjalAI::Reset()
     m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
     // Reset World States
-    UpdateWorldState(WORLD_STATE_WAVES, 0);
-    UpdateWorldState(WORLD_STATE_ENEMY, 0);
-    UpdateWorldState(WORLD_STATE_ENEMYCOUNT, 0);
+    m_pInstance->DoUpdateWorldState(WORLD_STATE_WAVES, 0);
+    m_pInstance->DoUpdateWorldState(WORLD_STATE_ENEMY, 0);
+    m_pInstance->DoUpdateWorldState(WORLD_STATE_ENEMYCOUNT, 0);
 
     if (!m_pInstance)
         return;
@@ -165,10 +166,10 @@ void hyjalAI::Aggro(Unit *who)
 
 void hyjalAI::SpawnCreatureForWave(uint32 uiMobEntry)
 {
-    sHyjalSpawnLoc* pSpawn = NULL;
+    sHyjalLocation* pSpawn = NULL;
 
-    uint32 uiMaxCount = sizeof(m_aHyjalSpawnLoc)/sizeof(sHyjalSpawnLoc);
-    uint32 uiRandId = urand(0, uiMaxCount/2);               //unsafe, if array becomes uneven.
+    uint32 uiMaxCount = sizeof(m_aHyjalSpawnLoc)/sizeof(sHyjalLocation);
+    uint32 uiRandId = urand(1, uiMaxCount/2);               //unsafe, if array becomes uneven.
 
     uint32 uiJ = 0;
 
@@ -177,13 +178,13 @@ void hyjalAI::SpawnCreatureForWave(uint32 uiMobEntry)
         if (m_aHyjalSpawnLoc[i].m_pBaseArea != m_uiBase)
             continue;
 
+        ++uiJ;
+
         if (uiJ == uiRandId)
         {
             pSpawn = &m_aHyjalSpawnLoc[i];
             break;
         }
-
-        ++uiJ;
     }
 
     if (pSpawn)
@@ -199,10 +200,27 @@ void hyjalAI::JustSummoned(Creature* pSummoned)
     // Increment Enemy Count to be used in World States and instance script
     ++m_uiEnemyCount;
 
-    pSummoned->SetInCombatWith(m_creature);
-    pSummoned->AddThreat(m_creature, 0.0f);
+    sHyjalLocation* pMove = NULL;
 
-    pSummoned->SetInCombatWithZone();
+    uint32 uiMaxCount = sizeof(m_aHyjalWaveMoveTo)/sizeof(sHyjalLocation);
+
+    for (uint32 i = 0; i < uiMaxCount; ++i)
+    {
+        if (m_aHyjalWaveMoveTo[i].m_pBaseArea != m_uiBase)
+            continue;
+
+        pMove = &m_aHyjalWaveMoveTo[i];
+        break;
+    }
+
+    if (pMove)
+    {
+        float fX, fY, fZ;
+        pSummoned->GetRandomPoint(pMove->m_fX, pMove->m_fY, pMove->m_fZ, 10.0f, fX, fY, fZ);
+
+        pSummoned->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+        pSummoned->GetMotionMaster()->MovePoint(0, fX, fY, fZ);
+    }
 
     // Check if creature is a boss.
     if (pSummoned->isWorldBoss())
@@ -214,9 +232,11 @@ void hyjalAI::JustSummoned(Creature* pSummoned)
 
         m_uiCheckTimer = 5000;
     }
+    else
+        lWaveMobGUIDList.push_back(pSummoned->GetGUID());
 }
 
-void hyjalAI::SummonNextWave(Wave wave[18], uint32 Count)
+void hyjalAI::SummonNextWave()
 {
     // 1 in 4 chance we give a rally yell. Not sure if the chance is offilike.
     if (rand()%4 == 0)
@@ -228,28 +248,38 @@ void hyjalAI::SummonNextWave(Wave wave[18], uint32 Count)
         return;
     }
 
+    sHyjalWave* pWaveData = m_uiBase ? &m_aHyjalWavesHorde[m_uiWaveCount] : &m_aHyjalWavesAlliance[m_uiWaveCount];
+
+    if (!pWaveData)
+    {
+        error_log("SD2: hyjalAI not able to obtain wavedata for SummonNextWave.");
+        return;
+    }
+
     m_uiEnemyCount = m_pInstance->GetData(DATA_TRASH);
 
     for(uint8 i = 0; i < MAX_WAVE_MOB; ++i)
     {
-        if (wave[Count].Mob[i])
-            SpawnCreatureForWave(wave[Count].Mob[i]);
+        if (pWaveData->m_auiMobEntry[i])
+            SpawnCreatureForWave(pWaveData->m_auiMobEntry[i]);
     }
 
-    if (!wave[Count].IsBoss)
+    if (!pWaveData->m_bIsBoss)
     {
-        uint32 stateValue = Count+1;
+        uint32 stateValue = m_uiWaveCount+1;
 
         if (m_bIsFirstBossDead)
             stateValue -= MAX_WAVES;                        // Subtract 9 from it to give the proper wave number if we are greater than 8
 
-        UpdateWorldState(WORLD_STATE_WAVES, stateValue);    // Set world state to our current wave number
-        UpdateWorldState(WORLD_STATE_ENEMY, 1);             // Enable world state
+        // Set world state to our current wave number
+        m_pInstance->DoUpdateWorldState(WORLD_STATE_WAVES, stateValue);
+        // Enable world state
+        m_pInstance->DoUpdateWorldState(WORLD_STATE_ENEMY, 1);
 
         m_pInstance->SetData(DATA_TRASH, m_uiEnemyCount);   // Send data for instance script to update count
 
         if (!m_bDebugMode)
-            m_uiNextWaveTimer = wave[Count].WaveTimer;
+            m_uiNextWaveTimer = pWaveData->m_uiWaveTimer;
         else
         {
             m_uiNextWaveTimer = 15000;
@@ -258,30 +288,39 @@ void hyjalAI::SummonNextWave(Wave wave[18], uint32 Count)
     }
     else
     {
-        UpdateWorldState(WORLD_STATE_WAVES, 0);             // Set world state for waves to 0 to disable it.
-        UpdateWorldState(WORLD_STATE_ENEMY, 1);
-        UpdateWorldState(WORLD_STATE_ENEMYCOUNT, 1);        // Set World State for enemies invading to 1.
+        // Set world state for waves to 0 to disable it.
+        m_pInstance->DoUpdateWorldState(WORLD_STATE_WAVES, 0);
+        m_pInstance->DoUpdateWorldState(WORLD_STATE_ENEMY, 1);
+
+        // Set World State for enemies invading to 1.
+        m_pInstance->DoUpdateWorldState(WORLD_STATE_ENEMYCOUNT, 1);
+
         m_bIsSummoningWaves = false;
     }
 
+    m_uiWaveMoveTimer = 15000;
     m_uiCheckTimer = 5000;
+    ++m_uiWaveCount;
 }
 
 void hyjalAI::StartEvent()
 {
+    if (!m_pInstance)
+        return;
+
     DoTalk(BEGIN);
 
     m_bIsEventInProgress = true;
     m_bIsSummoningWaves = true;
 
-    m_uiNextWaveTimer = 15000;
+    m_uiNextWaveTimer = 10000;
     m_uiCheckTimer = 5000;
 
     m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
-    UpdateWorldState(WORLD_STATE_WAVES, 0);
-    UpdateWorldState(WORLD_STATE_ENEMY, 0);
-    UpdateWorldState(WORLD_STATE_ENEMYCOUNT, 0);
+    m_pInstance->DoUpdateWorldState(WORLD_STATE_WAVES, 0);
+    m_pInstance->DoUpdateWorldState(WORLD_STATE_ENEMY, 0);
+    m_pInstance->DoUpdateWorldState(WORLD_STATE_ENEMYCOUNT, 0);
 }
 
 void hyjalAI::DoTalk(YellType pYellType)
@@ -312,27 +351,6 @@ void hyjalAI::DoTalk(YellType pYellType)
 
     if (pYell)
         DoScriptText(pYell->m_iTextId, m_creature);
-}
-
-void hyjalAI::UpdateWorldState(uint32 uiStateId, uint32 uiState)
-{
-    Map* pMap = m_creature->GetMap();
-
-    if (!pMap->IsDungeon())
-        return;
-
-    Map::PlayerList const& players = pMap->GetPlayers();
-
-    if (!players.isEmpty())
-    {
-        for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-        {
-            if (Player* pPlayer = itr->getSource())
-                pPlayer->SendUpdateWorldState(uiStateId, uiState);
-        }
-    }
-    else
-        debug_log("SD2: HyjalAI: UpdateWorldState, but PlayerList is empty");
 }
 
 void hyjalAI::SpellHitTarget(Unit* pTarget, const SpellEntry* pSpell)
@@ -367,25 +385,38 @@ void hyjalAI::UpdateAI(const uint32 uiDiff)
     if (!m_bIsEventInProgress)
         return;
 
-    if (m_bIsSummoningWaves)
+    if (m_bIsSummoningWaves && m_pInstance)
     {
-        if (m_pInstance && m_uiEnemyCount)
+        if (m_uiWaveMoveTimer < uiDiff)
         {
-            m_uiEnemyCount = m_pInstance->GetData(DATA_TRASH);
-
-            if (!m_uiEnemyCount)
+            // Skip the master timer, and start next wave in 5. Clear the list, it should not be any here now.
+            if (!m_pInstance->GetData(DATA_TRASH))
+            {
+                lWaveMobGUIDList.clear();
                 m_uiNextWaveTimer = 5000;
+            }
+
+            if (!lWaveMobGUIDList.empty())
+            {
+                for(std::list<uint64>::iterator itr = lWaveMobGUIDList.begin(); itr != lWaveMobGUIDList.end(); ++itr)
+                {
+                    if (Creature* pTemp = m_pInstance->instance->GetCreature(*itr))
+                    {
+                        if (!pTemp->isAlive() || pTemp->getVictim())
+                            continue;
+
+                        pTemp->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+                        pTemp->GetMotionMaster()->MovePoint(1, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ());
+                    }
+                }
+            }
+            m_uiWaveMoveTimer = 10000;
         }
+        else
+            m_uiWaveMoveTimer -= uiDiff;
 
         if (m_uiNextWaveTimer < uiDiff)
-        {
-            if (m_uiBase == BASE_HORDE)
-                SummonNextWave(HordeWaves, m_uiWaveCount);
-            else
-                SummonNextWave(AllianceWaves, m_uiWaveCount);
-
-            ++m_uiWaveCount;
-        }
+            SummonNextWave();
         else
             m_uiNextWaveTimer -= uiDiff;
     }
@@ -417,7 +448,9 @@ void hyjalAI::UpdateAI(const uint32 uiDiff)
                     m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
                     m_uiBossGUID[i] = 0;
-                    UpdateWorldState(WORLD_STATE_ENEMY, 0); // Reset world state for enemies to disable it
+
+                    // Reset world state for enemies to disable it
+                    m_pInstance->DoUpdateWorldState(WORLD_STATE_ENEMY, 0);
                 }
             }
         }

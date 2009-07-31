@@ -277,6 +277,10 @@ extern void AddSC_feralas();
 extern void AddSC_ghostlands();
 
 //Gnomeregan
+
+//Grizzly Hills
+extern void AddSC_grizzly_hills();
+
 //Gruul's Lair
 extern void AddSC_boss_gruul();
 extern void AddSC_boss_high_king_maulgar();
@@ -312,6 +316,9 @@ extern void AddSC_hellfire_peninsula();
 //Hillsbrad Foothills
 //Hinterlands
 extern void AddSC_hinterlands();
+
+//Icecrown
+extern void AddSC_icecrown();
 
 //Ironforge
 extern void AddSC_ironforge();
@@ -1171,6 +1178,10 @@ void ScriptsInit()
     AddSC_ghostlands();
 
     //Gnomeregan
+
+    //Grizzly Hills
+    AddSC_grizzly_hills();
+
     //Gruul's Lair
     AddSC_boss_gruul();
     AddSC_boss_high_king_maulgar();
@@ -1206,6 +1217,9 @@ void ScriptsInit()
     //Hillsbrad Foothills
     //Hinterlands
     AddSC_hinterlands();
+
+    //Icecrown
+    AddSC_icecrown();
 
     //Ironforge
     AddSC_ironforge();
@@ -1641,27 +1655,27 @@ bool GossipHello(Player* pPlayer, Creature* pCreature)
 }
 
 MANGOS_DLL_EXPORT
-bool GossipSelect(Player* pPlayer, Creature* pCreature, uint32 sender, uint32 action)
+bool GossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
 {
-    debug_log("SD2: Gossip selection, sender: %d, action: %d",sender, action);
+    debug_log("SD2: Gossip selection, sender: %u, action: %u", uiSender, uiAction);
 
     Script *tmpscript = m_scripts[pCreature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipSelect) return false;
 
     pPlayer->PlayerTalkClass->ClearMenus();
-    return tmpscript->pGossipSelect(pPlayer, pCreature,sender,action);
+    return tmpscript->pGossipSelect(pPlayer, pCreature, uiSender, uiAction);
 }
 
 MANGOS_DLL_EXPORT
-bool GossipSelectWithCode(Player* pPlayer, Creature* pCreature, uint32 sender, uint32 action, const char* sCode)
+bool GossipSelectWithCode(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction, const char* sCode)
 {
-    debug_log("SD2: Gossip selection with code, sender: %d, action: %d",sender, action);
+    debug_log("SD2: Gossip selection with code, sender: %u, action: %u", uiSender, uiAction);
 
     Script *tmpscript = m_scripts[pCreature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipSelectWithCode) return false;
 
     pPlayer->PlayerTalkClass->ClearMenus();
-    return tmpscript->pGossipSelectWithCode(pPlayer, pCreature,sender,action,sCode);
+    return tmpscript->pGossipSelectWithCode(pPlayer, pCreature, uiSender, uiAction, sCode);
 }
 
 MANGOS_DLL_EXPORT
@@ -1715,13 +1729,13 @@ uint32 NPCDialogStatus(Player* pPlayer, Creature* pCreature)
 }
 
 MANGOS_DLL_EXPORT
-uint32 GODialogStatus(Player* pPlayer, GameObject *_GO)
+uint32 GODialogStatus(Player* pPlayer, GameObject* pGo)
 {
-    Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
+    Script *tmpscript = m_scripts[pGo->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGODialogStatus) return 100;
 
     pPlayer->PlayerTalkClass->ClearMenus();
-    return tmpscript->pGODialogStatus(pPlayer,_GO);
+    return tmpscript->pGODialogStatus(pPlayer, pGo);
 }
 
 MANGOS_DLL_EXPORT
@@ -1745,33 +1759,33 @@ bool ItemQuestAccept(Player* pPlayer, Item *_Item, const Quest* pQuest)
 }
 
 MANGOS_DLL_EXPORT
-bool GOHello(Player* pPlayer, GameObject *_GO)
+bool GOHello(Player* pPlayer, GameObject* pGo)
 {
-    Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
+    Script *tmpscript = m_scripts[pGo->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGOHello) return false;
 
     pPlayer->PlayerTalkClass->ClearMenus();
-    return tmpscript->pGOHello(pPlayer,_GO);
+    return tmpscript->pGOHello(pPlayer, pGo);
 }
 
 MANGOS_DLL_EXPORT
-bool GOQuestAccept(Player* pPlayer, GameObject *_GO, const Quest* pQuest)
+bool GOQuestAccept(Player* pPlayer, GameObject* pGo, const Quest* pQuest)
 {
-    Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
+    Script *tmpscript = m_scripts[pGo->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGOQuestAccept) return false;
 
     pPlayer->PlayerTalkClass->ClearMenus();
-    return tmpscript->pGOQuestAccept(pPlayer,_GO, pQuest);
+    return tmpscript->pGOQuestAccept(pPlayer, pGo, pQuest);
 }
 
 MANGOS_DLL_EXPORT
-bool GOChooseReward(Player* pPlayer, GameObject *_GO, const Quest* pQuest, uint32 opt)
+bool GOChooseReward(Player* pPlayer, GameObject* pGo, const Quest* pQuest, uint32 opt)
 {
-    Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
+    Script *tmpscript = m_scripts[pGo->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGOChooseReward) return false;
 
     pPlayer->PlayerTalkClass->ClearMenus();
-    return tmpscript->pGOChooseReward(pPlayer,_GO, pQuest,opt);
+    return tmpscript->pGOChooseReward(pPlayer, pGo, pQuest,opt);
 }
 
 MANGOS_DLL_EXPORT

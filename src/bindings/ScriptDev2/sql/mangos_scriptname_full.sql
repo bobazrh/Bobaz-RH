@@ -279,8 +279,9 @@ UPDATE creature_template SET ScriptName='mob_webbed_creature' WHERE entry=17680;
 UPDATE creature_template SET ScriptName='npc_captured_sunhawk_agent' WHERE entry=17824;
 
 /* BOREAN TUNDRA */
-UPDATE creature_template SET ScriptName='npc_tiare' WHERE entry=30051;
+UPDATE creature_template SET ScriptName='npc_fizzcrank_fullthrottle' WHERE entry=25590;
 UPDATE creature_template SET ScriptName='npc_surristrasz' WHERE entry=24795;
+UPDATE creature_template SET ScriptName='npc_tiare' WHERE entry=30051;
 
 /* BURNING STEPPES */
 UPDATE creature_template SET ScriptName='npc_ragged_john' WHERE entry=9563;
@@ -418,6 +419,7 @@ UPDATE creature_template SET ScriptName='npc_lady_jaina_proudmoore' WHERE entry=
 UPDATE creature_template SET ScriptName='npc_nat_pagle' WHERE entry=12919;
 UPDATE creature_template SET ScriptName='npc_cassa_crimsonwing' WHERE entry=23704;
 UPDATE creature_template SET ScriptName='npc_restless_apparition' WHERE entry=23861;
+UPDATE creature_template SET ScriptName='npc_private_hendel' WHERE entry=4966;
 
 /* EASTERN PLAGUELANDS */
 UPDATE creature_template SET ScriptName='mobs_ghoul_flayer' WHERE entry IN (8530,8531,8532);
@@ -459,7 +461,7 @@ UPDATE creature_template SET ScriptName='npc_rathis_tomber' WHERE entry=16224;
 
 
 /* GRIZZLY HILLS */
-
+UPDATE creature_template SET ScriptName='npc_orsonn_and_kodian' WHERE entry IN (27274, 27275);
 
 /* GRUUL'S LAIR */
 UPDATE instance_template SET script='instance_gruuls_lair' WHERE map =565;
@@ -531,7 +533,7 @@ UPDATE creature_template SET ScriptName='npc_rinji' WHERE entry=7780;
 
 
 /* ICECROWN */
-
+UPDATE creature_template SET ScriptName='npc_arete' WHERE entry=29344;
 
 /* IRONFORGE */
 UPDATE creature_template SET ScriptName='npc_royal_historian_archesonus' WHERE entry=8879;

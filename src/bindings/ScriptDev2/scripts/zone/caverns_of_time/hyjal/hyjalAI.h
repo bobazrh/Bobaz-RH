@@ -37,14 +37,15 @@ enum eSpell
     SPELL_FERAL_SPIRIT      = 31331
 };
 
-struct Wave
+struct sHyjalWave
 {
-    uint32 Mob[MAX_WAVE_MOB];                               // Stores Creature Entries to be summoned in Waves
-    uint32 WaveTimer;                                       // The timer before the next wave is summoned
-    bool IsBoss;                                            // Simply used to inform the wave summoner that the next wave contains a boss to halt all waves after that
+    uint32 m_auiMobEntry[MAX_WAVE_MOB];                     // Stores Creature Entries to be summoned in Waves
+    uint32 m_uiWaveTimer;                                   // The timer before the next wave is summoned
+    bool   m_bIsBoss;                                       // Simply used to inform the wave summoner that the next wave contains a boss to halt all waves after that
 };
 
-static Wave AllianceWaves[]=                                // Waves that will be summoned in the Alliance Base
+// Waves that will be summoned in the Alliance Base
+static sHyjalWave m_aHyjalWavesAlliance[]=
 {
     // Rage Winterchill Wave 1-8
     {NPC_GHOUL, NPC_GHOUL, NPC_GHOUL, NPC_GHOUL, NPC_GHOUL, NPC_GHOUL, NPC_GHOUL, NPC_GHOUL, NPC_GHOUL, NPC_GHOUL, 0, 0, 0, 0, 0, 0, 0, 0, 120000, false},
@@ -70,7 +71,8 @@ static Wave AllianceWaves[]=                                // Waves that will b
     {NPC_ANETHERON, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, true}
 };
 
-static Wave HordeWaves[]=                                   // Waves that are summoned in the Horde base
+// Waves that are summoned in the Horde base
+static sHyjalWave m_aHyjalWavesHorde[]=
 {
     // Kaz'Rogal Wave 1-8
     {NPC_GHOUL, NPC_GHOUL, NPC_GHOUL, NPC_GHOUL, NPC_ABOMI, NPC_ABOMI, NPC_ABOMI, NPC_ABOMI, NPC_BANSH, NPC_BANSH, NPC_NECRO, NPC_NECRO, 0, 0, 0, 0, 0, 0, 120000, false},
@@ -150,16 +152,13 @@ struct MANGOS_DLL_DECL hyjalAI : public ScriptedAI
     void JustSummoned(Creature*);
 
     // Summons the next wave, calls SummonCreature
-    void SummonNextWave(Wave wave[18], uint32 Count);
+    void SummonNextWave();
 
     // Begins the event by gossip click
     void StartEvent();
 
     // Searches for the appropriate yell and sound and uses it to inform the raid of various things
     void DoTalk(YellType pYellType);
-
-    // Updates the world state counter at the top of the UI.
-    void UpdateWorldState(uint32 field, uint32 value);
 
     // Used to filter who to despawn after mass teleport
     void SpellHitTarget(Unit*, const SpellEntry*);
@@ -172,6 +171,7 @@ struct MANGOS_DLL_DECL hyjalAI : public ScriptedAI
 
         uint32 m_uiNextWaveTimer;
         uint32 m_uiWaveCount;
+        uint32 m_uiWaveMoveTimer;
         uint32 m_uiCheckTimer;
         uint32 m_uiEnemyCount;
         uint32 m_uiRetreatTimer;
@@ -193,7 +193,7 @@ struct MANGOS_DLL_DECL hyjalAI : public ScriptedAI
 
     private:
         uint32 m_uiSpellTimer[MAX_SPELL];
-        std::list<uint64> CreatureList;
+        std::list<uint64> lWaveMobGUIDList;
 };
 
 #endif
