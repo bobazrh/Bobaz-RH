@@ -2643,6 +2643,9 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
         case FORM_METAMORPHOSIS:
             modelid = 25277;
             break;
+		case FORM_SKELETON:
+			modelid = 9786;
+			break;
         case FORM_AMBIENT:
         case FORM_SHADOW:
         case FORM_STEALTH:
