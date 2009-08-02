@@ -16246,7 +16246,7 @@ void Player::ResetInstances(uint8 method)
     {
         InstanceSave *p = itr->second.save;
         const MapEntry *entry = sMapStore.LookupEntry(itr->first);
-        if(!entry || !p->CanReset())
+        if(!entry)// || !p->CanReset())
         {
             ++itr;
             continue;
@@ -16255,11 +16255,12 @@ void Player::ResetInstances(uint8 method)
         if(method == INSTANCE_RESET_ALL)
         {
             // the "reset all instances" method can only reset normal maps
-            if(dif == DIFFICULTY_HEROIC || entry->map_type == MAP_RAID)
+			// We want to allow to reset everything
+            /*if(dif == DIFFICULTY_HEROIC || entry->map_type == MAP_RAID)
             {
                 ++itr;
                 continue;
-            }
+            }*/
         }
 
         // if the map is loaded, reset it
