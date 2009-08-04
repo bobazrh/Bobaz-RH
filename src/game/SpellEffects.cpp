@@ -2387,7 +2387,7 @@ void Spell::EffectApplyAura(uint32 i)
         return;
 
     // ghost spell check, allow apply any auras at player loading in ghost mode (will be cleanup after load)
-    if( !unitTarget->isAlive() && m_spellInfo->Id != 20584 && m_spellInfo->Id != 8326 &&
+    if( !unitTarget->isAlive() && !IsDeathPersistentSpell(m_spellInfo) &&
         (unitTarget->GetTypeId()!=TYPEID_PLAYER || !((Player*)unitTarget)->GetSession()->PlayerLoading()) )
         return;
 
@@ -3299,12 +3299,17 @@ void Spell::EffectSummonType(uint32 i)
         case SUMMON_TYPE_POSESSED2:
         case SUMMON_TYPE_FORCE_OF_NATURE:
         case SUMMON_TYPE_GUARDIAN2:
-            EffectSummonGuardian(i);
+            // Jewelery statue case (totem like)
+            if(m_spellInfo->SpellIconID == 2056)
+                EffectSummonTotem(i);
+            else
+                EffectSummonGuardian(i);
             break;
         case SUMMON_TYPE_WILD:
             EffectSummonWild(i);
             break;
         case SUMMON_TYPE_DEMON:
+        case SUMMON_TYPE_INFERNO:
             EffectSummonDemon(i);
             break;
         case SUMMON_TYPE_SUMMON:
@@ -3350,6 +3355,16 @@ void Spell::EffectSummon(uint32 i)
 
     if(m_caster->GetTypeId()==TYPEID_PLAYER && spawnCreature->LoadPetFromDB((Player*)m_caster,pet_entry))
     {
+        // Summon in dest location
+        float x, y, z;
+        if(m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
+        {
+            x = m_targets.m_destX;
+            y = m_targets.m_destY;
+            z = m_targets.m_destZ;
+            spawnCreature->Relocate(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -m_caster->GetOrientation());
+        }
+
         // set timer for unsummon
         int32 duration = GetSpellDuration(m_spellInfo);
         if(duration > 0)
@@ -3724,13 +3739,6 @@ void Spell::EffectSummonGuardian(uint32 i)
     uint32 pet_entry = m_spellInfo->EffectMiscValue[i];
     if(!pet_entry)
         return;
-
-    // Jewelery statue case (totem like)
-    if(m_spellInfo->SpellIconID == 2056)
-    {
-        EffectSummonTotem(i);
-        return;
-    }
 
     // set timer for unsummon
     int32 duration = GetSpellDuration(m_spellInfo);
@@ -5286,8 +5294,8 @@ void Spell::EffectScriptEffect(uint32 effIndex)
         }
         case SPELLFAMILY_PALADIN:
         {
-            // Judgement
-            if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000800000))
+            // Judgement (seal trigger)
+            if (m_spellInfo->Category == SPELLCATEGORY_JUDGEMENT)
             {
                 if(!unitTarget || !unitTarget->isAlive())
                     return;
@@ -5297,12 +5305,12 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                 // Judgement self add switch
                 switch (m_spellInfo->Id)
                 {
-                    case 41467: break;                      // Judgement
                     case 53407: spellId1 = 20184; break;    // Judgement of Justice
                     case 20271:                             // Judgement of Light
                     case 57774: spellId1 = 20185; break;    // Judgement of Light
                     case 53408: spellId1 = 20186; break;    // Judgement of Wisdom
                     default:
+                        sLog.outError("Unsupported Judgement (seal trigger) spell (Id: %u) in Spell::EffectScriptEffect",m_spellInfo->Id);
                         return;
                 }
                 // all seals have aura dummy in 2 effect
@@ -6577,6 +6585,9 @@ void Spell::EffectSummonDemon(uint32 i)
 
     int32 amount = damage > 0 ? damage : 1;
 
+    if (m_spellInfo->EffectMiscValueB[i] == SUMMON_TYPE_INFERNO)
+        amount = 1;
+
     for(int32 count = 0; count < amount; ++count)
     {
         float px, py, pz;
@@ -6609,13 +6620,15 @@ void Spell::EffectSummonDemon(uint32 i)
 
         // TODO: Add damage/mana/hp according to level
 
+        // Enslave demon effect, without mana cost and cooldown
         if (m_spellInfo->EffectMiscValue[i] == 89)          // Inferno summon
         {
             // Enslave demon effect, without mana cost and cooldown
             m_caster->CastSpell(Charmed, 20882, true);      // FIXME: enslave does not scale with level, level 62+ minions cannot be enslaved
 
-            // Inferno effect
-            Charmed->CastSpell(Charmed, 22703, true, 0);
+            // Inferno effect for non player calls
+            if (m_spellInfo->EffectMiscValueB[i]!=SUMMON_TYPE_INFERNO)
+                Charmed->CastSpell(Charmed, 22703, true, 0);
         }
     }
 }
