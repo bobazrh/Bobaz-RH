@@ -22,12 +22,13 @@ SDCategory: Nexus
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_nexus.h"
 
 enum
 {
     SAY_AGGRO                   = -1576011,
     SAY_KILL                    = -1576012,
-    SAY_REFLECT                 = -1576013,
+    SAY_FRENZY                  = -1576013,
     SAY_ICESPIKE                = -1576014,
     SAY_DEATH                   = -1576015,
 
@@ -62,17 +63,33 @@ struct MANGOS_DLL_DECL boss_ormorokAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     bool m_bIsHeroicMode;
 
+    uint32 m_TrampleTimer;
+    uint32 m_SpellReflectionTimer;
+    uint32 m_SpikeTimer;
+    uint32 m_TanglerTimer;
+    bool m_Enraged;
+
     void Reset() 
     {
+		m_TrampleTimer=1000 + rand()%2000;
+		m_SpikeTimer=15000+rand()%5000;
+		m_SpellReflectionTimer=10000+rand()%5000;
+		m_Enraged = false;
+		if(m_pInstance)
+				m_pInstance->SetData(NPC_ORMOROK, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
+		if(m_pInstance)
+			m_pInstance->SetData(NPC_ORMOROK, IN_PROGRESS);
         DoScriptText(SAY_AGGRO, m_creature);
     }
 
     void JustDied(Unit* pKiller)
     {
+		if(m_pInstance)
+			m_pInstance->SetData(NPC_ORMOROK, DONE);
         DoScriptText(SAY_DEATH, m_creature);
     }
 
@@ -86,6 +103,33 @@ struct MANGOS_DLL_DECL boss_ormorokAI : public ScriptedAI
     {
         if (!m_creature->SelectHostilTarget() || !m_creature->getVictim())
             return;
+
+	if(m_TrampleTimer < uiDiff)
+	{
+	    DoCast(m_creature->getVictim(), (!m_bIsHeroicMode) ? SPELL_TRAMPLE : SPELL_TRAMPLE_H);
+	    m_TrampleTimer = 2000+rand()%2000;
+	} else m_TrampleTimer -= uiDiff;
+
+	if(m_SpikeTimer < uiDiff)
+	{
+	    DoCast(m_creature, (!m_bIsHeroicMode) ? SPELL_CRYSTAL_SPIKES : SPELL_CRYSTAL_SPIKES_H1);
+	    DoScriptText(SAY_ICESPIKE, m_creature);
+	    m_SpikeTimer = 20000;
+	} else m_SpikeTimer -= uiDiff;
+
+	if(m_SpellReflectionTimer < uiDiff)
+	{
+	   DoCast(m_creature, SPELL_REFLECTION);
+	   m_SpellReflectionTimer = 8000+rand()%15000;
+	} else m_SpellReflectionTimer -= uiDiff;
+
+	if(!m_Enraged && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 25)
+	{
+	   DoScriptText(SAY_FRENZY, m_creature);
+	   m_creature->InterruptNonMeleeSpells(false);
+	   DoCast(m_creature, (!m_bIsHeroicMode) ? SPELL_FRENZY : SPELL_FRENZY_H);
+	   m_Enraged = true;
+	}
 
         DoMeleeAttackIfReady();
     }
