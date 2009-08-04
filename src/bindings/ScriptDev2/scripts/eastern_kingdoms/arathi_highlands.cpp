@@ -26,7 +26,7 @@ npc_professor_phizzlethorpe
 EndContentData */
 
 #include "precompiled.h"
-#include "../npc/npc_escortAI.h"
+#include "escort_ai.h"
 
 /*######
 ## npc_professor_phizzlethorpe
@@ -112,11 +112,7 @@ bool QuestAccept_npc_professor_phizzlethorpe(Player* pPlayer, Creature* pCreatur
 
 CreatureAI* GetAI_npc_professor_phizzlethorpe(Creature* pCreature)
 {
-    npc_professor_phizzlethorpeAI* phizzleAI = new npc_professor_phizzlethorpeAI(pCreature);
-
-    phizzleAI->FillPointMovementListForCreature();
-
-    return (CreatureAI*)phizzleAI;
+    return new npc_professor_phizzlethorpeAI(pCreature);
 }
 
 void AddSC_arathi_highlands()

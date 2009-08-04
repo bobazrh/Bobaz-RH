@@ -30,7 +30,7 @@ npc_susurrus
 EndContentData */
 
 #include "precompiled.h"
-#include "../npc/npc_escortAI.h"
+#include "escort_ai.h"
 #include <cmath>
 
 /*######
@@ -386,11 +386,7 @@ bool QuestAccept_npc_magwin(Player* pPlayer, Creature* pCreature, const Quest* p
 
 CreatureAI* GetAI_npc_magwinAI(Creature* pCreature)
 {
-    npc_magwinAI* magwinAI = new npc_magwinAI(pCreature);
-
-    magwinAI->FillPointMovementListForCreature();
-
-    return (CreatureAI*)magwinAI;
+    return new npc_magwinAI(pCreature);
 }
 
 /*######

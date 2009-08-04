@@ -30,7 +30,7 @@ npc_mortog_steamhead
 EndContentData */
 
 #include "precompiled.h"
-#include "../npc/npc_escortAI.h"
+#include "escort_ai.h"
 
 /*######
 ## npcs_ashyen_and_keleth
@@ -308,11 +308,7 @@ bool QuestAccept_npc_kayra_longmane(Player* pPlayer, Creature* pCreature, const 
 
 CreatureAI* GetAI_npc_kayra_longmane(Creature* pCreature)
 {
-    npc_kayra_longmaneAI* thisAI = new npc_kayra_longmaneAI(pCreature);
-
-    thisAI->FillPointMovementListForCreature();
-
-    return (CreatureAI*)thisAI;
+    return new npc_kayra_longmaneAI(pCreature);
 }
 
 /*######

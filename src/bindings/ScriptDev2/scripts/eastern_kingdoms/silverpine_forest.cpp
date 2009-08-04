@@ -27,7 +27,7 @@ npc_deathstalker_erland
 EndContentData */
 
 #include "precompiled.h"
-#include "../npc/npc_escortAI.h"
+#include "escort_ai.h"
 
 /*######
 ## npc_astor_hadren
@@ -210,11 +210,7 @@ bool QuestAccept_npc_deathstalker_erland(Player* pPlayer, Creature* pCreature, c
 
 CreatureAI* GetAI_npc_deathstalker_erland(Creature* pCreature)
 {
-    npc_deathstalker_erlandAI* thisAI = new npc_deathstalker_erlandAI(pCreature);
-
-    thisAI->FillPointMovementListForCreature();
-
-    return (CreatureAI*)thisAI;
+    return new npc_deathstalker_erlandAI(pCreature);
 }
 
 void AddSC_silverpine_forest()
