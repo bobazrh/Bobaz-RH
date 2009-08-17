@@ -51,7 +51,11 @@ struct MANGOS_DLL_DECL mob_frost_tombAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     bool m_bIsHeroicMode;
 
+<<<<<<< .mine
     void SetPrisoner(Unit* uPrisoner)
+=======
+    void Reset()
+>>>>>>> .r1344
     {
         FrostTombGUID = uPrisoner->GetGUID();
     }

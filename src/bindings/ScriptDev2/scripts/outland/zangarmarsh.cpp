@@ -27,6 +27,7 @@ npc_cooshcoosh
 npc_elder_kuruti
 npc_kayra_longmane
 npc_mortog_steamhead
+npc_timothy_daniels
 EndContentData */
 
 #include "precompiled.h"
@@ -254,44 +255,37 @@ struct MANGOS_DLL_DECL npc_kayra_longmaneAI : public npc_escortAI
 
     void WaypointReached(uint32 i)
     {
-        Unit* pUnit = Unit::GetUnit(*m_creature, PlayerGUID);
+        Player* pPlayer = GetPlayerForEscort();
 
-        if (!pUnit || pUnit->GetTypeId() != TYPEID_PLAYER)
+        if (!pPlayer)
             return;
 
         switch(i)
         {
             case 4:
-                DoScriptText(SAY_AMBUSH1, m_creature, pUnit);
+                DoScriptText(SAY_AMBUSH1, m_creature, pPlayer);
                 DoSpawnCreature(NPC_SLAVEBINDER, -10.0f, -5.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 DoSpawnCreature(NPC_SLAVEBINDER, -8.0f, 5.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 break;
             case 5:
-                DoScriptText(SAY_PROGRESS, m_creature, pUnit);
+                DoScriptText(SAY_PROGRESS, m_creature, pPlayer);
                 SetRun();
                 break;
             case 16:
-                DoScriptText(SAY_AMBUSH2, m_creature, pUnit);
+                DoScriptText(SAY_AMBUSH2, m_creature, pPlayer);
                 DoSpawnCreature(NPC_SLAVEBINDER, -10.0f, -5.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 DoSpawnCreature(NPC_SLAVEBINDER, -8.0f, 5.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 break;
             case 17:
-                DoScriptText(SAY_END, m_creature, pUnit);
+                DoScriptText(SAY_END, m_creature, pPlayer);
                 break;
             case 25:
-                ((Player*)pUnit)->GroupEventHappens(QUEST_ESCAPE_FROM, m_creature);
+                pPlayer->GroupEventHappens(QUEST_ESCAPE_FROM, m_creature);
                 break;
         }
     }
 
     void Reset() { }
-
-    void UpdateAI(const uint32 diff)
-    {
-        //TODO: abilities
-
-        npc_escortAI::UpdateAI(diff);
-    }
 };
 
 bool QuestAccept_npc_kayra_longmane(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
@@ -335,6 +329,46 @@ bool GossipSelect_npc_mortog_steamhead(Player* pPlayer, Creature* pCreature, uin
 }
 
 /*######
+## npc_timothy_daniels
+######*/
+
+#define GOSSIP_TIMOTHY_DANIELS_ITEM1    "Specialist, eh? Just what kind of specialist are you, anyway?"
+#define GOSSIP_TEXT_BROWSE_POISONS      "Let me browse your reagents and poison supplies."
+
+enum
+{
+    GOSSIP_TEXTID_TIMOTHY_DANIELS1      = 9239
+};
+
+bool GossipHello_npc_timothy_daniels(Player* pPlayer, Creature* pCreature)
+{
+    if (pCreature->isQuestGiver())
+        pPlayer->PrepareQuestMenu(pCreature->GetGUID());
+
+    if (pCreature->isVendor())
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, GOSSIP_TEXT_BROWSE_POISONS, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRADE);
+
+    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_TIMOTHY_DANIELS_ITEM1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+    pPlayer->SEND_GOSSIP_MENU(pCreature->GetNpcTextId(), pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_timothy_daniels(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    switch(uiAction)
+    {
+        case GOSSIP_ACTION_INFO_DEF+1:
+            pPlayer->SEND_GOSSIP_MENU(GOSSIP_TEXTID_TIMOTHY_DANIELS1, pCreature->GetGUID());
+            break;
+        case GOSSIP_ACTION_TRADE:
+            pPlayer->SEND_VENDORLIST(pCreature->GetGUID());
+            break;
+    }
+
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -371,5 +405,11 @@ void AddSC_zangarmarsh()
     newscript->Name = "npc_mortog_steamhead";
     newscript->pGossipHello =  &GossipHello_npc_mortog_steamhead;
     newscript->pGossipSelect = &GossipSelect_npc_mortog_steamhead;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_timothy_daniels";
+    newscript->pGossipHello =  &GossipHello_npc_timothy_daniels;
+    newscript->pGossipSelect = &GossipSelect_npc_timothy_daniels;
     newscript->RegisterSelf();
 }

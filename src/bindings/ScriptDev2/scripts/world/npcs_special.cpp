@@ -150,7 +150,7 @@ struct MANGOS_DLL_DECL npc_air_force_botsAI : public ScriptedAI
 
         return pSummoned;
     }
-    
+
     Creature* GetSummonedGuard()
     {
         Creature* pCreature = (Creature*)Unit::GetUnit(*m_creature, m_uiSpawnedGUID);
@@ -567,7 +567,7 @@ struct MANGOS_DLL_DECL npc_injured_patientAI : public ScriptedAI
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             m_creature->setDeathState(JUST_DIED);
-            m_creature->SetFlag(UNIT_DYNAMIC_FLAGS, 32);
+            m_creature->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
 
             if (Doctorguid)
             {

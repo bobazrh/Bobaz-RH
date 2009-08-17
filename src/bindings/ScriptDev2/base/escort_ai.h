@@ -5,8 +5,6 @@
 #ifndef SC_ESCORTAI_H
 #define SC_ESCORTAI_H
 
-extern UNORDERED_MAP<uint32, std::vector<PointMovement> > PointMovementMap;
-
 struct Escort_Waypoint
 {
     Escort_Waypoint(uint32 _id, float _x, float _y, float _z, uint32 _w)
@@ -28,14 +26,12 @@ struct Escort_Waypoint
 struct MANGOS_DLL_DECL npc_escortAI : public ScriptedAI
 {
     public:
-        explicit npc_escortAI(Creature* pCreature) : ScriptedAI(pCreature),
-            IsBeingEscorted(false), IsOnHold(false), PlayerGUID(0), m_uiPlayerCheckTimer(1000), m_uiWPWaitTimer(2500),
-            m_bIsReturning(false), m_bIsActiveAttacker(true), m_bIsRunning(false),
-            m_pQuestForEscort(NULL), m_bCanInstantRespawn(false), m_bCanReturnToStart(false) {}
+        explicit npc_escortAI(Creature* pCreature);
         ~npc_escortAI() {}
 
         // Pure Virtual Functions
-        virtual void WaypointReached(uint32) = 0;
+        virtual void WaypointReached(uint32 uiPointId) = 0;
+        virtual void WaypointStart(uint32 uiPointId) {}
 
         virtual void Aggro(Unit*);
 
@@ -56,12 +52,20 @@ struct MANGOS_DLL_DECL npc_escortAI : public ScriptedAI
 
         void EnterEvadeMode();
 
-        void UpdateAI(const uint32);
+        void UpdateAI(const uint32);                        //the "internal" update, calls UpdateEscortAI()
+        virtual void UpdateEscortAI(const uint32);          //used when it's needed to add code in update (abilities, scripted events, etc)
 
         void MovementInform(uint32, uint32);
 
         // EscortAI functions
         //void AddWaypoint(uint32 id, float x, float y, float z, uint32 WaitTimeMs = 0);
+
+        bool IsPlayerOrGroupInRange();
+
+        Player* GetPlayerForEscort()
+        {
+            return (Player*)Unit::GetUnit(*m_creature, m_uiPlayerGUID);
+        }
 
         void FillPointMovementListForCreature();
 
@@ -71,16 +75,16 @@ struct MANGOS_DLL_DECL npc_escortAI : public ScriptedAI
 
     // EscortAI variables
     protected:
-        uint64 PlayerGUID;
         bool IsBeingEscorted;
         bool IsOnHold;
 
     private:
+        uint64 m_uiPlayerGUID;
         uint32 m_uiWPWaitTimer;
         uint32 m_uiPlayerCheckTimer;
 
         const Quest* m_pQuestForEscort;                     //generally passed in Start() when regular escort script.
- 
+
         std::list<Escort_Waypoint> WaypointList;
         std::list<Escort_Waypoint>::iterator CurrentWP;
 

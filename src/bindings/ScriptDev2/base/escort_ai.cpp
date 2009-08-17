@@ -11,6 +11,7 @@ EndScriptData */
 
 #include "precompiled.h"
 #include "escort_ai.h"
+#include "../system/system.h"
 
 const float MAX_PLAYER_DISTANCE = 66.0f;
 
@@ -19,6 +20,20 @@ enum
     POINT_LAST_POINT    = 0xFFFFFF,
     POINT_HOME          = 0xFFFFFE
 };
+
+npc_escortAI::npc_escortAI(Creature* pCreature) : ScriptedAI(pCreature),
+    IsBeingEscorted(false),
+    IsOnHold(false),
+    m_uiPlayerGUID(0),
+    m_uiPlayerCheckTimer(1000),
+    m_uiWPWaitTimer(2500),
+    m_bIsReturning(false),
+    m_bIsActiveAttacker(true),
+    m_bIsRunning(false),
+    m_pQuestForEscort(NULL),
+    m_bCanInstantRespawn(false),
+    m_bCanReturnToStart(false)
+{}
 
 bool npc_escortAI::IsVisible(Unit* pWho) const
 {
@@ -89,10 +104,10 @@ void npc_escortAI::MoveInLineOfSight(Unit* pWho)
 
 void npc_escortAI::JustDied(Unit* pKiller)
 {
-    if (!IsBeingEscorted || !PlayerGUID || !m_pQuestForEscort)
+    if (!IsBeingEscorted || !m_uiPlayerGUID || !m_pQuestForEscort)
         return;
 
-    if (Player* pPlayer = (Player*)Unit::GetUnit(*m_creature, PlayerGUID))
+    if (Player* pPlayer = GetPlayerForEscort())
     {
         if (Group* pGroup = pPlayer->GetGroup())
         {
@@ -159,6 +174,32 @@ void npc_escortAI::EnterEvadeMode()
     Reset();
 }
 
+bool npc_escortAI::IsPlayerOrGroupInRange()
+{
+    if (Player* pPlayer = GetPlayerForEscort())
+    {
+        if (Group* pGroup = pPlayer->GetGroup())
+        {
+            for(GroupReference* pRef = pGroup->GetFirstMember(); pRef != NULL; pRef = pRef->next())
+            {
+                Player* pMember = pRef->getSource();
+
+                if (pMember && m_creature->IsWithinDistInMap(pMember, MAX_PLAYER_DISTANCE))
+                {
+                    return true;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            if (m_creature->IsWithinDistInMap(pPlayer, MAX_PLAYER_DISTANCE))
+                return true;
+        }
+    }
+    return false;
+}
+
 void npc_escortAI::UpdateAI(const uint32 uiDiff)
 {
     //Waypoint Updating
@@ -198,7 +239,10 @@ void npc_escortAI::UpdateAI(const uint32 uiDiff)
             if (!IsOnHold)
             {
                 m_creature->GetMotionMaster()->MovePoint(CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z);
-                debug_log("SD2: EscortAI Next WP is: %u, %f, %f, %f", CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z);
+                debug_log("SD2: EscortAI start waypoint %u (%f, %f, %f).", CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z);
+
+                WaypointStart(CurrentWP->id);
+
                 m_uiWPWaitTimer = 0;
             }
         }
@@ -207,35 +251,11 @@ void npc_escortAI::UpdateAI(const uint32 uiDiff)
     }
 
     //Check if player or any member of his group is within range
-    if (IsBeingEscorted && PlayerGUID && !m_creature->getVictim() && !m_bIsReturning)
+    if (IsBeingEscorted && m_uiPlayerGUID && !m_creature->getVictim() && !m_bIsReturning)
     {
         if (m_uiPlayerCheckTimer < uiDiff)
         {
-            bool bIsMaxRangeExceeded = true;
-
-            if (Player* pPlayer = (Player*)Unit::GetUnit(*m_creature, PlayerGUID))
-            {
-                if (Group* pGroup = pPlayer->GetGroup())
-                {
-                    for(GroupReference* pRef = pGroup->GetFirstMember(); pRef != NULL; pRef = pRef->next())
-                    {
-                        Player* pMember = pRef->getSource();
-
-                        if (pMember && m_creature->IsWithinDistInMap(pMember, MAX_PLAYER_DISTANCE))
-                        {
-                            bIsMaxRangeExceeded = false;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    if (m_creature->IsWithinDistInMap(pPlayer, MAX_PLAYER_DISTANCE))
-                        bIsMaxRangeExceeded = false;
-                }
-            }
-
-            if (bIsMaxRangeExceeded)
+            if (!IsPlayerOrGroupInRange())
             {
                 debug_log("SD2: EscortAI failed because player/group was to far away or not found");
 
@@ -256,6 +276,11 @@ void npc_escortAI::UpdateAI(const uint32 uiDiff)
             m_uiPlayerCheckTimer -= uiDiff;
     }
 
+    UpdateEscortAI(uiDiff);
+}
+
+void npc_escortAI::UpdateEscortAI(const uint32 uiDiff)
+{
     //Check if we have a current target
     if (!m_creature->SelectHostilTarget() || !m_creature->getVictim())
         return;
@@ -319,17 +344,17 @@ void npc_escortAI::MovementInform(uint32 uiMoveType, uint32 uiPointId)
 
 void npc_escortAI::FillPointMovementListForCreature()
 {
-    UNORDERED_MAP<uint32, std::vector<PointMovement> >::iterator pPointsEntries = PointMovementMap.find(m_creature->GetEntry());
+    std::vector<ScriptPointMove> const &pPointsEntries = pSystemMgr.GetPointMoveList(m_creature->GetEntry());
 
-    if (pPointsEntries != PointMovementMap.end())
+    if (pPointsEntries.empty())
+        return;
+
+    std::vector<ScriptPointMove>::const_iterator itr;
+
+    for (itr = pPointsEntries.begin(); itr != pPointsEntries.end(); ++itr)
     {
-        std::vector<PointMovement>::iterator itr;
-
-        for (itr = pPointsEntries->second.begin(); itr != pPointsEntries->second.end(); ++itr)
-        {
-            Escort_Waypoint pPoint(itr->m_uiPointId,itr->m_fX,itr->m_fY,itr->m_fZ,itr->m_uiWaitTime);
-            WaypointList.push_back(pPoint);
-        }
+        Escort_Waypoint pPoint(itr->uiPointId, itr->fX, itr->fY, itr->fZ, itr->uiWaitTime);
+        WaypointList.push_back(pPoint);
     }
 }
 
@@ -382,7 +407,7 @@ void npc_escortAI::Start(bool bIsActiveAttacker, bool bRun, uint64 uiPlayerGUID,
     m_bIsActiveAttacker = bIsActiveAttacker;
     m_bIsRunning = bRun;
 
-    PlayerGUID = uiPlayerGUID;
+    m_uiPlayerGUID = uiPlayerGUID;
     m_pQuestForEscort = pQuest;
 
     m_bCanInstantRespawn = bInstantRespawn;
@@ -401,7 +426,7 @@ void npc_escortAI::Start(bool bIsActiveAttacker, bool bRun, uint64 uiPlayerGUID,
     //disable npcflags
     m_creature->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
 
-    debug_log("SD2: EscortAI started with %d waypoints. ActiveAttacker = %d, Run = %d, PlayerGUID = %d", WaypointList.size(), m_bIsActiveAttacker, m_bIsRunning, PlayerGUID);
+    debug_log("SD2: EscortAI started with %d waypoints. ActiveAttacker = %d, Run = %d, PlayerGUID = %d", WaypointList.size(), m_bIsActiveAttacker, m_bIsRunning, m_uiPlayerGUID);
 
     CurrentWP = WaypointList.begin();
 

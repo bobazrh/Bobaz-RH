@@ -153,34 +153,35 @@ struct MANGOS_DLL_DECL npc_custodian_of_timeAI : public npc_escortAI
 
     void WaypointReached(uint32 i)
     {
-        Unit *pTemp = Unit::GetUnit(*m_creature,PlayerGUID);
-        if (!pTemp)
+        Player* pPlayer = GetPlayerForEscort();
+
+        if (!pPlayer)
             return;
 
         switch(i)
         {
-            case 0: DoScriptText(WHISPER_CUSTODIAN_1, m_creature, pTemp); break;
-            case 1: DoScriptText(WHISPER_CUSTODIAN_2, m_creature, pTemp); break;
-            case 2: DoScriptText(WHISPER_CUSTODIAN_3, m_creature, pTemp); break;
-            case 3: DoScriptText(WHISPER_CUSTODIAN_4, m_creature, pTemp); break;
-            case 5: DoScriptText(WHISPER_CUSTODIAN_5, m_creature, pTemp); break;
-            case 6: DoScriptText(WHISPER_CUSTODIAN_6, m_creature, pTemp); break;
-            case 7: DoScriptText(WHISPER_CUSTODIAN_7, m_creature, pTemp); break;
-            case 8: DoScriptText(WHISPER_CUSTODIAN_8, m_creature, pTemp); break;
-            case 9: DoScriptText(WHISPER_CUSTODIAN_9, m_creature, pTemp); break;
-            case 10: DoScriptText(WHISPER_CUSTODIAN_4, m_creature, pTemp); break;
-            case 13: DoScriptText(WHISPER_CUSTODIAN_10, m_creature, pTemp); break;
-            case 14: DoScriptText(WHISPER_CUSTODIAN_4, m_creature, pTemp); break;
-            case 16: DoScriptText(WHISPER_CUSTODIAN_11, m_creature, pTemp); break;
-            case 17: DoScriptText(WHISPER_CUSTODIAN_12, m_creature, pTemp); break;
-            case 18: DoScriptText(WHISPER_CUSTODIAN_4, m_creature, pTemp); break;
-            case 22: DoScriptText(WHISPER_CUSTODIAN_13, m_creature, pTemp); break;
-            case 23: DoScriptText(WHISPER_CUSTODIAN_4, m_creature, pTemp); break;
+            case 0: DoScriptText(WHISPER_CUSTODIAN_1, m_creature, pPlayer); break;
+            case 1: DoScriptText(WHISPER_CUSTODIAN_2, m_creature, pPlayer); break;
+            case 2: DoScriptText(WHISPER_CUSTODIAN_3, m_creature, pPlayer); break;
+            case 3: DoScriptText(WHISPER_CUSTODIAN_4, m_creature, pPlayer); break;
+            case 5: DoScriptText(WHISPER_CUSTODIAN_5, m_creature, pPlayer); break;
+            case 6: DoScriptText(WHISPER_CUSTODIAN_6, m_creature, pPlayer); break;
+            case 7: DoScriptText(WHISPER_CUSTODIAN_7, m_creature, pPlayer); break;
+            case 8: DoScriptText(WHISPER_CUSTODIAN_8, m_creature, pPlayer); break;
+            case 9: DoScriptText(WHISPER_CUSTODIAN_9, m_creature, pPlayer); break;
+            case 10: DoScriptText(WHISPER_CUSTODIAN_4, m_creature, pPlayer); break;
+            case 13: DoScriptText(WHISPER_CUSTODIAN_10, m_creature, pPlayer); break;
+            case 14: DoScriptText(WHISPER_CUSTODIAN_4, m_creature, pPlayer); break;
+            case 16: DoScriptText(WHISPER_CUSTODIAN_11, m_creature, pPlayer); break;
+            case 17: DoScriptText(WHISPER_CUSTODIAN_12, m_creature, pPlayer); break;
+            case 18: DoScriptText(WHISPER_CUSTODIAN_4, m_creature, pPlayer); break;
+            case 22: DoScriptText(WHISPER_CUSTODIAN_13, m_creature, pPlayer); break;
+            case 23: DoScriptText(WHISPER_CUSTODIAN_4, m_creature, pPlayer); break;
             case 24:
-                DoScriptText(WHISPER_CUSTODIAN_14, m_creature, pTemp);
-                DoCast(pTemp,34883);
+                DoScriptText(WHISPER_CUSTODIAN_14, m_creature, pPlayer);
+                DoCast(pPlayer, 34883);
                 //below here is temporary workaround, to be removed when spell works properly
-                ((Player*)pTemp)->AreaExploredOrEventHappens(10277);
+                pPlayer->AreaExploredOrEventHappens(10277);
                 break;
         }
     }
@@ -203,11 +204,6 @@ struct MANGOS_DLL_DECL npc_custodian_of_timeAI : public npc_escortAI
     }
 
     void Reset() { }
-
-    void UpdateAI(const uint32 diff)
-    {
-        npc_escortAI::UpdateAI(diff);
-    }
 };
 
 CreatureAI* GetAI_npc_custodian_of_time(Creature* pCreature)
@@ -246,12 +242,12 @@ bool GossipSelect_npc_marin_noggenfogger(Player* pPlayer, Creature* pCreature, u
 
 enum
 {
-    SAY_START               = -1000287,
-    SAY_AGGRO1              = -1000288,
-    SAY_AGGRO2              = -1000289,
-    SAY_AMBUSH              = -1000290,
-    SAY_AMBUSH_REPLY        = -1000291,
-    SAY_END                 = -1000292,
+    SAY_OOX_START           = -1000287,
+    SAY_OOX_AGGRO1          = -1000288,
+    SAY_OOX_AGGRO2          = -1000289,
+    SAY_OOX_AMBUSH          = -1000290,
+    SAY_OOX17_AMBUSH_REPLY  = -1000291,
+    SAY_OOX_END             = -1000292,
 
     QUEST_RESCUE_OOX_17TN   = 648,
     FACTION_ESCORTEE_A      = 774,
@@ -268,7 +264,7 @@ struct MANGOS_DLL_DECL npc_oox17tnAI : public npc_escortAI
 
     void WaypointReached(uint32 i)
     {
-        Unit* pPlayer = Unit::GetUnit((*m_creature), PlayerGUID);
+        Player* pPlayer = GetPlayerForEscort();
 
         if (!pPlayer)
             return;
@@ -277,27 +273,26 @@ struct MANGOS_DLL_DECL npc_oox17tnAI : public npc_escortAI
         {
             //1. Ambush: 3 scorpions
             case 22:
-                DoScriptText(SAY_AMBUSH,m_creature);
+                DoScriptText(SAY_OOX_AMBUSH, m_creature);
                 m_creature->SummonCreature(NPC_SCORPION, -8340.70, -4448.17, 9.17, 3.10, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
                 m_creature->SummonCreature(NPC_SCORPION, -8343.18, -4444.35, 9.44, 2.35, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
                 m_creature->SummonCreature(NPC_SCORPION, -8348.70, -4457.80, 9.58, 2.02, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
                 break;
             //2. Ambush: 2 Rogues & 1 Shadow Mage
             case 28:
-                DoScriptText(SAY_AMBUSH,m_creature);
+                DoScriptText(SAY_OOX_AMBUSH, m_creature);
 
                 m_creature->SummonCreature(NPC_SCOFFLAW, -7488.02, -4786.56 ,10.67, 3.74, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
                 m_creature->SummonCreature(NPC_SHADOW_MAGE, -7486.41, -4791.55 ,10.54, 3.26, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
 
                 if (Creature* pCreature = m_creature->SummonCreature(NPC_SCOFFLAW, -7488.47, -4800.77, 9.77, 2.50,TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
-                    DoScriptText(SAY_AMBUSH_REPLY,pCreature);
+                    DoScriptText(SAY_OOX17_AMBUSH_REPLY,pCreature);
 
                 break;
             case 34:
-                DoScriptText(SAY_END,m_creature);
+                DoScriptText(SAY_OOX_END, m_creature);
                 // Award quest credit
-                if (pPlayer && pPlayer->GetTypeId() == TYPEID_PLAYER)
-                    ((Player*)pPlayer)->GroupEventHappens(QUEST_RESCUE_OOX_17TN,m_creature);
+                pPlayer->GroupEventHappens(QUEST_RESCUE_OOX_17TN, m_creature);
                 break;
         }
     }
@@ -309,8 +304,8 @@ struct MANGOS_DLL_DECL npc_oox17tnAI : public npc_escortAI
         //For an small probability he say something when it aggros
         switch(rand()%10)
         {
-           case 0: DoScriptText(SAY_AGGRO1,m_creature); break;
-           case 1: DoScriptText(SAY_AGGRO2,m_creature); break;
+           case 0: DoScriptText(SAY_OOX_AGGRO1, m_creature); break;
+           case 1: DoScriptText(SAY_OOX_AGGRO2, m_creature); break;
         }
     }
 
@@ -329,7 +324,7 @@ bool QuestAccept_npc_oox17tn(Player* pPlayer, Creature* pCreature, const Quest* 
 {
     if (pQuest->GetQuestId() == QUEST_RESCUE_OOX_17TN)
     {
-        DoScriptText(SAY_START, pCreature);
+        DoScriptText(SAY_OOX_START, pCreature);
 
         pCreature->SetStandState(UNIT_STAND_STATE_STAND);
 
@@ -606,8 +601,11 @@ struct MANGOS_DLL_DECL npc_toogaAI : public ScriptedAI
 
     void JustDied(Unit* pKiller)
     {
-        if (Unit* pUnit = Unit::GetUnit(*m_creature,m_uiPlayerGUID))
-            ((Player*)pUnit)->FailTimedQuest(QUEST_TOOGA);
+        if (Player* pPlayer = (Player*)Unit::GetUnit(*m_creature, m_uiPlayerGUID))
+        {
+            if (pPlayer->GetQuestStatus(QUEST_TOOGA) == QUEST_STATUS_INCOMPLETE)
+                pPlayer->FailQuest(QUEST_TOOGA);
+        }
 
         m_uiPlayerGUID = 0;
         m_creature->GetMotionMaster()->MovementExpired();
