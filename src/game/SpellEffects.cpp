@@ -4556,6 +4556,17 @@ void Spell::EffectWeaponDmg(uint32 i)
         }
         case SPELLFAMILY_DEATHKNIGHT:
         {
+		// glyph of Death Strike
+		if(m_spellInfo->SpellFamilyFlags & 0x010)
+		{
+			if(Aura * aur=m_caster->GetDummyAura(59336))
+			{
+				uint32 runicPowerMod = aur->GetModifier()->m_amount*m_caster->GetPower(POWER_RUNIC_POWER)/20;
+				if(runicPowerMod > 25)runicPowerMod=25;
+				totalDamagePercentMod *= (100.0f + float(runicPowerMod))/100.0f;
+			}
+			break;
+		}
             // Blood Strike, Heart Strike, Obliterate
             // Blood-Caked Strike, Scourge Strike
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0002000001400000) ||
@@ -4585,18 +4596,9 @@ void Spell::EffectWeaponDmg(uint32 i)
             }
             break;
         }
-		case SPELLFAMILY_DEATHKNIGHT:
+/*		case SPELLFAMILY_DEATHKNIGHT:
 		{
-			if(m_spellInfo->SpellFamilyFlags & 0x010)
-			{
-				if(Aura * aur=m_caster->GetDummyAura(59336))
-				{
-					uint32 runicPowerMod = aur->GetModifier()->m_amount*m_caster->GetPower(POWER_RUNIC_POWER)/20;
-					if(runicPowerMod > 25)runicPowerMod=25;
-					totalDamagePercentMod *= (100.0f + float(runicPowerMod))/100.0f;
-				}
-				break;
-			}
+
 			if(m_spellInfo->SpellFamilyFlags & 0x0802000001000000LL)
             		{
                 		uint32 diseases = 0;
@@ -4623,7 +4625,7 @@ void Spell::EffectWeaponDmg(uint32 i)
                 		}
                 	}
 			break;
-		}
+		}*/
     }
 
     int32 fixed_bonus = 0;
