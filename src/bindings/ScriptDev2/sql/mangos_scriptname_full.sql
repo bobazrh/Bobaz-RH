@@ -373,6 +373,7 @@ UPDATE creature_template SET ScriptName='mob_shield_generator_channel' WHERE ent
 
 
 /* DARKSHORE */
+UPDATE creature_template SET ScriptName='npc_kerlonian' WHERE entry=11218;
 UPDATE creature_template SET ScriptName='npc_prospector_remtravel' WHERE entry=2917;
 UPDATE creature_template SET ScriptName='npc_threshwackonator' WHERE entry=6669;
 
@@ -985,7 +986,7 @@ UPDATE creature_template SET ScriptName='boss_loken' WHERE entry=28923;
 
 
 /* UN'GORO CRATER */
-
+UPDATE creature_template SET ScriptName='npc_ringo' WHERE entry=9999;
 
 /* UNDERCITY */
 UPDATE creature_template SET ScriptName='npc_lady_sylvanas_windrunner' WHERE entry=10181;

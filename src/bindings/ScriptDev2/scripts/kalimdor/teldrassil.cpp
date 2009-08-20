@@ -51,7 +51,7 @@ struct MANGOS_DLL_DECL npc_mistAI : public FollowerAI
     {
         FollowerAI::MoveInLineOfSight(pWho);
 
-        if (!m_creature->getVictim() && !IsFollowComplete() && pWho->GetEntry() == NPC_ARYNIA)
+        if (!m_creature->getVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE) && pWho->GetEntry() == NPC_ARYNIA)
         {
             if (m_creature->IsWithinDistInMap(pWho, 10.0f))
             {
@@ -68,19 +68,10 @@ struct MANGOS_DLL_DECL npc_mistAI : public FollowerAI
         if (Player* pPlayer = GetLeaderForFollower())
         {
             if (pPlayer->GetQuestStatus(QUEST_MIST) == QUEST_STATUS_INCOMPLETE)
-            {
-                uint16 uiQuestLogSlot = pPlayer->FindQuestSlot(QUEST_MIST);
-
-                if (uiQuestLogSlot < MAX_QUEST_LOG_SIZE)
-                {
-                    //This will be wrong, need to check all group members (if any) for state before event
-                    if (pPlayer->GetQuestSlotState(uiQuestLogSlot) != QUEST_STATE_FAIL)
-                        pPlayer->AreaExploredOrEventHappens(QUEST_MIST);
-                }
-            }
+                pPlayer->GroupEventHappens(QUEST_MIST, m_creature);
         }
 
-        //The follow is over (and for later development to indicate a post event can now run)
+        //The follow is over (and for later development, run off to the woods before really end)
         SetFollowComplete();
     }
 
