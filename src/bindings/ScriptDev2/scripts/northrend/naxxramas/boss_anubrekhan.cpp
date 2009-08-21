@@ -124,7 +124,7 @@ struct MANGOS_DLL_DECL boss_anubrekhanAI : public ScriptedAI
         {
             //Cast Impale on a random target
             //Do NOT cast it when we are afflicted by locust swarm
-            if (!m_creature->HasAura(SPELL_LOCUSTSWARM) || !m_creature->HasAura(SPELL_LOCUSTSWARM_H))
+            if (!m_creature->HasAura(SPELL_LOCUSTSWARM) && !m_creature->HasAura(SPELL_LOCUSTSWARM_H))
             {
                 if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
                     DoCast(target, m_bIsHeroicMode ? SPELL_IMPALE_H : SPELL_IMPALE);
@@ -141,11 +141,16 @@ struct MANGOS_DLL_DECL boss_anubrekhanAI : public ScriptedAI
         }else LocustSwarm_Timer -= diff;
 
         //Summon_Timer
-        /*if (Summon_Timer < diff)
+        if (Summon_Timer < diff)
         {
-            DoCast(m_creature, SPELL_SUMMONGUARD);
+            //DoCast(m_creature, SPELL_SUMMONGUARD);
+	    float x,y,z=0.0f;
+
+            m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),3.5f);
+            m_creature->SummonCreature(NPC_CRYPT_GUARD, x,y,z,2.0f, TEMPSUMMON_CORPSE_DESPAWN, 30000);
+
             Summon_Timer = 45000;
-        }else Summon_Timer -= diff;*/
+        }else Summon_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }
