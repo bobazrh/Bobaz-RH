@@ -5,6 +5,8 @@
 #ifndef SC_ESCORTAI_H
 #define SC_ESCORTAI_H
 
+#include "../system/system.h"
+
 struct Escort_Waypoint
 {
     Escort_Waypoint(uint32 _id, float _x, float _y, float _z, uint32 _w)
@@ -79,6 +81,8 @@ struct MANGOS_DLL_DECL npc_escortAI : public ScriptedAI
         bool IsOnHold;
 
     private:
+        bool AssistPlayerInCombat(Unit* pWho);
+
         uint64 m_uiPlayerGUID;
         uint32 m_uiWPWaitTimer;
         uint32 m_uiPlayerCheckTimer;
