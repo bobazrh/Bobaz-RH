@@ -282,8 +282,8 @@ enum RuneType
 
 struct RuneInfo
 {
-    uint8 BaseRune;
-    uint8 CurrentRune;
+    uint8  BaseRune;
+    uint8  CurrentRune;
     uint16 Cooldown;                                        // msec
 };
 
@@ -1402,7 +1402,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void RewardRage( uint32 damage, uint32 weaponSpeedHitFactor, bool attacker );
         void SendPetSkillWipeConfirm();
         void CalcRage( uint32 damage,bool attacker );
-        void RegenerateAll();
+        void RegenerateAll(uint32 diff = REGEN_TIME_PARTIAL);
         void Regenerate(Powers power, uint32 diff);
         void RegenerateHealth(uint32 diff);
         void setRegenTimer(uint32 time) {m_regenTimer = time;}
