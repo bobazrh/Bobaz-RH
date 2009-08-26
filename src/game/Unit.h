@@ -856,6 +856,11 @@ typedef std::set<uint64> GuardianPetList;
 #define ATTACK_DISPLAY_DELAY 200
 #define MAX_PLAYER_STEALTH_DETECT_RANGE 45.0f               // max distance for detection targets by player
 
+// Regeneration defines
+#define REGEN_TIME_FULL     2000                            // For this time difference is computed regen value
+#define REGEN_TIME_PARTIAL  500                             // Time for partial "realtime" regeneration
+#define REGEN_TIME_PRECISE  200                             // Used in Spell::CheckPower for precise regeneration in spell cast time
+
 struct SpellProcEventEntry;                                 // used only privately
 
 class MANGOS_DLL_SPEC Unit : public WorldObject
@@ -1433,6 +1438,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         }
         bool IsUnderLastManaUseEffect() const;
 
+        uint32 GetRegenTimer() const { return m_regenTimer; }
+
         void SetContestedPvP(Player *attackedPlayer = NULL);
 
         void MeleeDamageBonus(Unit *pVictim, uint32 *damage, WeaponAttackType attType, SpellEntry const *spellProto = NULL);
@@ -1553,7 +1560,6 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         uint32 m_reactiveTimer[MAX_REACTIVE];
         uint32 m_regenTimer;
-        uint32 m_lastRegenerate;                            // msecs
 
     private:
         bool IsTriggeredAtSpellProcEvent(Unit *pVictim, Aura* aura, SpellEntry const* procSpell, uint32 procFlag, uint32 procExtra, WeaponAttackType attType, bool isVictim, bool active, SpellProcEventEntry const*& spellProcEvent );
