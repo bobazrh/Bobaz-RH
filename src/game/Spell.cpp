@@ -5002,6 +5002,9 @@ SpellCastResult Spell::CheckPower()
     if(m_CastItem)
         return SPELL_CAST_OK;
 
+    if (m_powerCost > 0 && m_caster->GetTypeId() == TYPEID_PLAYER)
+        ((Player*)m_caster)->RegenerateAll();
+
     // health as power used - need check health amount
     if(m_spellInfo->powerType == POWER_HEALTH)
     {
