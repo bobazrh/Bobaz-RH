@@ -119,7 +119,8 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
         {
             case TYPE_BJARNGRIM:
                 if (uiData == DONE)
-                    DoUseDoorOrButton(m_uiBjarngrimDoorGUID);
+                    if(GameObject * pGo = instance->GetGameObject(m_uiBjarngrimDoorGUID))  //DoUseDoorOrButton(m_uiBjarngrimDoorGUID);
+			pGo->SetGoState(GO_STATE_ACTIVE);
                 m_auiEncounter[0] = uiData;
                 break;
             case TYPE_VOLKHAN:

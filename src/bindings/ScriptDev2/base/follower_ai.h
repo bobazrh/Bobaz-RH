@@ -5,6 +5,8 @@
 #ifndef SC_FOLLOWERAI_H
 #define SC_FOLLOWERAI_H
 
+#include "../system/system.h"
+
 enum eFollowState
 {
     STATE_FOLLOW_NONE       = 0x000,
@@ -53,6 +55,8 @@ class MANGOS_DLL_DECL FollowerAI : public ScriptedAI
     private:
         void AddFollowState(uint32 uiFollowState) { m_uiFollowState |= uiFollowState; }
         void RemoveFollowState(uint32 uiFollowState) { m_uiFollowState &= ~uiFollowState; }
+
+        bool AssistPlayerInCombat(Unit* pWho);
 
         uint64 m_uiLeaderGUID;
         uint32 m_uiUpdateFollowTimer;

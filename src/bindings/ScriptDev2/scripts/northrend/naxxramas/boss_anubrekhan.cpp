@@ -22,6 +22,7 @@ SDCategory: Naxxramas
 EndScriptData */
 
 #include "precompiled.h"
+#include "instance_naxxramas.h"
 
 enum
 {
@@ -72,6 +73,9 @@ struct MANGOS_DLL_DECL boss_anubrekhanAI : public ScriptedAI
         Impale_Timer = 15000;                               //15 seconds
         LocustSwarm_Timer = 80000 + (rand()%40000);         //Random time between 80 seconds and 2 minutes for initial cast
         Summon_Timer = LocustSwarm_Timer + 45000;           //45 seconds after initial locust swarm
+
+	if(m_pInstance)
+	    m_pInstance->SetData(TYPE_ARAC_ANUBREKHAN, NOT_STARTED);
     }
 
     void KilledUnit(Unit* pVictim)
@@ -94,6 +98,15 @@ struct MANGOS_DLL_DECL boss_anubrekhanAI : public ScriptedAI
             case 1: DoScriptText(SAY_AGGRO2, m_creature); break;
             case 2: DoScriptText(SAY_AGGRO3, m_creature); break;
         }
+
+ 	if(m_pInstance)
+	    m_pInstance->SetData(TYPE_ARAC_ANUBREKHAN, IN_PROGRESS);
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+	 if(m_pInstance)
+            m_pInstance->SetData(TYPE_ARAC_ANUBREKHAN, DONE);
     }
 
     void MoveInLineOfSight(Unit *who)

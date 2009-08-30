@@ -3,7 +3,7 @@
 --
 
 DELETE FROM sd2_db_version;
-INSERT INTO sd2_db_version (version) VALUES ('ScriptDev2 (for MaNGOS 8273+) ');
+INSERT INTO sd2_db_version (version) VALUES ('ScriptDev2 (for MaNGOS 8422+) ');
 
 --
 -- Below contains data for table `script_texts` mainly used in C++ parts.
@@ -449,7 +449,55 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 (-1000442,'Be on the alert! The Blackwood furbolgs are numerous in the area...',0,0,0,0,'kerlonian SAY_KER_ALERT_1'),
 (-1000443,'It\'s quiet... Too quiet...',0,0,0,0,'kerlonian SAY_KER_ALERT_2'),
 (-1000444,'Oh, I can see Liladris from here... Tell her I\'m here, won\'t you?',0,0,0,0,'kerlonian SAY_KER_END'),
-(-1000445,'%s wakes up!',0,2,0,0,'kerlonian EMOTE_KER_AWAKEN');
+(-1000445,'%s wakes up!',0,2,0,0,'kerlonian EMOTE_KER_AWAKEN'),
+
+(-1000446,'A-Me good. Good, A-Me. Follow... follow A-Me. Home. A-Me go home.',0,0,0,0,'ame01 SAY_AME_START'),
+(-1000447,'Good... good, A-Me. A-Me good. Home. Find home.',0,0,0,0,'ame01 SAY_AME_PROGRESS'),
+(-1000448,'A-Me home! A-Me good! Good A-Me. Home. Home. Home.',0,0,0,0,'ame01 SAY_AME_END'),
+(-1000449,'$c, no hurt A-Me. A-Me good.',0,0,0,0,'ame01 SAY_AME_AGGRO1'),
+(-1000450,'Danger. Danger! $c try hurt A-Me.',0,0,0,0,'ame01 SAY_AME_AGGRO2'),
+(-1000451,'Bad, $c. $c, bad!',0,0,0,0,'ame01 SAY_AME_AGGRO3'),
+
+(-1000452,'I noticed some fire on that island over there. A human, too. Let\'s go check it out, $n.',0,0,1,0,'ogron SAY_OGR_START'),
+(-1000453,'That\'s Reethe alright. Let\'s go see what he has to say, yeah?',0,0,1,1,'ogron SAY_OGR_SPOT'),
+(-1000454,'W-what do you want? Just leave me alone...',0,0,0,6,'ogron SAY_OGR_RET_WHAT'),
+(-1000455,'I swear. I didn\'t steal anything from you! Here, take some of my supplies, just go away!',0,0,0,27,'ogron SAY_OGR_RET_SWEAR'),
+(-1000456,'Just tell us what you know about the Shady Rest Inn, and I won\'t bash your skull in.',0,0,1,0,'ogron SAY_OGR_REPLY_RET'),
+(-1000457,'I... Well, I may of taken a little thing or two from the inn... but what would an ogre care about that?',0,0,0,6,'ogron SAY_OGR_RET_TAKEN'),
+(-1000458,'Look here, if you don\'t tell me about the fire--',0,0,1,0,'ogron SAY_OGR_TELL_FIRE'),
+(-1000459,'Not one step closer, ogre!',0,0,0,27,'ogron SAY_OGR_RET_NOCLOSER'),
+(-1000460,'And I don\'t know anything about this fire of yours...',0,0,0,0,'ogron SAY_OGR_RET_NOFIRE'),
+(-1000461,'What was that? Did you hear something?',0,0,0,0,'ogron SAY_OGR_RET_HEAR'),
+(-1000462,'Paval Reethe! Found you at last. And consorting with ogres now? No fear, even deserters and traitors are afforded some mercy.',0,0,0,0,'ogron SAY_OGR_CAL_FOUND'),
+(-1000463,'Private, show Lieutenant Reethe some mercy.',0,0,0,29,'ogron SAY_OGR_CAL_MERCY'),
+(-1000464,'Gladly, sir.',0,0,0,0,'ogron SAY_OGR_HALL_GLAD'),
+(-1000465,'%s staggers backwards as the arrow lodges itself deeply in his chest.',0,2,0,0,'ogron EMOTE_OGR_RET_ARROW'),
+(-1000466,'Ugh... Hallan, didn\'t think you had it in you...',0,0,0,34,'ogron SAY_OGR_RET_ARROW'),
+(-1000467,'Now, let\'s clean up the rest of the trash, men!',0,0,0,0,'ogron SAY_OGR_CAL_CLEANUP'),
+(-1000468,'Damn it! You\'d better not die on me, human!',0,0,1,0,'ogron SAY_OGR_NODIE'),
+(-1000469,'Still with us, Reethe?',0,0,1,0,'ogron SAY_OGR_SURVIVE'),
+(-1000470,'Must be your lucky day. Alright, I\'ll talk. Just leave me alone. Look, you\'re not going to believe me, but it wa... oh, Light, looks like the girl could shoot...',0,0,0,0,'ogron SAY_OGR_RET_LUCKY'),
+(-1000471,'By the way, thanks for watching my back.',0,0,1,0,'ogron SAY_OGR_THANKS'),
+
+(-1000472,'1...',0,3,0,0,'mana bomb SAY_COUNT_1'),
+(-1000473,'2...',0,3,0,0,'mana bomb SAY_COUNT_2'),
+(-1000474,'3...',0,3,0,0,'mana bomb SAY_COUNT_3'),
+(-1000475,'4...',0,3,0,0,'mana bomb SAY_COUNT_4'),
+(-1000476,'5...',0,3,0,0,'mana bomb SAY_COUNT_5'),
+
+(-1000477,'Let us leave this place. I\'ve had enough of these madmen!',0,0,0,0,'akuno SAY_AKU_START'),
+(-1000478,'You\'ll go nowhere, fool!',0,0,0,0,'akuno SAY_AKU_AMBUSH_A'),
+(-1000479,'Beware! More cultists come!',0,0,0,0,'akuno SAY_AKU_AMBUSH_B'),
+(-1000480,'You will not escape us so easily!',0,0,0,0,'akuno SAY_AKU_AMBUSH_B_REPLY'),
+(-1000481,'I can find my way from here. My friend Mekeda will reward you for your kind actions.',0,0,0,0,'akuno SAY_AKU_COMPLETE'),
+
+(-1000482,'Look out!',0,0,0,0,'maghar captive SAY_MAG_START'),
+(-1000483,'Don\'t let them escape! Kill the strong one first!',0,0,0,0,'maghar captive SAY_MAG_NO_ESCAPE'),
+(-1000484,'More of them coming! Watch out!',0,0,0,0,'maghar captive SAY_MAG_MORE'),
+(-1000485,'Where do you think you\'re going? Kill them all!',0,0,0,0,'maghar captive SAY_MAG_MORE_REPLY'),
+(-1000486,'Ride the lightning, filth!',0,0,0,0,'maghar captive SAY_MAG_LIGHTNING'),
+(-1000487,'FROST SHOCK!!!',0,0,0,0,'maghar captive SAY_MAG_SHOCK'),
+(-1000488,'It is best that we split up now, in case they send more after us. Hopefully one of us will make it back to Garrosh. Farewell stranger.',0,0,0,0,'maghar captive SAY_MAG_COMPLETE');
 
 -- -1 033 000 SHADOWFANG KEEP
 INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
@@ -2509,6 +2557,32 @@ INSERT INTO script_waypoint VALUES
 (4962, 5, -3738.633789, -830.997498, 11.057384, 0, ''),
 (4962, 6, -3690.224121, -862.261597,  9.960449, 0, '');
 
+DELETE FROM script_waypoint WHERE entry=4983;
+INSERT INTO script_waypoint VALUES
+(4983, 0, -3322.649414, -3124.631836, 33.842, 0, ''),
+(4983, 1, -3326.336670, -3126.833496, 34.426, 0, ''),
+(4983, 2, -3336.984131, -3129.611816, 30.692, 0, ''),
+(4983, 3, -3342.598389, -3132.146729, 30.422, 0, ''),
+(4983, 4, -3355.827881, -3140.947998, 29.534, 0, ''),
+(4983, 5, -3365.828125, -3144.284180, 35.176, 0, ''),
+(4983, 6, -3368.904541, -3147.265381, 36.091, 0, ''),
+(4983, 7, -3369.355957, -3169.828857, 36.325, 0, ''),
+(4983, 8, -3371.443359, -3183.905029, 33.454, 0, ''),
+(4983, 9, -3373.824951, -3190.861084, 34.717, 5000, 'SAY_OGR_SPOT'),
+(4983, 10, -3368.529785, -3198.210205, 34.926, 0, 'SAY_OGR_RET_WHAT'),
+(4983, 11, -3366.265625, -3210.867676, 33.733, 5000, 'pause'),
+(4983, 12, -3368.529785, -3198.210205, 34.926, 0, ''),
+(4983, 13, -3373.824951, -3190.861084, 34.717, 0, ''),
+(4983, 14, -3371.443359, -3183.905029, 33.454, 0, ''),
+(4983, 15, -3369.355957, -3169.828857, 36.325, 0, ''),
+(4983, 16, -3368.904541, -3147.265381, 36.091, 0, ''),
+(4983, 17, -3365.828125, -3144.284180, 35.176, 0, ''),
+(4983, 18, -3355.827881, -3140.947998, 29.534, 0, ''),
+(4983, 19, -3342.598389, -3132.146729, 30.422, 0, ''),
+(4983, 20, -3336.984131, -3129.611816, 30.692, 0, ''),
+(4983, 21, -3326.336670, -3126.833496, 34.426, 0, ''),
+(4983, 22, -3322.649414, -3124.631836, 33.842, 0, '');
+
 DELETE FROM script_waypoint WHERE entry=6182;
 INSERT INTO script_waypoint VALUES
 (6182, 0, -11480.684570, 1545.091187, 49.898571, 0, ''),
@@ -2730,6 +2804,49 @@ INSERT INTO script_waypoint VALUES
 (9503, 5, 851.878906, -196.928131, -43.703655, 15000,'b5'),
 (9503, 6, 877.035217, -187.048080, -43.703655, 0,''),
 (9503, 7, 891.198000, -197.924000, -43.620400, 0,'home');
+
+DELETE FROM script_waypoint WHERE entry=9623;
+INSERT INTO script_waypoint VALUES
+(9623, 0, -6383.070801, -1964.368896, -258.709, 0, 'SAY_AME_START'),
+(9623, 1, -6393.649414, -1949.572266, -261.449, 0, ''),
+(9623, 2, -6397.846680, -1931.099609, -263.366, 0, ''),
+(9623, 3, -6397.501953, -1921.470703, -263.876, 0, ''),
+(9623, 4, -6389.630371, -1909.995361, -259.601, 0, ''),
+(9623, 5, -6380.065430, -1905.452881, -255.858, 0, ''),
+(9623, 6, -6373.437988, -1900.275024, -254.774, 0, ''),
+(9623, 7, -6372.868652, -1893.500854, -255.678, 0, ''),
+(9623, 8, -6379.730469, -1877.627808, -259.654, 0, ''),
+(9623, 9, -6380.264160, -1871.139648, -260.617, 0, ''),
+(9623, 10, -6373.830566, -1855.620361, -259.566, 0, ''),
+(9623, 11, -6368.824707, -1847.770508, -259.246, 0, ''),
+(9623, 12, -6370.902832, -1835.038940, -260.212, 0, ''),
+(9623, 13, -6376.591309, -1821.592285, -260.856, 0, ''),
+(9623, 14, -6381.931152, -1810.434326, -266.180, 0, ''),
+(9623, 15, -6396.713867, -1807.123535, -269.329, 0, ''),
+(9623, 16, -6400.266602, -1795.053589, -269.744, 0, ''),
+(9623, 17, -6402.675781, -1747.514648, -272.961, 0, ''),
+(9623, 18, -6396.997559, -1710.052979, -273.719, 0, ''),
+(9623, 19, -6388.105957, -1676.328125, -272.133, 5000, 'SAY_AME_PROGRESS'),
+(9623, 20, -6370.711914, -1638.638306, -272.031, 0, ''),
+(9623, 21, -6366.709473, -1592.645996, -272.201, 0, ''),
+(9623, 22, -6333.869629, -1534.598755, -270.493, 0, ''),
+(9623, 23, -6305.362305, -1477.913330, -269.518, 0, ''),
+(9623, 24, -6311.588867, -1419.017456, -267.622, 0, ''),
+(9623, 25, -6330.014648, -1400.064331, -266.425, 0, ''),
+(9623, 26, -6356.021973, -1392.607422, -267.123, 0, ''),
+(9623, 27, -6370.859375, -1386.179321, -270.218, 0, ''),
+(9623, 28, -6381.529785, -1369.780273, -272.110, 0, ''),
+(9623, 29, -6405.381348, -1321.522827, -271.699, 0, ''),
+(9623, 30, -6406.583496, -1307.574585, -271.802, 0, ''),
+(9623, 31, -6386.325684, -1286.851074, -272.074, 0, ''),
+(9623, 32, -6364.254883, -1264.706299, -269.075, 0, ''),
+(9623, 33, -6343.636230, -1239.844360, -268.364, 0, ''),
+(9623, 34, -6335.568848, -1202.449585, -271.515, 0, ''),
+(9623, 35, -6325.625000, -1184.455322, -270.461, 0, ''),
+(9623, 36, -6317.797363, -1177.668091, -269.792, 0, ''),
+(9623, 37, -6303.024414, -1180.252686, -269.332, 0, 'SAY_AME_END'),
+(9623, 38, -6301.975098, -1184.787842, -269.371, 1000, ''),
+(9623, 39, -6297.575684, -1186.412964, -268.962, 5000, '');
 
 DELETE FROM script_waypoint WHERE entry=10096;
 INSERT INTO script_waypoint VALUES
@@ -3191,6 +3308,29 @@ INSERT INTO script_waypoint VALUES
 (17969, 24, -472.463959, 5449.546875, 22.561453, 0, ''),
 (17969, 25, -454.533264, 5461.302246, 22.602837, 30000, 'quest complete');
 
+DELETE FROM script_waypoint WHERE entry=18210;
+INSERT INTO script_waypoint VALUES
+(18210, 0, -1581.410034, 8557.933594, 2.726, 0, ''),
+(18210, 1, -1579.908447, 8553.716797, 2.559, 0, ''),
+(18210, 2, -1577.829102, 8549.880859, 2.001, 0, ''),
+(18210, 3, -1571.161987, 8543.494141, 2.001, 0, ''),
+(18210, 4, -1563.944824, 8530.334961, 1.605, 0, ''),
+(18210, 5, -1554.565552, 8518.413086, 0.364, 0, ''),
+(18210, 6, -1549.239136, 8515.518555, 0.293, 0, ''),
+(18210, 7, -1518.490112, 8516.771484, 0.683, 2000, 'SAY_MAG_MORE'),
+(18210, 8, -1505.038940, 8513.247070, 0.672, 0, ''),
+(18210, 9, -1476.161133, 8496.066406, 2.157, 0, ''),
+(18210, 10, -1464.450684, 8492.601563, 3.529, 0, ''),
+(18210, 11, -1457.568359, 8492.183594, 4.449, 0, ''),
+(18210, 12, -1444.100342, 8499.031250, 6.177, 0, ''),
+(18210, 13, -1426.472168, 8510.116211, 7.686, 0, ''),
+(18210, 14, -1403.685303, 8524.146484, 9.680, 0, ''),
+(18210, 15, -1384.890503, 8542.014648, 11.180, 0, ''),
+(18210, 16, -1382.286133, 8539.869141, 11.139, 7500, 'SAY_MAG_COMPLETE'),
+(18210, 17, -1361.224609, 8521.440430, 11.144, 0, ''),
+(18210, 18, -1324.803589, 8510.688477, 13.050, 0, ''),
+(18210, 19, -1312.075439, 8492.709961, 14.235, 0, '');
+
 DELETE FROM script_waypoint WHERE entry=18731;
 INSERT INTO script_waypoint VALUES
 (18731, 0, -157.366, 2.177, 8.073, 0, ''),
@@ -3357,6 +3497,28 @@ INSERT INTO script_waypoint VALUES
 (21027, 48, -2841.654541, 1285.809204, 7.933223, 0, ''),
 (21027, 49, -2841.754883, 1289.832520, 6.990304, 0, ''),
 (21027, 50, -2871.398438, 1302.348145, 6.807335, 7500, 'SAY_WIL_END');
+
+DELETE FROM script_waypoint WHERE entry=22377;
+INSERT INTO script_waypoint VALUES
+(22377, 0, -2770.457520, 5418.410645, -34.538, 0, ''),
+(22377, 1, -2778.180420, 5416.253906, -34.538, 0, ''),
+(22377, 2, -2816.960449, 5414.944336, -34.529, 0, ''),
+(22377, 3, -2827.533203, 5414.737305, -28.265, 0, ''),
+(22377, 4, -2841.610596, 5413.021973, -28.261, 0, ''),
+(22377, 5, -2863.605957, 5411.964355, -28.262, 1000, 'SAY_AKU_AMBUSH_A'),
+(22377, 6, -2874.559570, 5413.799316, -28.260, 0, ''),
+(22377, 7, -2878.775879, 5413.812012, -28.261, 0, ''),
+(22377, 8, -2892.586914, 5413.478516, -18.784, 0, ''),
+(22377, 9, -2896.040527, 5413.137207, -18.589, 0, ''),
+(22377, 10, -2896.318848, 5409.431641, -18.450, 0, ''),
+(22377, 11, -2895.997803, 5396.909668, -8.855, 0, ''),
+(22377, 12, -2895.734131, 5386.623535, -9.260, 0, ''),
+(22377, 13, -2895.318359, 5367.613281, -9.456, 0, ''),
+(22377, 14, -2890.306641, 5353.883301, -11.280, 1000, 'SAY_AKU_AMBUSH_B'),
+(22377, 15, -2880.419189, 5334.625977, -10.629, 0, ''),
+(22377, 16, -2866.394043, 5314.253906, -9.678, 0, ''),
+(22377, 17, -2864.753174, 5277.734375, -11.087, 0, ''),
+(22377, 18, -2856.330322, 5255.902344, -11.496, 5000, 'SAY_AKU_COMPLETE');
 
 DELETE FROM script_waypoint WHERE entry=22916;
 INSERT INTO script_waypoint VALUES
