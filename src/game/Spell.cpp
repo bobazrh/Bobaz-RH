@@ -3495,7 +3495,7 @@ SpellCastResult Spell::CheckRuneCost(uint32 runeCostID)
     if(plr->getClass() != CLASS_DEATH_KNIGHT)
         return SPELL_CAST_OK;
 
-    SpellRuneCostEntry const *src = sSpellRuneCostStore.LookupEntry(runeCostID);
+	SpellRuneCostEntry const *src = sSpellRuneCostStore.LookupEntry(runeCostID);
 
     if(!src)
         return SPELL_CAST_OK;
@@ -5030,9 +5030,12 @@ SpellCastResult Spell::CheckPower()
         return SPELL_FAILED_UNKNOWN;
     }
 
-    SpellCastResult failReason = CheckRuneCost(m_spellInfo->runeCostID);
-    if(failReason != SPELL_CAST_OK)
-        return failReason;
+	if(m_spellInfo->powerType != POWER_RUNIC_POWER)
+	{
+		SpellCastResult failReason = CheckRuneCost(m_spellInfo->runeCostID);
+		if(failReason != SPELL_CAST_OK)
+			return failReason;
+	}
 
     // Check power amount
     Powers powerType = Powers(m_spellInfo->powerType);
