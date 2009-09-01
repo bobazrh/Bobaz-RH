@@ -2454,7 +2454,6 @@ void Spell::cast(bool skipCheck)
     // CAST SPELL
     SendSpellCooldown();
 
-    TakePower();
     TakeReagents();                                         // we must remove reagents before HandleEffects to allow place crafted item in same slot
 
     SendCastResult(castResult);
@@ -2478,6 +2477,8 @@ void Spell::cast(bool skipCheck)
         // Immediate spell, no big deal
         handle_immediate();
     }
+
+    TakePower();
 
     SetExecutedCurrently(false);
 }
