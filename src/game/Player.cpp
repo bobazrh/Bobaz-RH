@@ -1201,12 +1201,20 @@ void Player::Update( uint32 p_time )
         }
     }
 
-    if(m_regenTimer > 0)
+    if (m_regenTimer)
     {
         if(p_time >= m_regenTimer)
             m_regenTimer = 0;
         else
             m_regenTimer -= p_time;
+    }
+
+    if (m_lastManaUseTimer)
+    {
+        if (p_time >= m_lastManaUseTimer)
+            m_lastManaUseTimer = 0;
+        else
+            m_lastManaUseTimer -= p_time;
     }
 
     if (m_weaponChangeTimer > 0)
@@ -1930,7 +1938,7 @@ void Player::RegenerateAll(uint32 diff)
     if (getClass() == CLASS_DEATH_KNIGHT)
         Regenerate(POWER_RUNE, diff);
 
-    m_regenTimer = REGEN_TIME_PARTIAL;
+    m_regenTimer = REGEN_TIME_FULL;
 }
 
 // diff contains the time in milliseconds since last regen.

@@ -860,7 +860,7 @@ typedef std::set<uint64> GuardianPetList;
 // Regeneration defines
 #define REGEN_TIME_FULL     2000                            // For this time difference is computed regen value
 #define REGEN_TIME_PARTIAL  500                             // Time for partial "realtime" regeneration
-#define REGEN_TIME_PRECISE  200                             // Used in Spell::CheckPower for precise regeneration in spell cast time
+#define REGEN_TIME_PRECISE  500                             // Used in Spell::CheckPower for precise regeneration in spell cast time
 
 struct SpellProcEventEntry;                                 // used only privately
 
@@ -1429,6 +1429,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 SpellCriticalDamageBonus(SpellEntry const *spellProto, uint32 damage, Unit *pVictim);
         uint32 SpellCriticalHealingBonus(SpellEntry const *spellProto, uint32 damage, Unit *pVictim);
 
+<<<<<<< HEAD:src/game/Unit.h
         void SetLastManaUse(uint32 spellCastTime)
         {
             if (GetTypeId() == TYPEID_PLAYER && !IsUnderLastManaUseEffect())
@@ -1438,6 +1439,18 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
             m_lastManaUse = spellCastTime;
         }
         bool IsUnderLastManaUseEffect() const;
+=======
+        void SetLastManaUse()
+        {
+            if (GetTypeId() == TYPEID_PLAYER && !IsUnderLastManaUseEffect())
+                RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_REGENERATE_POWER);
+
+            m_lastManaUseTimer = 5000;
+        }
+        bool IsUnderLastManaUseEffect() const { return m_lastManaUseTimer; }
+
+        uint32 GetRegenTimer() const { return m_regenTimer; }
+>>>>>>> 5d830b813b8ec0f7dcb9d994c16a29fe59d7394b:src/game/Unit.h
 
         uint32 GetRegenTimer() const { return m_regenTimer; }
 
@@ -1561,6 +1574,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         uint32 m_reactiveTimer[MAX_REACTIVE];
         uint32 m_regenTimer;
+        uint32 m_lastManaUseTimer;
 
     private:
         bool IsTriggeredAtSpellProcEvent(Unit *pVictim, Aura* aura, SpellEntry const* procSpell, uint32 procFlag, uint32 procExtra, WeaponAttackType attType, bool isVictim, bool active, SpellProcEventEntry const*& spellProcEvent );
@@ -1573,7 +1587,6 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         uint32 m_state;                                     // Even derived shouldn't modify
         uint32 m_CombatTimer;
-        uint32 m_lastManaUse;                               // msecs
 
         Spell* m_currentSpells[CURRENT_MAX_SPELL];
 

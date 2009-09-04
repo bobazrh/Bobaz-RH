@@ -3493,7 +3493,7 @@ void Spell::TakePower()
 
     // Set the five second timer
     if (powerType == POWER_MANA && m_powerCost > 0)
-        m_caster->SetLastManaUse(getMSTime());
+        m_caster->SetLastManaUse();
 }
 
 SpellCastResult Spell::CheckRuneCost(uint32 runeCostID)
@@ -5017,14 +5017,9 @@ SpellCastResult Spell::CheckPower()
     if (m_powerCost > 0 && m_caster->GetTypeId() == TYPEID_PLAYER)
     {
         Player* playerCaster = (Player*)m_caster;
-        uint32 diff = REGEN_TIME_PARTIAL - m_caster->GetRegenTimer();
+        uint32 diff = REGEN_TIME_FULL - m_caster->GetRegenTimer();
         if (diff >= REGEN_TIME_PRECISE)
-        {
-            if (m_spellInfo->powerType == POWER_HEALTH)
-                playerCaster->RegenerateHealth(diff);
-            else
-                playerCaster->Regenerate((Powers)m_spellInfo->powerType, diff);
-        }
+            playerCaster->RegenerateAll(diff);
     }
 
     // health as power used - need check health amount
