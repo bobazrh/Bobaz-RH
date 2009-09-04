@@ -1209,14 +1209,6 @@ void Player::Update( uint32 p_time )
             m_regenTimer -= p_time;
     }
 
-    if (m_lastManaUseTimer)
-    {
-        if (p_time >= m_lastManaUseTimer)
-            m_lastManaUseTimer = 0;
-        else
-            m_lastManaUseTimer -= p_time;
-    }
-
     if (m_weaponChangeTimer > 0)
     {
         if(p_time >= m_weaponChangeTimer)
