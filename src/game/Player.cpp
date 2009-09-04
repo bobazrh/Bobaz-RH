@@ -1930,7 +1930,7 @@ void Player::RegenerateAll(uint32 diff)
     if (getClass() == CLASS_DEATH_KNIGHT)
         Regenerate(POWER_RUNE, diff);
 
-    m_regenTimer = REGEN_TIME_PARTIAL;
+    m_regenTimer = REGEN_TIME_FULL;
 }
 
 // diff contains the time in milliseconds since last regen.

@@ -5006,14 +5006,9 @@ SpellCastResult Spell::CheckPower()
     if (m_powerCost > 0 && m_caster->GetTypeId() == TYPEID_PLAYER)
     {
         Player* playerCaster = (Player*)m_caster;
-        uint32 diff = REGEN_TIME_PARTIAL - m_caster->GetRegenTimer();
+        uint32 diff = REGEN_TIME_FULL - m_caster->GetRegenTimer();
         if (diff >= REGEN_TIME_PRECISE)
-        {
-            if (m_spellInfo->powerType == POWER_HEALTH)
-                playerCaster->RegenerateHealth(diff);
-            else
-                playerCaster->Regenerate((Powers)m_spellInfo->powerType, diff);
-        }
+            RegenerateAll(diff);
     }
 
     // health as power used - need check health amount
