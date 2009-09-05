@@ -126,6 +126,19 @@ struct Waypoint
     float m_fX, m_fY, m_fZ;
 };
 
+struct LavaFlow
+{
+	float m_fXS, m_fYS, m_fZS;
+	float m_fXE, m_fYE, m_fZE;
+}
+
+m_aLavaFlow[]=
+{
+	{3284.396,497.648,57.156,3209.770,507.032,57.156},
+	{3286.254,532.034,57.156,3213.379,535.517,57.156},
+	{3282.072,562.883,57.156,3208.670,563.389,57.156}
+};
+
 //each dragons special points. First where fly to before connect to connon, second where land point is.
 Waypoint m_aTene[]=
 {
@@ -349,6 +362,14 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
                 }
             }
         }
+
+		for(int i =0;i<3;i++)
+		{
+			Creature * pFlame=m_creature->SummonCreature(NPC_FLAME_TSUNAMI, m_aLavaFlow[i].m_fXS,m_aLavaFlow[i].m_fYS,m_aLavaFlow[i].m_fZS,2.0f, TEMPSUMMON_CORPSE_DESPAWN, 30000);
+			pFlame->CastSpell(pFlame,SPELL_FLAME_TSUNAMI,true);
+			pFlame->CastSpell(pFlame,SPELL_FLAME_TSUNAMI_DMG_AURA,true);
+			pFlame->GetMotionMaster()->MovePoint(POINT_ID_LAND,m_aLavaFlow[i].m_fXE,m_aLavaFlow[i].m_fYE,m_aLavaFlow[i].m_fZE);
+		}
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -1069,6 +1090,56 @@ CreatureAI* GetAI_mob_twilight_eggs(Creature* pCreature)
 }
 
 /*######
+## Mob Flame Tsunami
+######*/
+
+struct MANGOS_DLL_DECL mob_flame_tsunamiAI : public ScriptedAI
+{
+    mob_flame_tsunamiAI(Creature* pCreature) : ScriptedAI(pCreature) { Reset(); }
+
+    void MovementInform(uint32 uiType, uint32 uiPointId)
+    {
+        if (!m_pInstance || uiType != POINT_MOTION_TYPE)
+            return;
+
+        debug_log("mob_flame_tsunamiAI: %s reached point %u", m_creature->GetName(), uiPointId);
+
+        if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) != IN_PROGRESS)
+        {
+            EnterEvadeMode();
+            return;
+        }
+
+        if (uiPointId == POINT_ID_LAND)
+        {
+			m_creature->DealDamage(m_creature,m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            m_creature->RemoveCorpse();
+            return;
+		}
+    }
+
+    void Reset()
+    {
+        
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostilTarget() || !m_creature->getVictim())
+            return;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_mob_flame_tsunami(Creature* pCreature)
+{
+    return new mob_flame_tsunamiAI(pCreature);
+}
+
+
+/*######
 ## Mob Twilight Whelps
 ######*/
 
@@ -1149,5 +1220,10 @@ void AddSC_boss_sartharion()
     newscript = new Script;
     newscript->Name = "mob_twilight_whelp";
     newscript->GetAI = &GetAI_mob_twilight_whelp;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_flame_tsunami";
+    newscript->GetAI = &GetAI_mob_flame_tsunami;
     newscript->RegisterSelf();
 }
