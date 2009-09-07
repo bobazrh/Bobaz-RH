@@ -1429,18 +1429,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 SpellCriticalDamageBonus(SpellEntry const *spellProto, uint32 damage, Unit *pVictim);
         uint32 SpellCriticalHealingBonus(SpellEntry const *spellProto, uint32 damage, Unit *pVictim);
 
-<<<<<<< HEAD:src/game/Unit.h
-        void SetLastManaUse(uint32 spellCastTime)
-        {
-            if (GetTypeId() == TYPEID_PLAYER && !IsUnderLastManaUseEffect())
-            {
-                RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_REGENERATE_POWER);
-            }
-            m_lastManaUse = spellCastTime;
-        }
-        bool IsUnderLastManaUseEffect() const;
-=======
-        void SetLastManaUse()
+       void SetLastManaUse()
         {
             if (GetTypeId() == TYPEID_PLAYER && !IsUnderLastManaUseEffect())
                 RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_REGENERATE_POWER);
@@ -1448,9 +1437,6 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
             m_lastManaUseTimer = 5000;
         }
         bool IsUnderLastManaUseEffect() const { return m_lastManaUseTimer; }
-
-        uint32 GetRegenTimer() const { return m_regenTimer; }
->>>>>>> 5d830b813b8ec0f7dcb9d994c16a29fe59d7394b:src/game/Unit.h
 
         uint32 GetRegenTimer() const { return m_regenTimer; }
 
