@@ -4454,7 +4454,7 @@ void Spell::EffectWeaponDmg(uint32 i)
         return;
     if(!unitTarget->isAlive())
         return;
-
+   
     // multiple weapon dmg effect workaround
     // execute only the last weapon damage
     // and handle all effects at once
@@ -4585,22 +4585,40 @@ void Spell::EffectWeaponDmg(uint32 i)
         }
         case SPELLFAMILY_DEATHKNIGHT:
         {
-		// glyph of Death Strike
-		if(m_spellInfo->SpellFamilyFlags & 0x010)
-		{
-			if(Aura * aur=m_caster->GetDummyAura(59336))
+			// Tundra Stalker
+            Unit::AuraList const& m_OverrideClassScript = m_caster->GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
+            for(Unit::AuraList::const_iterator citr = m_OverrideClassScript.begin(); citr != m_OverrideClassScript.end(); ++citr)
+            {
+                if( (*citr)->GetModifier()->m_miscvalue == 7277 )
+                {
+                    Unit::AuraMap const& auras = unitTarget->GetAuras();
+                    for(Unit::AuraMap::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
+                    {
+                        if(itr->second->GetSpellProto()->Dispel == DISPEL_DISEASE &&
+                            itr->second->GetCasterGUID() == m_caster->GetGUID() &&
+                            IsSpellLastAuraEffect(itr->second->GetSpellProto(), itr->second->GetEffIndex()) &&
+                            itr->second->GetSpellProto()->SpellIconID == 3142 )
+						    {
+							    totalDamagePercentMod += (itr->second->GetModifier()->m_amount / 100.0f);
+						    }
+                    }
+                }
+            }
+			// glyph of Death Strike
+			if(m_spellInfo->SpellFamilyFlags & 0x010)
 			{
-				uint32 runicPowerMod = aur->GetModifier()->m_amount*m_caster->GetPower(POWER_RUNIC_POWER)/20;
-				if(runicPowerMod > 25)runicPowerMod=25;
-				totalDamagePercentMod *= (100.0f + float(runicPowerMod))/100.0f;
+				if(Aura * aur=m_caster->GetDummyAura(59336))
+				{
+					uint32 runicPowerMod = aur->GetModifier()->m_amount*m_caster->GetPower(POWER_RUNIC_POWER)/20;
+					if(runicPowerMod > 25)runicPowerMod=25;
+					totalDamagePercentMod *= (100.0f + float(runicPowerMod))/100.0f;
+				}
 			}
-			break;
-		}
             // Blood Strike, Heart Strike, Obliterate
             // Blood-Caked Strike, Scourge Strike
-            if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0002000001400000) ||
+			if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0002000001400000) ||
                 m_spellInfo->SpellIconID == 1736 || m_spellInfo->SpellIconID == 3143)
-            {
+			{
                 uint32 count = 0;
                 Unit::AuraMap const& auras = unitTarget->GetAuras();
                 for(Unit::AuraMap::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
@@ -4608,9 +4626,10 @@ void Spell::EffectWeaponDmg(uint32 i)
                     if(itr->second->GetSpellProto()->Dispel == DISPEL_DISEASE &&
                         itr->second->GetCasterGUID() == m_caster->GetGUID() &&
                         IsSpellLastAuraEffect(itr->second->GetSpellProto(), itr->second->GetEffIndex()))
-                        ++count;
+						{
+							++count;
+						}
                 }
-
                 if (count)
                 {
                     // Effect 1(for Blood-Caked Strike)/3(other) damage is bonus
@@ -4618,43 +4637,14 @@ void Spell::EffectWeaponDmg(uint32 i)
                     // Blood Strike, Blood-Caked Strike and Obliterate store bonus*2
                     if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0002000000400000) ||
                         m_spellInfo->SpellIconID == 1736)
-                        bonus /= 2.0f;
-
-                    totalDamagePercentMod += bonus;
-                }
-            }
-            break;
-        }
-/*		case SPELLFAMILY_DEATHKNIGHT:
-		{
-
-			if(m_spellInfo->SpellFamilyFlags & 0x0802000001000000LL)
-            		{
-                		uint32 diseases = 0;
-				Unit::AuraMap& allAuras = unitTarget->GetAuras();
-		                for(Unit::AuraMap::iterator iter = allAuras.begin(), next;iter != allAuras.end(); iter = next)
-                		{
-                    			next = iter;
-                    			++next;
-                    			SpellEntry const *aurSpellInfo = iter->second->GetSpellProto();
-                    			if(iter->second->GetEffIndex() == 0 && aurSpellInfo->Dispel == DISPEL_DISEASE && iter->second->GetCaster() == m_caster)
-                    			{
-                        			++diseases;
-					}
+						{
+							bonus /= 2.0f;
+							totalDamagePercentMod += bonus;
+						}
 				}
-				if(diseases)
-                		{
-                    			switch(m_spellInfo->SpellIconID)
-                    			{
-                        			case 2639: totalDamagePercentMod *= (1 + 0.125f * diseases); break;
-                        			case 3143: totalDamagePercentMod *= (1 + 0.110f * diseases); break;
-                        			case 3145: totalDamagePercentMod *= (1 + 0.100f * diseases); break;
-                        			default: break;
-					}
-                		}
-                	}
+			}
 			break;
-		}*/
+        }
     }
 
     int32 fixed_bonus = 0;
