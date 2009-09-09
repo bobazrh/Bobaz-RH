@@ -2535,6 +2535,18 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             }
             break;
         }
+        case SPELLFAMILY_DEATHKNIGHT:
+        {
+            if(GetSpellProto()->SpellIconID == 2797 && m_target->GetTypeId()==TYPEID_PLAYER && this->m_effIndex==1)
+            {
+                Unit * caster = GetCaster();
+                if(caster)
+                {
+                    caster->CastSpell(m_target,55095,true,NULL,this,m_originalCasterGUID);
+                }
+            }
+            break;
+        }
     }
 
     // pet auras

@@ -661,6 +661,32 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 }
                 break;
             }
+            case SPELLFAMILY_DEATHKNIGHT:
+            {
+                // Icy Touch & Howling Blast
+                if (m_spellInfo->SpellIconID == 2721 || m_spellInfo->SpellIconID == 2131)
+                {
+                    Unit::AuraList const& DummyAuras = m_caster->GetAurasByType(SPELL_AURA_DUMMY);
+                    for(Unit::AuraList::const_iterator citr = DummyAuras.begin(); citr != DummyAuras.end(); ++citr)
+                    {
+                        if( (*citr)->GetModifier()->m_miscvalue == 7244 )
+                        {
+                            Unit::AuraMap const& auras = unitTarget->GetAuras();
+                            for(Unit::AuraMap::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
+                            {
+                                if(itr->second->GetSpellProto()->Dispel == DISPEL_DISEASE &&
+                                    itr->second->GetCasterGUID() == m_caster->GetGUID() &&
+                                    IsSpellLastAuraEffect(itr->second->GetSpellProto(), itr->second->GetEffIndex()))
+						            {
+							            damage *= (1.0f+((*citr)->GetModifier()->m_amount / 100.0f));
+                                        break;
+						            }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
         }
 
         if(damage >= 0)
@@ -1897,11 +1923,11 @@ void Spell::EffectDummy(uint32 i)
                 // unitTarget is Creature
                 if(unitTarget->GetTypeId()!=TYPEID_PLAYER)
                 {
-			float x = m_caster->GetPositionX();
-			float y = m_caster->GetPositionY(); 
-			float z = m_caster->GetPositionZ()+1;
-			float orientation = unitTarget->GetOrientation();
-			unitTarget->SendMonsterMove(x,y,z,orientation,MONSTER_MOVE_FLY,1);
+			        float x = m_caster->GetPositionX();
+			        float y = m_caster->GetPositionY(); 
+			        float z = m_caster->GetPositionZ()+1;
+			        float orientation = unitTarget->GetOrientation();
+			        unitTarget->SendMonsterMove(x,y,z,orientation,MONSTER_MOVE_FLY,1);
                 }
                 else
                 {   // unitTarget is Player
@@ -4454,7 +4480,6 @@ void Spell::EffectWeaponDmg(uint32 i)
         return;
     if(!unitTarget->isAlive())
         return;
-   
     // multiple weapon dmg effect workaround
     // execute only the last weapon damage
     // and handle all effects at once
@@ -4599,7 +4624,7 @@ void Spell::EffectWeaponDmg(uint32 i)
                             IsSpellLastAuraEffect(itr->second->GetSpellProto(), itr->second->GetEffIndex()) &&
                             itr->second->GetSpellProto()->SpellIconID == 3142 )
 						    {
-							    totalDamagePercentMod += (itr->second->GetModifier()->m_amount / 100.0f);
+							    totalDamagePercentMod += ((*citr)->GetModifier()->m_amount / 100.0f);
 						    }
                     }
                 }
@@ -4614,6 +4639,28 @@ void Spell::EffectWeaponDmg(uint32 i)
 					totalDamagePercentMod *= (100.0f + float(runicPowerMod))/100.0f;
 				}
 			}
+            // Frost Strike
+            if (m_spellInfo->SpellIconID == 2740)
+            {
+                Unit::AuraList const& DummyAuras = m_caster->GetAurasByType(SPELL_AURA_DUMMY);
+                for(Unit::AuraList::const_iterator citr = DummyAuras.begin(); citr != DummyAuras.end(); ++citr)
+                {
+                    if( (*citr)->GetModifier()->m_miscvalue == 7244 )
+                    {
+                        Unit::AuraMap const& auras = unitTarget->GetAuras();
+                        for(Unit::AuraMap::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
+                        {
+                            if(itr->second->GetSpellProto()->Dispel == DISPEL_DISEASE &&
+                                itr->second->GetCasterGUID() == m_caster->GetGUID() &&
+                                IsSpellLastAuraEffect(itr->second->GetSpellProto(), itr->second->GetEffIndex()))
+						        {
+							        totalDamagePercentMod += ((*citr)->GetModifier()->m_amount / 100.0f);
+                                    break;
+						        }
+                        }
+                    }
+                }
+            }
             // Blood Strike, Heart Strike, Obliterate
             // Blood-Caked Strike, Scourge Strike
 			if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0002000001400000) ||
