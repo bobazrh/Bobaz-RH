@@ -2542,7 +2542,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 Unit * caster = GetCaster();
                 if(caster)
                 {
-                    caster->CastSpell(m_target,55095,true,NULL,this,m_originalCasterGUID);
+                    caster->CastSpell(m_target,55095,true,NULL,this,caster->GetGUID());
                 }
             }
             break;
