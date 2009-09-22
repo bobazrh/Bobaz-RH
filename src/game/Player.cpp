@@ -16797,8 +16797,8 @@ void Player::HandleStealthedUnitsDetection()
     TypeContainerVisitor<MaNGOS::UnitListSearcher<MaNGOS::AnyStealthedCheck >, GridTypeMapContainer >  grid_unit_searcher(searcher);
 
     CellLock<GridReadGuard> cell_lock(cell, p);
-    cell_lock->Visit(cell_lock, world_unit_searcher, *GetMap());
-    cell_lock->Visit(cell_lock, grid_unit_searcher, *GetMap());
+    cell_lock->Visit(cell_lock, world_unit_searcher, *GetMap(), *this, MAX_PLAYER_STEALTH_DETECT_RANGE);
+    cell_lock->Visit(cell_lock, grid_unit_searcher, *GetMap(), *this, MAX_PLAYER_STEALTH_DETECT_RANGE);
 
     WorldObject const* viewPoint = GetViewPoint();
 
@@ -19600,7 +19600,7 @@ void Player::SetTitle(CharTitlesEntry const* title, bool lost)
     GetSession()->SendPacket(&data);
 }
 
-void Player::ConvertRune(uint8 index, uint8 newType)
+void Player::ConvertRune(uint8 index, RuneType newType)
 {
     SetCurrentRune(index, newType);
 
@@ -19628,6 +19628,15 @@ void Player::AddRunePower(uint8 index)
     GetSession()->SendPacket(&data);
 }
 
+static RuneType runeSlotTypes[MAX_RUNES] = {
+    /*0*/ RUNE_BLOOD,
+    /*1*/ RUNE_BLOOD,
+    /*2*/ RUNE_UNHOLY,
+    /*3*/ RUNE_UNHOLY,
+    /*4*/ RUNE_FROST,
+    /*5*/ RUNE_FROST
+};
+
 void Player::InitRunes()
 {
     if(getClass() != CLASS_DEATH_KNIGHT)
@@ -19639,14 +19648,24 @@ void Player::InitRunes()
 
     for(uint32 i = 0; i < MAX_RUNES; ++i)
     {
-        SetBaseRune(i, i / 2);                              // init base types
-        SetCurrentRune(i, i / 2);                           // init current types
+        SetBaseRune(i, runeSlotTypes[i]);                   // init base types
+        SetCurrentRune(i, runeSlotTypes[i]);                // init current types
         SetRuneCooldown(i, 0);                              // reset cooldowns
         m_runes->SetRuneState(i);
     }
 
     for(uint32 i = 0; i < NUM_RUNE_TYPES; ++i)
         SetFloatValue(PLAYER_RUNE_REGEN_1 + i, 0.1f);
+}
+
+
+bool Player::IsBaseRuneSlotsOnCooldown( RuneType runeType ) const
+{
+    for(uint32 i = 0; i < MAX_RUNES; ++i)
+        if (GetBaseRune(i) == runeType && GetRuneCooldown(i) == 0)
+            return false;
+
+    return true;
 }
 
 void Player::AutoStoreLoot(uint8 bag, uint8 slot, uint32 loot_id, LootStore const& store, bool broadcast)
