@@ -1319,7 +1319,6 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
         case TARGET_TOTEM_FIRE:
         case TARGET_SELF:
         case TARGET_SELF2:
-        case TARGET_DYNAMIC_OBJECT:
         case TARGET_AREAEFFECT_CUSTOM:
         case TARGET_AREAEFFECT_CUSTOM_2:
         case TARGET_SUMMON:
@@ -1986,6 +1985,28 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
             if(DynamicObject* dynObj = m_caster->GetDynObject(m_triggeredByAuraSpell ? m_triggeredByAuraSpell->Id : m_spellInfo->Id))
                 m_targets.setDestination(dynObj->GetPositionX(), dynObj->GetPositionY(), dynObj->GetPositionZ());
             break;
+
+        case TARGET_DYNAMIC_OBJECT_FRONT:
+        case TARGET_DYNAMIC_OBJECT_LEFT_SIDE:
+        case TARGET_DYNAMIC_OBJECT_RIGHT_SIDE:
+            if (!(m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION))
+            {
+                float angle = m_caster->GetOrientation();
+                switch(targetMode)
+                {
+                    case TARGET_DYNAMIC_OBJECT_FRONT:                         break;
+                    case TARGET_DYNAMIC_OBJECT_LEFT_SIDE:  angle -= 3*M_PI/4; break;
+                    case TARGET_DYNAMIC_OBJECT_RIGHT_SIDE: angle += 3*M_PI/4; break;
+                }
+
+                float x,y;
+                m_caster->GetNearPoint2D(x,y,radius,angle);
+                m_targets.setDestination(x,y,m_caster->GetPositionZ());
+            }
+
+            TagUnitMap.push_back(m_caster);
+            break;
+
         case TARGET_POINT_AT_NORTH:
         case TARGET_POINT_AT_SOUTH:
         case TARGET_POINT_AT_EAST:
@@ -2391,6 +2412,8 @@ void Spell::cast(bool skipCheck)
             else if(m_spellInfo->SpellIconID == 1662 && m_spellInfo->AttributesEx & 0x20)
                                                             // Blood Fury (Racial)
                 AddPrecastSpell(23230);                     // Blood Fury - Healing Reduction
+            else if(m_spellInfo->Id == 20594)               // Stoneskin
+                AddTriggeredSpell(65116);                   // Stoneskin - armor 10% for 8 sec
             break;
         }
         case SPELLFAMILY_MAGE:
@@ -5065,12 +5088,13 @@ SpellCastResult Spell::CheckPower()
         return SPELL_FAILED_UNKNOWN;
     }
 
-	if(m_spellInfo->powerType != POWER_RUNIC_POWER)
-	{
-		SpellCastResult failReason = CheckRuneCost(m_spellInfo->runeCostID);
-		if(failReason != SPELL_CAST_OK)
-			return failReason;
-	}
+    //check rune cost only if a spell has PowerType == POWER_RUNE
+    if(m_spellInfo->powerType == POWER_RUNE)
+    {
+        SpellCastResult failReason = CheckRuneCost(m_spellInfo->runeCostID);
+        if(failReason != SPELL_CAST_OK)
+            return failReason;
+    }
 
     // Check power amount
     Powers powerType = Powers(m_spellInfo->powerType);
