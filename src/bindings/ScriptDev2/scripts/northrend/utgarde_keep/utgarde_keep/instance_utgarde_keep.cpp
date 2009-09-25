@@ -25,6 +25,7 @@ struct MANGOS_DLL_DECL  instance_utgarde_keep : public ScriptedInstance
     uint64 Dalronn;
     uint64 Ingvar;
 
+
     bool   IsBossDied[2];
 
     uint32 Encounters[ENCOUNTERS];
@@ -45,6 +46,7 @@ struct MANGOS_DLL_DECL  instance_utgarde_keep : public ScriptedInstance
     {
         for(uint8 i = 0; i < ENCOUNTERS; ++i)
             if(Encounters[i] == IN_PROGRESS) return true;
+
 
         return false;
     }

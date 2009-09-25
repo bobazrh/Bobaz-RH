@@ -135,7 +135,7 @@ struct MANGOS_DLL_DECL npc_rizzle_sprysprocketAI : public npc_escortAI
         //pSummoned->CastSpell(pSummoned,SPELL_PERIODIC_GRENADE,false,0,0,m_creature->GetGUID());
     }
 
-    void UpdateAI(const uint32 uiDiff)
+    void UpdateEscortAI(const uint32 uiDiff)
     {
         if (m_bIsIntro)
         {
@@ -160,7 +160,7 @@ struct MANGOS_DLL_DECL npc_rizzle_sprysprocketAI : public npc_escortAI
                 case 2:
                     m_creature->CastSpell(m_creature,SPELL_SWIM_SPEED,false);
                     m_bIsIntro = false;
-                    Start(false,true,false);
+                    Start(false,true);
                     break;
             }
 
@@ -175,8 +175,6 @@ struct MANGOS_DLL_DECL npc_rizzle_sprysprocketAI : public npc_escortAI
 
             m_uiDepthChargeTimer = 10000 + rand()%5000;
         }else m_uiDepthChargeTimer -= uiDiff;
-
-        npc_escortAI::UpdateAI(uiDiff);
     }
 };
 

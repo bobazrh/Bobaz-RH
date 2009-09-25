@@ -1099,16 +1099,16 @@ struct MANGOS_DLL_DECL mob_flame_tsunamiAI : public ScriptedAI
 
     void MovementInform(uint32 uiType, uint32 uiPointId)
     {
-        if (!m_pInstance || uiType != POINT_MOTION_TYPE)
+        if (uiType != POINT_MOTION_TYPE)
             return;
 
         debug_log("mob_flame_tsunamiAI: %s reached point %u", m_creature->GetName(), uiPointId);
 
-        if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) != IN_PROGRESS)
+        /*if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) != IN_PROGRESS)
         {
             EnterEvadeMode();
             return;
-        }
+        }*/
 
         if (uiPointId == POINT_ID_LAND)
         {

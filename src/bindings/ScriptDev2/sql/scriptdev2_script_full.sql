@@ -555,7 +555,10 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 (-1000537,'You are no challenge for the Crimson Sigil. Mind breakers, end this nonsense.',0,1,0,0,'lordillidan ILLIDAN_SUMMON2'),
 (-1000538,'Run while you still can. The highlords come soon...',0,1,0,0,'lordillidan ILLIDAN_SUMMON3'),
 (-1000539,'Torloth your master calls!',0,1,0,0,'lordillidan ILLIDAN_SUMMON4'),
-(-1000540,'So you have defeated the Crimson Sigil. You now seek to challenge my rule? Not even Arthas could defeat me, yet you dare to even harbor such thoughts? Then I say to you, come! Come $N! The Black Temple awaits...',0,1,0,0,'lordillidan EVENT_COMPLETED');
+(-1000540,'So you have defeated the Crimson Sigil. You now seek to challenge my rule? Not even Arthas could defeat me, yet you dare to even harbor such thoughts? Then I say to you, come! Come $N! The Black Temple awaits...',0,1,0,0,'lordillidan EVENT_COMPLETED'),
+
+(-1000541,'%s jumps into the moonwell and goes underwater...',0,2,0,0,'kitten EMOTE_SAB_JUMP'),
+(-1000542,'%s follows $n obediertly.',0,2,0,0,'kitten EMOTE_SAB_FOLLOW');
 
 -- -1 033 000 SHADOWFANG KEEP
 INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
@@ -1962,9 +1965,56 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 (-1574017,'See... you... soon.',13200,1,0,0,'dalronn SAY_DAL_DEATH'),
 (-1574018,'There\'s no... greater... glory.',13201,1,0,0,'dalronn SAY_DAL_DEATH_REAL'),
 (-1574019,'You may serve me yet.',13202,1,0,0,'dalronn SAY_DAL_KILL'),
-(-1574020,'Skarvald, you incompetent slug! Return and make yourself useful!',13203,1,0,0,'dalronn SAY_DAL_SKA_DIES_REPLY');
+(-1574020,'Skarvald, you incompetent slug! Return and make yourself useful!',13203,1,0,0,'dalronn SAY_DAL_SKA_DIES_REPLY'),
+
+(-1574021,'%s casts Frost Tomb on $N',0,3,0,0,'keleseth EMOTE_FROST_TOMB');
 
 -- -1 575 000 UTGARDE PINNACLE
+INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
+(-1575000,'My liege! I have done as you asked, and now beseech you for your blessing!',13856,1,0,0,'svala SAY_INTRO_1'),
+(-1575001,'Your sacrifice is a testament to your obedience. Indeed you are worthy of this charge. Arise, and forever be known as Svala Sorrowgrave!',14732,1,0,0,'svala SAY_INTRO_2_ARTHAS'),
+(-1575002,'The sensation is... beyond my imagining. I am yours to command, my king.',13857,1,0,0,'svala SAY_INTRO_3'),
+(-1575003,'Your first test awaits you. Destroy our uninvited guests.',14733,1,0,0,'svala SAY_INTRO_4_ARTHAS'),
+(-1575004,'I will be happy to slaughter them in your name! Come, enemies of the Scourge! I will show you the might of the Lich King!',13858,1,0,0,'svala SAY_INTRO_5'),
+(-1575005,'I will vanquish your soul!',13842,1,0,0,'svala SAY_AGGRO'),
+(-1575006,'You were a fool to challenge the power of the Lich King!',13845,1,0,0,'svala SAY_SLAY_1'),
+(-1575007,'Your will is done, my king.',13847,1,0,0,'svala SAY_SLAY_2'),
+(-1575008,'Another soul for my master.',13848,1,0,0,'svala SAY_SLAY_3'),
+(-1575009,'Your death approaches.',13850,1,0,0,'svala SAY_SACRIFICE_1'),
+(-1575010,'Go now to my master.',13851,1,0,0,'svala SAY_SACRIFICE_2'),
+(-1575011,'Your end is inevitable.',13852,1,0,0,'svala SAY_SACRIFICE_3'),
+(-1575012,'Yor-guul mak!',13853,1,0,0,'svala SAY_SACRIFICE_4'),
+(-1575013,'Any last words?',13854,1,0,0,'svala SAY_SACRIFICE_5'),
+(-1575014,'Nooo! I did not come this far... to...',13855,1,0,0,'svala SAY_DEATH'),
+
+(-1575015,'What this place? I will destroy you!',13464,1,0,0,'gortok SAY_AGGRO'),
+(-1575016,'You die! That what master wants!',13465,1,0,0,'gortok SAY_SLAY_1'),
+(-1575017,'An easy task!',13466,1,0,0,'gortok SAY_SLAY_2'),
+(-1575018,' ',13467,1,0,0,'gortok SAY_DEATH'),
+
+(-1575019,'What mongrels dare intrude here? Look alive, my brothers! A feast for the one that brings me their heads!',13497,1,0,0,'skadi SAY_AGGRO'),
+(-1575020,'Sear them to the bone!',13498,1,0,0,'skadi SAY_DRAKEBREATH_1'),
+(-1575021,'Go now! Leave nothing but ash in your wake!',13499,1,0,0,'skadi SAY_DRAKEBREATH_2'),
+(-1575022,'Cleanse our sacred halls with flame!',13500,1,0,0,'skadi SAY_DRAKEBREATH_3'),
+(-1575023,'I ask for ... to kill them, yet all I get is feeble whelps! By Ye.. SLAUGHTER THEM!',13501,1,0,0,'skadi SAY_DRAKE_HARPOON_1'),
+(-1575024,'If one more harpoon touches my drake I\'ll flae my miserable heins.',13502,1,0,0,'skadi SAY_DRAKE_HARPOON_2'),
+(-1575025,'Mjor Na Ul Kaval!',13503,1,0,0,'skadi SAY_KILL_1'),
+(-1575026,'Not so brash now, are you?',13504,1,0,0,'skadi SAY_KILL_2'),
+(-1575027,'I\'ll mount your skull from the highest tower!',13505,1,0,0,'skadi SAY_KILL_3'),
+(-1575028,'ARGH! You call that... an attack? I\'ll... show... aghhhh...',13506,1,0,0,'skadi SAY_DEATH'),
+(-1575029,'You motherless knaves! Your corpses will make fine morsels for my new drake!',13507,1,0,0,'skadi SAY_DRAKE_DEATH'),
+(-1575030,'%s is within range of the harpoon launchers!',0,3,0,0,'skadi EMOTE_HARPOON_RANGE'),
+
+(-1575031,'You invade my home and then dare to challenge me? I will tear the hearts from your chests and offer them as gifts to the death god! Rualg nja gaborr!',13609,1,0,0,'ymiron SAY_AGGRO'),
+(-1575032,'Bjorn of the Black Storm! Honor me now with your presence!',13610,1,0,0,'ymiron SAY_SUMMON_BJORN'),
+(-1575033,'Haldor of the rocky cliffs, grant me your strength!',13611,1,0,0,'ymiron SAY_SUMMON_HALDOR'),
+(-1575034,'Ranulf of the screaming abyss, snuff these maggots with darkest night!',13612,1,0,0,'ymiron SAY_SUMMON_RANULF'),
+(-1575035,'Tor of the Brutal Siege! Bestow your might upon me!',13613,1,0,0,'ymiron SAY_SUMMON_TORGYN'),
+(-1575036,'Your death is only the beginning!',13614,1,0,0,'ymiron SAY_SLAY_1'),
+(-1575037,'You have failed your people!',13615,1,0,0,'ymiron SAY_SLAY_2'),
+(-1575038,'There is a reason I am king!',13616,1,0,0,'ymiron SAY_SLAY_3'),
+(-1575039,'Bleed no more!',13617,1,0,0,'ymiron SAY_SLAY_4'),
+(-1575040,'What... awaits me... now?',13618,1,0,0,'ymiron SAY_DEATH');
 
 -- -1 576 000 NEXUS
 INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
@@ -2075,8 +2125,108 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 -- -1 595 000 CULLING OF STRATHOLME
 
 -- -1 599 000 HALLS OF STONE
+INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
+(-1599000,'Soft, vulnerable shells. Brief, fragile lives. You can not escape the curse of flesh!',14180,1,0,0,'sjonnir SAY_AGGRO'),
+(-1599001,'???',14181,1,0,0,'sjonnir SAY_SLAY_1'),
+(-1599002,'Flesh is no match for iron!',14182,1,0,0,'sjonnir SAY_SLAY_2'),
+(-1599003,'Armies of iron will smother the world!',14183,1,0,0,'sjonnir SAY_SLAY_3'),
+(-1599004,'Loken will not rest, until the forge is retaken. You changed nothing!',14184,1,0,0,'sjonnir SAY_DEATH'),
+
+(-1599005,'You shouldn\'t have come...now you will die!',13487,1,0,0,'maiden SAY_AGGRO'),
+(-1599006,'Why must it be this way?',13488,1,0,0,'maiden SAY_SLAY_1'),
+(-1599007,'You had it coming!',13489,1,0,0,'maiden SAY_SLAY_2'),
+(-1599008,'My burden grows heavier.',13490,1,0,0,'maiden SAY_SLAY_3'),
+(-1599009,'This is your own fault!',13491,1,0,0,'maiden SAY_SLAY_4'),
+(-1599010,'So much lost time... that you\'ll never get back!',13492,1,0,0,'maiden SAY_STUN'),
+(-1599011,'I hope you all rot! I never...wanted...this.',13493,1,0,0,'maiden SAY_DEATH'),
+
+(-1599012,'Now that\'s owning your supper!',14244,1,0,0,'brann SAY_KILL_1'),
+(-1599013,'Press on, that\'s the way!',14245,1,0,0,'brann SAY_KILL_2'),
+(-1599014,'Keep it up now. Plenty of death-dealing for everyone!',14246,1,0,0,'brann SAY_KILL_3'),
+(-1599015,'I\'m all kinds of busted up. Might not... make it...',14257,1,0,0,'brann SAY_LOW_HEALTH'),
+(-1599016,'Not yet, not... yet-',14258,1,0,0,'brann SAY_DEATH'),
+(-1599017,'I\'m doing everything I can!',14260,1,0,0,'brann SAY_PLAYER_DEATH_1'),
+(-1599018,'Light preserve you!',14261,1,0,0,'brann SAY_PLAYER_DEATH_2'),
+(-1599019,'I hope this is all worth it!',14262,1,0,0,'brann SAY_PLAYER_DEATH_3'),
+(-1599020,'Time to get some answers! Let\'s get this show on the road!',14259,1,0,0,'brann SAY_ESCORT_START'),
+
+(-1599021,'Don\'t worry. Old Brann has got your back. Keep that metal monstrosity busy and I\'ll see if I can sweet talk this machine into helping you.',14274,1,0,0,'brann SAY_SPAWN_DWARF'),
+(-1599022,'This is a wee bit trickier that before... Oh, bloody--incomin\'!',14275,1,0,0,'brann SAY_SPAWN_TROGG'),
+(-1599023,'What in the name o\' Madoran did THAT do? Oh! Wait: I just about got it...',14276,1,0,0,'brann SAY_SPAWN_OOZE'),
+(-1599024,'Ha, that did it. Help\'s a-coming. Take this you glow-eying brute!',14277,1,0,0,'brann SAY_SPAWN_EARTHEN'),
+
+(-1599025,'Take a moment and relish this with me! Soon all will be revealed! Okay then, let’s do this!',14247,1,0,0,'brann SAY_EVENT_INTRO_1'),
+(-1599026,'Now keep an eye out! I\'ll have this licked in two shakes of a--',14248,1,0,0,'brann SAY_EVENT_INTRO_2'),
+(-1599027,'Warning! Life form pattern not recognized. Archival processing terminated. Continued interference will result in targeted response.',13765,1,0,0,'brann SAY_EVENT_INTRO_3_ABED'),
+
+(-1599028,'Oh, that doesn\'t sound good. We might have a complication or two...',14249,1,0,0,'brann SAY_EVENT_A_1'),
+(-1599029,'Security breach in progress. Analysis of historical archives transferred to lower priority queue. Countermeasures engaged.',13756,1,0,0,'brann SAY_EVENT_A_2_KADD'),
+(-1599030,'Ah, you want to play hardball, eh? That\'s just my game!',14250,1,0,0,'brann SAY_EVENT_A_3'),
+
+(-1599031,'Couple more minutes and I\'ll--',14251,1,0,0,'brann SAY_EVENT_B_1'),
+(-1599032,'Threat index threshold exceeded. Celestial archive aborted. Security level heightened.',13761,1,0,0,'brann SAY_EVENT_B_2_MARN'),
+(-1599033,'Heightened? What\'s the good news?',14252,1,0,0,'brann SAY_EVENT_B_3'),
+
+(-1599034,'So that was the problem? Now I\'m makin\' progress...',14253,1,0,0,'brann SAY_EVENT_C_1'),
+(-1599035,'Critical threat index. Void analysis diverted. Initiating sanitization protocol.',13767,1,0,0,'brann SAY_EVENT_C_2_ABED'),
+(-1599036,'Hang on! Nobody\'s gonna\' be sanitized as long as I have a say in it!',14254,1,0,0,'brann SAY_EVENT_C_3'),
+
+(-1599037,'Ha! The old magic fingers finally won through! Now let\'s get down to-',14255,1,0,0,'brann SAY_EVENT_D_1'),
+(-1599038,'Alert! Security fail safes deactivated. Beginning memory purge...',13768,1,0,0,'brann SAY_EVENT_D_2_ABED'),
+(-1599039,'Purge? No no no no no! Where did I-- Aha, this should do the trick...',14256,1,0,0,'brann SAY_EVENT_D_3'),
+(-1599040,'System online. Life form pattern recognized. Welcome Branbronzan. Query?',13769,1,0,0,'brann SAY_EVENT_D_4_ABED'),
+
+(-1599041,'Query? What do you think I’m here for? Tea and biscuits? Spill the beans already!',14263,1,0,0,'brann SAY_EVENT_END_01'),
+(-1599042,'Tell me how that dwarfs came to be! And start at the beginning!',14264,1,0,0,'brann SAY_EVENT_END_02'),
+(-1599043,'Accessing prehistoric data. Retrieved. In the beginning Earthen were created to-',13770,1,0,0,'brann SAY_EVENT_END_03_ABED'),
+(-1599044,'Right, right! I know that the Earthen were made of stone to shape the deep reaches of the world but what about the anomalies? Matrix non-stabilizing and whatnot.',14265,1,0,0,'brann SAY_EVENT_END_04'),
+(-1599045,'Accessing. In the early stages of its development cycle Azeroth suffered infection by parasitic, necrophotic symbiotes.',13771,1,0,0,'brann SAY_EVENT_END_05_ABED'),
+(-1599046,'Necro-what? Speak bloody common will ya?',14266,1,0,0,'brann SAY_EVENT_END_06'),
+(-1599047,'Designation: Old Gods. Old Gods rendered all systems, including Earthen defenseless in order to facilitate assimilation. This matrix destabilization has been termed the Curse of Flesh. Effects of destabilization increased over time.',13772,1,0,0,'brann SAY_EVENT_END_07_ABED'),
+(-1599048,'Old Gods eh? So they zapped the Earthen with this Curse of Flesh. And then what?',14267,1,0,0,'brann SAY_EVENT_END_08'),
+(-1599049,'Accessing. Creators arrived to extirpate symbiotic infection. Assessment revealed that Old God infestation had grown malignant. Excising parasites would result in loss of host.',13757,1,0,0,'brann SAY_EVENT_END_09_KADD'),
+(-1599050,'If they killed the Old Gods Azeroth would have been destroyed.',14268,1,0,0,'brann SAY_EVENT_END_10'),
+(-1599051,'Correct. Creators neutralized parasitic threat and contained it within the host. Forge of Wills and other systems were instituted to create new Earthen. Safeguards were implemented and protectors were appointed.',13758,1,0,0,'brann SAY_EVENT_END_11_KADD'),
+(-1599052,'What protectors?',14269,1,0,0,'brann SAY_EVENT_END_12'),
+(-1599053,'Designations: Aesir and Vanir or in common nomenclator Storm and Earth Giants. Sentinel Loken designated supreme. Dragon Aspects appointed to monitor evolution of Azeroth.',13759,1,0,0,'brann SAY_EVENT_END_13_KADD'),
+(-1599054,'Aesir and Vanir. Okay. So the Forge of Wills started to make new Earthen. But what happened to the old ones?',14270,1,0,0,'brann SAY_EVENT_END_14'),
+(-1599055,'Additional background is relevant to your query. Following global combat between-',13262,1,0,0,'brann SAY_EVENT_END_15_MARN'),
+(-1599056,'Hold everything! The Aesir and Vanir went to war? Why?',14271,1,0,0,'brann SAY_EVENT_END_16'),
+(-1599057,'Unknown. Data suggests that impetus for global combat originated with prime designate Loken who neutralized all remaining Aesir and Vanir affecting termination of conflict. Prime designate Loken then initiated stasis of several seed races including Earthen, Giant and Vrykul at designated holding facilities.',13263,1,0,0,'brann SAY_EVENT_END_17_MARN'),
+(-1599058,'This Loken sounds like a nasty character. Glad we don’t have to worry about the likes of him anymore. So if I’m understanding you lads the original Earthen eventually woke up from this statis. And by that time this destabily-whatever had turned them into our brother dwarfs. Or at least dwarf ancestors. Hm?',14272,1,0,0,'brann SAY_EVENT_END_18'),
+(-1599059,'Essentially that is correct.',13764,1,0,0,'brann SAY_EVENT_END_19_MARN'),
+(-1599060,'Well now. That’s a lot to digest. I’m gonna need some time to take all of this in. Thank you!',14273,1,0,0,'brann SAY_EVENT_END_20'),
+(-1599061,'Acknowledged Branbronzan. Session terminated.',13773,1,0,0,'brann SAY_EVENT_END_21_ABED'),
+
+(-1599062,'Loken?! That\'s downright bothersome... We might\'ve neutralized the iron dwarves, but I\'d lay odds there\'s another machine somewhere else churnin\' out a whole mess o\' these iron vrykul!',14278,1,0,0,'brann SAY_VICTORY_SJONNIR_1'),
+(-1599063,'I\'ll use the forge to make badtches o\' earthen to stand guard... But our greatest challenge still remains: find and stop Loken!',14279,1,0,0,'brann SAY_VICTORY_SJONNIR_2'),
+
+(-1599064,'I think it\'s time to see what\'s behind the door near the entrance. I\'m going to sneak over there, nice and quiet. Meet me at the door and I\'ll get us in.',0,1,0,0,'brann SAY_ENTRANCE_MEET');
 
 -- -1 600 000 DRAK'THARON KEEP
+INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
+(-1600000,'More grunts, more glands, more FOOD!',13181,1,0,0,'trollgore SAY_AGGRO'),
+(-1600001,'So hungry! Must feed!',13182,1,0,0,'trollgore SAY_CONSUME'),
+(-1600002,'Aaaargh...',13183,1,0,0,'trollgore SAY_DEATH'),
+(-1600003,'Corpse go boom!',13184,1,0,0,'trollgore SAY_EXPLODE'),
+(-1600004,'You have gone, me gonna eat you!',13185,1,0,0,'trollgore SAY_KILL'),
+
+(-1600005,'The chill that you feel is the herald of your doom!',13173,1,0,0,'novos SAY_AGGRO'),
+(-1600006,'Your efforts... are in vain.',13174,1,0,0,'novos SAY_DEATH'),
+(-1600007,'Such is the fate of all who oppose the Lich King.',13175,1,0,0,'novos SAY_KILL'),
+(-1600008,'Bolster my defenses! Hurry, curse you!',13176,1,0,0,'novos SAY_ADDS'),
+(-1600009,'Surely you can see the futility of it all!',13177,1,0,0,'novos SAY_BUBBLE_1'),
+(-1600010,'Just give up and die already!',13178,1,0,0,'novos SAY_BUBBLE_2'),
+(-1600011,'%s calls for assistance.',0,3,0,0,'novos EMOTE_ASSISTANCE'),
+
+(-1600012,'Tharon\'ja sees all! The work of mortals shall not end the eternal dynasty!',13862,1,0,0,'tharonja SAY_AGGRO'),
+(-1600013,'As Tharon\'ja predicted.',13863,1,0,0,'tharonja SAY_KILL_1'),
+(-1600014,'As it was written.',13864,1,0,0,'tharonja SAY_KILL_2'),
+(-1600015,'Your flesh serves Tharon\'ja now!',13865,1,0,0,'tharonja SAY_FLESH_1'),
+(-1600016,'Tharon\'ja has a use for your mortal shell!',13866,1,0,0,'tharonja SAY_FLESH_2'),
+(-1600017,'No! A taste... all too brief!',13867,1,0,0,'tharonja SAY_SKELETON_1'),
+(-1600018,'Tharon\'ja will have more!',13868,1,0,0,'tharonja SAY_SKELETON_2'),
+(-1600019,'Im... impossible! Tharon\'ja is eternal! Tharon\'ja... is...',13869,1,0,0,'tharonja SAY_DEATH');
 
 -- -1 601 000 AZJOL-NERUB
 
@@ -2132,6 +2282,39 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 -- -1 603 000 ULDUAR
 
 -- -1 604 000 GUNDRAK
+INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
+(-1604000,'Drakkari gonna kill anybody who trespass on these lands!',14443,1,0,0,'sladran SAY_AGGRO'),
+(-1604001,'Minions of the scale, heed my call!',14444,1,0,0,'sladran SAY_SUMMON_SNAKE'),
+(-1604002,'Our thousand fangs gonna rend your flesh! ',14445,1,0,0,'sladran SAY_SUMMON_CONSTRICT'),
+(-1604003,'Ye not breathin\'! Good.',14446,1,0,0,'sladran SAY_SLAY_1'),
+(-1604004,'You scared now?',14447,1,0,0,'sladran SAY_SLAY_2'),
+(-1604005,'I\'ll eat you next, mon!',14448,1,0,0,'sladran SAY_SLAY_3'),
+(-1604006,'I sssee now... Ssscourge wasss not... our greatessst enemy...',14449,1,0,0,'sladran SAY_DEATH'),
+(-1604007,'%s begins to cast Poison Nova!',0,3,0,0,'sladran EMOTE_NOVA'),
+
+(-1604008,'%s surges forward!',0,2,0,0,'colossus EMOTE_SURGE'),
+(-1604009,'%s seep into the ground.',0,2,0,0,'colossus EMOTE_SEEP'),
+(-1604010,'%s begins to glow faintly.',0,2,0,0,'colossus EMOTE_GLOW'),
+
+(-1604011,'We fought back da Scourge. What chance joo be thinkin\' JOO got?',14721,1,0,0,'moorabi SAY_AGGRO'),
+(-1604012,'Da ground gonna swallow you up! ',14723,1,0,0,'moorabi SAY_QUAKE'),
+(-1604013,'Get ready for somethin\'... much... BIGGAH!',14722,1,0,0,'moorabi SAY_TRANSFORM'),
+(-1604014,'I crush you, cockroaches!',14725,1,0,0,'moorabi SAY_SLAY_1'),
+(-1604015,'Who gonna stop me; you?',14726,1,0,0,'moorabi SAY_SLAY_2'),
+(-1604016,'Not so tough now.',14727,1,0,0,'moorabi SAY_SLAY_3'),
+(-1604017,'If our gods can die... den so can we...',14728,1,0,0,'moorabi SAY_DEATH'),
+(-1604018,'%s begins to transform!',0,3,0,0,'moorabi EMOTE_TRANSFORM'),
+
+(-1604019,'I\'m gonna spill your guts, mon!',14430,1,0,0,'galdarah SAY_AGGRO'),
+(-1604020,'Ain\'t gonna be nottin\' left after this!',14431,1,0,0,'galdarah SAY_TRANSFORM_1'),
+(-1604021,'You wanna see power? I\'m gonna show you power!',14432,1,0,0,'galdarah SAY_TRANSFORM_2'),
+(-1604022,'Gut them! Impale them!',14433,1,0,0,'galdarah SAY_SUMMON_1'),
+(-1604023,'Kill them all!',14434,1,0,0,'galdarah SAY_SUMMON_2'),
+(-1604024,'Say hello to my BIG friend!',14435,1,0,0,'galdarah SAY_SUMMON_3'),
+(-1604025,'What a rush!',14436,1,0,0,'galdarah SAY_SLAY_1'),
+(-1604026,'Who needs gods, when WE ARE GODS!',14437,1,0,0,'galdarah SAY_SLAY_2'),
+(-1604027,'I told ya so!',14438,1,0,0,'galdarah SAY_SLAY_3'),
+(-1604028,'Even the mighty... can fall.',14439,1,0,0,'galdarah SAY_DEATH');
 
 -- -1 608 000 VIOLET HOLD
 
@@ -3859,6 +4042,31 @@ INSERT INTO script_waypoint VALUES
 (24358, 2, 120.670631, 1636.346802, 42.415, 0, ''),
 (24358, 3, 120.536003, 1611.654663, 43.473, 10000, 'SAY_OPEN_ENTRANCE'),
 (24358, 4, 120.536003, 1611.654663, 43.473, 0, '');
+
+DELETE FROM script_waypoint WHERE entry=28070;
+INSERT INTO script_waypoint VALUES
+(28070, 0, 1053.789795, 476.639343, 207.744, 0, ''),
+(28070, 1, 1032.293945, 467.623444, 207.736, 0, ''),
+(28070, 2, 1017.908752, 454.765656, 207.719, 0, ''),
+(28070, 3, 1004.810120, 441.305115, 207.373, 0, ''),
+(28070, 4, 988.694214, 424.422485, 207.425, 0, ''),
+(28070, 5, 984.816345, 422.177917, 205.994, 0, ''),
+(28070, 6, 977.204468, 420.026917, 205.994, 0, ''),
+(28070, 7, 962.388123, 421.983307, 205.994, 0, ''),
+(28070, 8, 950.419556, 416.515198, 205.994, 0, ''),
+(28070, 9, 943.972290, 403.071228, 205.994, 0, ''),
+(28070, 10, 947.921936, 387.683563, 205.994, 0, ''),
+(28070, 11, 946.554749, 383.270782, 205.994, 0, ''),
+(28070, 12, 944.654724, 380.630859, 207.286, 0, ''),
+(28070, 13, 941.101563, 377.373413, 207.421, 0, 'reach tribunal, set pause'),
+(28070, 14, 935.217896, 370.557343, 207.421, 0, ''),
+(28070, 15, 928.035950, 363.026733, 204.018, 0, ''),
+(28070, 16, 909.287292, 344.392792, 203.706, 0, ''),
+(28070, 17, 897.946838, 333.634735, 203.706, 0, 'reach panel'),
+(28070, 18, 918.914429, 351.312866, 203.706, 0, 'reach floor disc (end event begin)'),
+(28070, 19, 928.070068, 363.296326, 204.091, 0, 'stealth'),
+(28070, 20, 934.817627, 370.136261, 207.421, 0, ''),
+(28070, 21, 941.501465, 377.254456, 207.421, 0, '');
 
 DELETE FROM script_waypoint WHERE entry=28912;
 INSERT INTO script_waypoint VALUES

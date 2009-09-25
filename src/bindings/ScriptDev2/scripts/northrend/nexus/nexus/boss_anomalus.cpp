@@ -235,8 +235,11 @@ struct MANGOS_DLL_DECL mob_chaotic_riftAI : public Scripted_NoMovementAI
 
     void JustDied(Unit* pKiller)
     {
-	Creature* pAnomalus = ((Creature *)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_ANOMALUS)));
-	((boss_anomalusAI*)(pAnomalus->AI()))->RiftDied(m_creature);
+	if(m_pInstance)
+	{
+		Creature* pAnomalus = ((Creature *)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_ANOMALUS)));
+		((boss_anomalusAI*)(pAnomalus->AI()))->RiftDied(m_creature);
+	}
     }
 
     void KilledUnit(Unit* pVictim)
