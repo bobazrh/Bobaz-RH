@@ -1314,9 +1314,13 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
     switch(targetMode)
     {
         case TARGET_RANDOM_NEARBY_LOC:
+            radius *= sqrt(rand_norm()); // Get a random point in circle. Use sqrt(rand) to correct distribution when converting polar to Cartesian coordinates.
+                                         // no 'break' expected since we use code in case TARGET_RANDOM_CIRCUMFERENCE_POINT!!!
+        case TARGET_RANDOM_CIRCUMFERENCE_POINT:
         {
-            float dest_x = m_caster->GetPositionX() + irand(-radius, radius);
-            float dest_y = m_caster->GetPositionY() + irand(-radius, radius);
+            float angle = 2.0 * M_PI * rand_norm();
+            float dest_x = m_caster->GetPositionX() + cos(angle) * radius;
+            float dest_y = m_caster->GetPositionY() + sin(angle) * radius;
             float dest_z = m_caster->GetMap()->GetHeight(dest_x, dest_y, MAX_HEIGHT);
             m_targets.setDestination(dest_x, dest_y, dest_z);
 
@@ -1325,8 +1329,10 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
         }
         case TARGET_RANDOM_NEARBY_DEST:
         {
-            float dest_x = m_targets.m_destX + irand(-radius, radius);
-            float dest_y = m_targets.m_destY + irand(-radius, radius);
+            radius *= sqrt(rand_norm()); // Get a random point in circle. Use sqrt(rand) to correct distribution when converting polar to Cartesian coordinates.
+            float angle = 2.0 * M_PI * rand_norm();
+            float dest_x = m_targets.m_destX + cos(angle) * radius;
+            float dest_y = m_targets.m_destY + sin(angle) * radius;
             float dest_z = m_caster->GetMap()->GetHeight(dest_x, dest_y, MAX_HEIGHT);
             m_targets.setDestination(dest_x, dest_y, dest_z);
 
@@ -1743,6 +1749,9 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
             FillAreaTargets(TagUnitMap,m_caster->GetPositionX(), m_caster->GetPositionY(),radius,inFront ? PUSH_IN_FRONT : PUSH_IN_BACK,SPELL_TARGETS_AOE_DAMAGE);
             break;
         }
+        case TARGET_NARROW_FRONTAL_CONE:
+            FillAreaTargets(TagUnitMap,m_caster->GetPositionX(), m_caster->GetPositionY(), radius, PUSH_IN_FRONT_15, SPELL_TARGETS_AOE_DAMAGE);
+            break;
         case TARGET_IN_FRONT_OF_CASTER_30:
             FillAreaTargets(TagUnitMap,m_caster->GetPositionX(), m_caster->GetPositionY(), radius, PUSH_IN_FRONT_30, SPELL_TARGETS_AOE_DAMAGE);
             break;
@@ -2240,7 +2249,7 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
             break;
         }
         default:
-            sLog.outError( "SPELL: Unknown implicit target (%u) for spell ID %u", targetMode, m_spellInfo->Id );
+            //sLog.outError( "SPELL: Unknown implicit target (%u) for spell ID %u", targetMode, m_spellInfo->Id );
             break;
     }
 
