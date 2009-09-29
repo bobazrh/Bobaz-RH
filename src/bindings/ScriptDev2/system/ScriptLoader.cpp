@@ -4,6 +4,9 @@
 
 #include "precompiled.h"
 
+//battlegrounds
+extern void AddSC_battleground();
+
 //custom
 
 //examples
@@ -241,6 +244,10 @@ extern void AddSC_ungoro_crater();
 extern void AddSC_winterspring();
 
 //northrend
+extern void AddSC_boss_jedoga();                            //ahnkahet
+extern void AddSC_boss_nadox();
+extern void AddSC_boss_taldaram();
+extern void AddSC_boss_volazj();
 extern void AddSC_boss_anubarak();                          //azjol-nerub
 extern void AddSC_boss_hadronox();
 extern void AddSC_boss_krikthir();
@@ -252,6 +259,7 @@ extern void AddSC_boss_colossus();                          //gundrak
 extern void AddSC_boss_galdarah();
 extern void AddSC_boss_moorabi();
 extern void AddSC_boss_sladran();
+extern void AddSC_instance_gundrak();
 extern void AddSC_boss_anubrekhan();                        //naxxramas
 extern void AddSC_boss_four_horsemen();
 extern void AddSC_boss_faerlina();
@@ -377,6 +385,9 @@ extern void AddSC_zangarmarsh();
 
 void AddScripts()
 {
+    //battlegrounds
+    AddSC_battleground();
+
     //custom
 
     //examples
@@ -614,6 +625,10 @@ void AddScripts()
     AddSC_winterspring();
 
     //northrend
+    AddSC_boss_jedoga();                                    //ahnkahet
+    AddSC_boss_nadox();
+    AddSC_boss_taldaram();
+    AddSC_boss_volazj();
     AddSC_boss_anubarak();                                  //azjol-nerub
     AddSC_boss_hadronox();
     AddSC_boss_krikthir();
@@ -625,6 +640,7 @@ void AddScripts()
     AddSC_boss_galdarah();
     AddSC_boss_moorabi();
     AddSC_boss_sladran();
+    AddSC_instance_gundrak();
     AddSC_boss_anubrekhan();                                //naxxramas
     AddSC_boss_four_horsemen();
     AddSC_boss_faerlina();

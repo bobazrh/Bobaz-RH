@@ -47,6 +47,7 @@ include/sc_grid_searchers.cpp \
 include/sc_grid_searchers.h \
 include/sc_instance.cpp \
 include/sc_instance.h \
+scripts/battlegrounds/battleground.cpp \
 scripts/eastern_kingdoms/alterac_mountains.cpp \
 scripts/eastern_kingdoms/arathi_highlands.cpp \
 scripts/eastern_kingdoms/blasted_lands.cpp \
@@ -295,6 +296,10 @@ scripts/northrend/grizzly_hills.cpp \
 scripts/northrend/icecrown.cpp \
 scripts/northrend/sholazar_basin.cpp \
 scripts/northrend/storm_peaks.cpp \
+scripts/northrend/azjol-nerub/ahnkahet/boss_jedoga.cpp \
+scripts/northrend/azjol-nerub/ahnkahet/boss_nadox.cpp \
+scripts/northrend/azjol-nerub/ahnkahet/boss_taldaram.cpp \
+scripts/northrend/azjol-nerub/ahnkahet/boss_volazj.cpp \
 scripts/northrend/azjol-nerub/azjol-nerub/boss_anubarak.cpp \
 scripts/northrend/azjol-nerub/azjol-nerub/boss_hadronox.cpp \
 scripts/northrend/azjol-nerub/azjol-nerub/boss_krikthir.cpp \
@@ -307,6 +312,8 @@ scripts/northrend/gundrak/boss_colossus.cpp \
 scripts/northrend/gundrak/boss_galdarah.cpp \
 scripts/northrend/gundrak/boss_moorabi.cpp \
 scripts/northrend/gundrak/boss_sladran.cpp \
+scripts/northrend/gundrak/def_gundrak.h \
+scripts/northrend/gundrak/instance_gundrak.cpp \
 scripts/northrend/naxxramas/boss_anubrekhan.cpp \
 scripts/northrend/naxxramas/boss_faerlina.cpp \
 scripts/northrend/naxxramas/boss_four_horsemen.cpp \

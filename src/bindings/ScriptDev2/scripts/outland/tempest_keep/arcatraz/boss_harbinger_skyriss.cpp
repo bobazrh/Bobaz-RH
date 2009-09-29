@@ -120,11 +120,7 @@ struct MANGOS_DLL_DECL boss_harbinger_skyrissAI : public ScriptedAI
         if (victim->GetTypeId() != TYPEID_PLAYER)
             return;
 
-        switch(rand()%2)
-        {
-            case 0: DoScriptText(SAY_KILL_1, m_creature); break;
-            case 1: DoScriptText(SAY_KILL_2, m_creature); break;
-        }
+        DoScriptText(urand(0, 1) ? SAY_KILL_1 : SAY_KILL_2, m_creature);
     }
 
     void JustSummoned(Creature *summoned)
@@ -132,17 +128,14 @@ struct MANGOS_DLL_DECL boss_harbinger_skyrissAI : public ScriptedAI
         summoned->AI()->AttackStart(m_creature->getVictim());
     }
 
-    void DoSplit(uint32 val)
+    void DoSplit()
     {
         if (m_creature->IsNonMeleeSpellCasted(false))
             m_creature->InterruptNonMeleeSpells(false);
 
         DoScriptText(SAY_IMAGE, m_creature);
 
-        if (val == 66)
-            DoCast(m_creature, SPELL_66_ILLUSION);
-        else
-            DoCast(m_creature, SPELL_33_ILLUSION);
+        DoCast(m_creature, IsImage33 ? SPELL_33_ILLUSION : SPELL_66_ILLUSION);
     }
 
     void UpdateAI(const uint32 diff)
@@ -186,14 +179,14 @@ struct MANGOS_DLL_DECL boss_harbinger_skyrissAI : public ScriptedAI
 
         if (!IsImage66 && ((m_creature->GetHealth()*100) / m_creature->GetMaxHealth() <= 66))
         {
-            DoSplit(66);
             IsImage66 = true;
+            DoSplit();
         }
 
         if (!IsImage33 && ((m_creature->GetHealth()*100) / m_creature->GetMaxHealth() <= 33))
         {
-            DoSplit(33);
             IsImage33 = true;
+            DoSplit();
         }
 
         if (MindRend_Timer < diff)
@@ -211,11 +204,7 @@ struct MANGOS_DLL_DECL boss_harbinger_skyrissAI : public ScriptedAI
             if (m_creature->IsNonMeleeSpellCasted(false))
                 return;
 
-            switch(rand()%2)
-            {
-                case 0: DoScriptText(SAY_FEAR_1, m_creature); break;
-                case 1: DoScriptText(SAY_FEAR_2, m_creature); break;
-            }
+            DoScriptText(urand(0, 1) ? SAY_FEAR_1 : SAY_FEAR_2, m_creature);
 
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1))
                 DoCast(target,SPELL_FEAR);
@@ -230,11 +219,7 @@ struct MANGOS_DLL_DECL boss_harbinger_skyrissAI : public ScriptedAI
             if (m_creature->IsNonMeleeSpellCasted(false))
                 return;
 
-            switch(rand()%2)
-            {
-                case 0: DoScriptText(SAY_MIND_1, m_creature); break;
-                case 1: DoScriptText(SAY_MIND_2, m_creature); break;
-            }
+            DoScriptText(urand(0, 1) ? SAY_MIND_1 : SAY_MIND_2, m_creature);
 
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1))
                 DoCast(target, m_bIsHeroicMode ? H_SPELL_DOMINATION : SPELL_DOMINATION);

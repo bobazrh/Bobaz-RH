@@ -393,6 +393,14 @@
 			Name="scripts"
 			>
 			<Filter
+				Name="battlegrounds"
+				>
+				<File
+					RelativePath="..\scripts\battlegrounds\battleground.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
 				Name="custom"
 				>
 			</Filter>
@@ -1549,6 +1557,22 @@
 					<Filter
 						Name="ahnkahet"
 						>
+						<File
+							RelativePath="..\scripts\northrend\azjol-nerub\ahnkahet\boss_jedoga.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\northrend\azjol-nerub\ahnkahet\boss_nadox.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\northrend\azjol-nerub\ahnkahet\boss_taldaram.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\northrend\azjol-nerub\ahnkahet\boss_volazj.cpp"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="azjol-nerub"
@@ -1608,6 +1632,14 @@
 					</File>
 					<File
 						RelativePath="..\scripts\northrend\gundrak\boss_sladran.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\gundrak\def_gundrak.h"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\gundrak\instance_gundrak.cpp"
 						>
 					</File>
 				</Filter>
