@@ -2234,14 +2234,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 
         switch(GetId())
         {
-            case 2584:                                      // Waiting to Resurrect
-            {
-                // Waiting to resurrect spell cancel, we must remove player from resurrect queue
-                if(m_target->GetTypeId() == TYPEID_PLAYER)
-                    if(BattleGround *bg = ((Player*)m_target)->GetBattleGround())
-                        bg->RemovePlayerFromResurrectQueue(m_target->GetGUID());
-                return;
-            }
             case 36730:                                     // Flame Strike
             {
                 m_target->CastSpell(m_target, 36731, true, NULL, this);
@@ -6247,7 +6239,7 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
 
 void Aura::PeriodicTick()
 {
-    if(!m_target->isAlive())
+    if (!m_target->isAlive() ^ IsDeathOnlySpell(GetSpellProto()))
         return;
 
     switch(m_modifier.m_auraname)
@@ -7388,6 +7380,17 @@ void Aura::HandleModTargetArmorPct(bool apply, bool Real)
 
 void Aura::HandleAuraModAllCritChance(bool apply, bool Real)
 {
-    this->HandleAuraModCritPercent(apply, Real);
-    this->HandleModSpellCritChance(apply, Real);
+    // spells required only Real aura add/remove
+    if(!Real)
+        return;
+
+    if(m_target->GetTypeId() != TYPEID_PLAYER)
+        return;
+
+    ((Player*)m_target)->HandleBaseModValue(CRIT_PERCENTAGE,         FLAT_MOD, float (m_modifier.m_amount), apply);
+    ((Player*)m_target)->HandleBaseModValue(OFFHAND_CRIT_PERCENTAGE, FLAT_MOD, float (m_modifier.m_amount), apply);
+    ((Player*)m_target)->HandleBaseModValue(RANGED_CRIT_PERCENTAGE,  FLAT_MOD, float (m_modifier.m_amount), apply);
+
+    // included in Player::UpdateSpellCritChance calculation
+    ((Player*)m_target)->UpdateAllSpellCritChances();
 }

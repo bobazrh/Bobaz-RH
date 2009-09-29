@@ -329,7 +329,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX3_UNK9                       0x00000200            // 9
 #define SPELL_ATTR_EX3_MAIN_HAND                  0x00000400            // 10 Main hand weapon required
 #define SPELL_ATTR_EX3_BATTLEGROUND               0x00000800            // 11 Can casted only on battleground
-#define SPELL_ATTR_EX3_UNK12                      0x00001000            // 12
+#define SPELL_ATTR_EX3_CAST_ON_DEAD               0x00001000            // 12 target is a dead player (not every spell has this flag)
 #define SPELL_ATTR_EX3_UNK13                      0x00002000            // 13
 #define SPELL_ATTR_EX3_UNK14                      0x00004000            // 14 "Honorless Target" only this spells have this flag
 #define SPELL_ATTR_EX3_UNK15                      0x00008000            // 15 Auto Shoot, Shoot, Throw,  - this is autoshot flag
@@ -1032,9 +1032,11 @@ enum Targets
     TARGET_ALL_PARTY                   = 33,
     TARGET_ALL_PARTY_AROUND_CASTER_2   = 34,                // used in Tranquility
     TARGET_SINGLE_PARTY                = 35,
+    TARGET_ALL_HOSTILE_UNITS_AROUND_CASTER = 36,
     TARGET_AREAEFFECT_PARTY            = 37,
     TARGET_SCRIPT                      = 38,
     TARGET_SELF_FISHING                = 39,
+    TARGET_FOCUS_OR_SCRIPTED_GAMEOBJECT= 40,
     TARGET_TOTEM_EARTH                 = 41,
     TARGET_TOTEM_WATER                 = 42,
     TARGET_TOTEM_AIR                   = 43,
@@ -1047,12 +1049,16 @@ enum Targets
     TARGET_DYNAMIC_OBJECT_RIGHT_SIDE   = 50,
     TARGET_AREAEFFECT_CUSTOM_2         = 52,
     TARGET_CURRENT_ENEMY_COORDINATES   = 53,                // set unit coordinates as dest, only 16 target B imlemented
+    TARGET_LARGE_FRONTAL_CONE          = 54,
     TARGET_ALL_RAID_AROUND_CASTER      = 56,
     TARGET_SINGLE_FRIEND_2             = 57,
     TARGET_NARROW_FRONTAL_CONE         = 60,
     TARGET_AREAEFFECT_PARTY_AND_CLASS  = 61,
     TARGET_DUELVSPLAYER_COORDINATES    = 63,
+    TARGET_INFRONT_OF_VICTIM           = 64,
     TARGET_BEHIND_VICTIM               = 65,                // used in teleport behind spells, caster/target dependent from spell effect
+    TARGET_RIGHT_FROM_VICTIM           = 66,
+    TARGET_LEFT_FROM_VICTIM            = 67,
     TARGET_RANDOM_NEARBY_LOC           = 72,                // used in teleport onto nearby locations
     TARGET_RANDOM_CIRCUMFERENCE_POINT  = 73,
     TARGET_DYNAMIC_OBJECT_COORDINATES  = 76,
@@ -1894,7 +1900,7 @@ enum HolidayIds
     HOLIDAY_NOBLEGARDEN              = 181,
     HOLIDAY_CHILDRENS_WEEK           = 201,
     HOLIDAY_CALL_TO_ARMS_AV          = 283,
-    HOLIDAY_CALL_TO_ARMS_WG          = 284,
+    HOLIDAY_CALL_TO_ARMS_WS          = 284,
     HOLIDAY_CALL_TO_ARMS_AB          = 285,
     HOLIDAY_FISHING_EXTRAVAGANZA     = 301,
     HOLIDAY_HARVEST_FESTIVAL         = 321,
@@ -1902,7 +1908,7 @@ enum HolidayIds
     HOLIDAY_LUNAR_FESTIVAL           = 327,
     HOLIDAY_LOVE_IS_IN_THE_AIR       = 335,
     HOLIDAY_FIRE_FESTIVAL            = 341,
-    HOLIDAY_CALL_TO_ARMS_ES          = 353,
+    HOLIDAY_CALL_TO_ARMS_EY          = 353,
     HOLIDAY_BREWFEST                 = 372,
     HOLIDAY_DARKMOON_FAIRE_ELWYNN    = 374,
     HOLIDAY_DARKMOON_FAIRE_THUNDER   = 375,
