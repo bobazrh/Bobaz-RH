@@ -419,7 +419,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         {
             DoScriptText(SAY_SARTHARION_BREATH, m_creature);
             DoCast(m_creature->getVictim(), m_bIsHeroic ? SPELL_FLAME_BREATH_H : SPELL_FLAME_BREATH);
-            m_uiFlameBreathTimer = 25000 + rand()%10000;
+            m_uiFlameBreathTimer = urand(25000, 35000);
         }
         else
             m_uiFlameBreathTimer -= uiDiff;
@@ -428,7 +428,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         if (m_uiTailSweepTimer < uiDiff)
         {
             DoCast(m_creature->getVictim(), m_bIsHeroic ? SPELL_TAIL_LASH_H : SPELL_TAIL_LASH);
-            m_uiTailSweepTimer = 15000 + rand()%5000;
+            m_uiTailSweepTimer = urand(15000, 20000);
         }
         else
             m_uiTailSweepTimer -= uiDiff;
@@ -437,7 +437,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         if (m_uiCleaveTimer < uiDiff)
         {
             DoCast(m_creature->getVictim(), SPELL_CLEAVE);
-            m_uiCleaveTimer = 7000 + rand()%3000;
+            m_uiCleaveTimer = urand(7000, 10000);
         }
         else
             m_uiCleaveTimer -= uiDiff;
@@ -456,7 +456,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
                     case 2: DoScriptText(SAY_SARTHARION_SPECIAL_3, m_creature); break;
                 }
             }
-            m_uiLavaStrikeTimer = 5000 + rand()%15000;
+            m_uiLavaStrikeTimer = urand(5000, 20000);
         }
         else
             m_uiLavaStrikeTimer -= uiDiff;
@@ -778,7 +778,7 @@ struct MANGOS_DLL_DECL mob_tenebronAI : public dummy_dragonAI
             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsHeroic ? SPELL_SHADOW_FISSURE_H : SPELL_SHADOW_FISSURE);
 
-            m_uiShadowFissureTimer = 15000 + rand()%5000;
+            m_uiShadowFissureTimer = urand(15000, 20000);
         }
         else
             m_uiShadowFissureTimer -= uiDiff;
@@ -788,7 +788,7 @@ struct MANGOS_DLL_DECL mob_tenebronAI : public dummy_dragonAI
         {
             DoScriptText(SAY_TENEBRON_BREATH, m_creature);
             DoCast(m_creature->getVictim(), m_bIsHeroic ? SPELL_SHADOW_BREATH_H : SPELL_SHADOW_BREATH);
-            m_uiShadowBreathTimer = 20000 + rand()%5000;
+            m_uiShadowBreathTimer = urand(20000, 25000);
         }
         else
             m_uiShadowBreathTimer -= uiDiff;
@@ -853,7 +853,7 @@ struct MANGOS_DLL_DECL mob_shadronAI : public dummy_dragonAI
             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsHeroic ? SPELL_SHADOW_FISSURE_H : SPELL_SHADOW_FISSURE);
 
-            m_uiShadowFissureTimer = 15000 + rand()%5000;
+            m_uiShadowFissureTimer = urand(15000, 20000);
         }
         else
             m_uiShadowFissureTimer -= uiDiff;
@@ -863,7 +863,7 @@ struct MANGOS_DLL_DECL mob_shadronAI : public dummy_dragonAI
         {
             DoScriptText(SAY_SHADRON_BREATH, m_creature);
             DoCast(m_creature->getVictim(), m_bIsHeroic ? SPELL_SHADOW_BREATH_H : SPELL_SHADOW_BREATH);
-            m_uiShadowBreathTimer = 20000 + rand()%5000;
+            m_uiShadowBreathTimer = urand(20000, 25000);
         }
         else
             m_uiShadowBreathTimer -= uiDiff;
@@ -922,7 +922,7 @@ struct MANGOS_DLL_DECL mob_vesperonAI : public dummy_dragonAI
             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsHeroic ? SPELL_SHADOW_FISSURE_H : SPELL_SHADOW_FISSURE);
 
-            m_uiShadowFissureTimer = 15000 + rand()%5000;
+            m_uiShadowFissureTimer = urand(15000, 20000);
         }
         else
             m_uiShadowFissureTimer -= uiDiff;
@@ -932,7 +932,7 @@ struct MANGOS_DLL_DECL mob_vesperonAI : public dummy_dragonAI
         {
             DoScriptText(SAY_VESPERON_BREATH, m_creature);
             DoCast(m_creature->getVictim(), m_bIsHeroic ? SPELL_SHADOW_BREATH_H : SPELL_SHADOW_BREATH);
-            m_uiShadowBreathTimer = 20000 + rand()%5000;
+            m_uiShadowBreathTimer = urand(20000, 25000);
         }
         else
             m_uiShadowBreathTimer -= uiDiff;
@@ -1152,7 +1152,7 @@ struct MANGOS_DLL_DECL mob_twilight_whelpAI : public ScriptedAI
         if (m_uiFadeArmorTimer < uiDiff)
         {
             DoCast(m_creature->getVictim(), SPELL_FADE_ARMOR);
-            m_uiFadeArmorTimer = 5000 + rand()%5000;
+            m_uiFadeArmorTimer = urand(5000, 10000);
         }
         else
             m_uiFadeArmorTimer -= uiDiff;
