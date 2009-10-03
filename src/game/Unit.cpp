@@ -4067,9 +4067,9 @@ void Unit::RemoveArenaAuras(bool onleave)
     for(AuraMap::iterator iter = m_Auras.begin(); iter != m_Auras.end();)
     {
         if ( !(iter->second->GetSpellProto()->AttributesEx4 & (1<<21)) // don't remove stances, shadowform, pally/hunter auras
-            && !iter->second->IsPassive()                               // don't remove passive auras
+            && !iter->second->IsPassive()                              // don't remove passive auras
             && (!(iter->second->GetSpellProto()->Attributes & SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY) || !(iter->second->GetSpellProto()->Attributes & SPELL_ATTR_UNK8))   // not unaffected by invulnerability auras or not having that unknown flag (that seemed the most probable)
-            && (iter->second->IsPositive() ^ onleave))                   // remove positive buffs on enter, negative buffs on leave
+            && (iter->second->IsPositive() != onleave))                // remove positive buffs on enter, negative buffs on leave
             RemoveAura(iter);
         else
             ++iter;
@@ -7008,7 +7008,8 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     // Blade Barrier
     if (auraSpellInfo->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT && auraSpellInfo->SpellIconID == 85)
     {
-        if (this->GetTypeId() != TYPEID_PLAYER || !((Player*)this)->IsBaseRuneSlotsOnCooldown(RUNE_BLOOD))
+        if (GetTypeId() != TYPEID_PLAYER || getClass() != CLASS_DEATH_KNIGHT ||
+            !((Player*)this)->IsBaseRuneSlotsOnCooldown(RUNE_BLOOD))
             return false;
     }
 
@@ -9398,7 +9399,7 @@ bool Unit::isTargetableForAttack(bool inverseAlive /*=false*/) const
     if (HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE))
         return false;
 
-    if (!(isAlive() ^ inverseAlive))
+    if (!(isAlive() != inverseAlive))
         return false;
 
     return IsInWorld() && !hasUnitState(UNIT_STAT_DIED)&& !isInFlight() /*&& !isStealth()*/;
