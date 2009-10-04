@@ -203,7 +203,7 @@ struct MANGOS_DLL_DECL boss_warbringer_omroggAI : public ScriptedAI
         if (!pLeftHead || !pRightHead)
             return;
 
-        m_iThreat = rand()%4;
+        m_iThreat = irand(0, 3);
 
         Unit* pSource = (pLeftHead->GetEntry() == Threat[m_iThreat].creature ? pLeftHead : pRightHead);
 
@@ -220,7 +220,7 @@ struct MANGOS_DLL_DECL boss_warbringer_omroggAI : public ScriptedAI
 
         if (Unit* pLeftHead = Unit::GetUnit(*m_creature,m_uiLeftHeadGUID))
         {
-            m_iAggro = rand()%3;
+            m_iAggro = irand(0, 2);
 
             DoScriptText(GoCombat[m_iAggro].id, pLeftHead);
 
@@ -253,7 +253,7 @@ struct MANGOS_DLL_DECL boss_warbringer_omroggAI : public ScriptedAI
         if (!pLeftHead || !pRightHead)
             return;
 
-        m_iKilling = rand()%2;
+        m_iKilling = irand(0, 1);
 
         Unit* pSource = (pLeftHead->GetEntry() == Killing[m_iKilling].creature ? pLeftHead : pRightHead);
 
@@ -362,19 +362,19 @@ struct MANGOS_DLL_DECL boss_warbringer_omroggAI : public ScriptedAI
                 DoResetThreat();
                 m_creature->AddThreat(target, 0.0f);
             }
-            m_uiResetThreat_Timer = 25000+rand()%15000;
+            m_uiResetThreat_Timer = urand(25000, 40000);
         }else m_uiResetThreat_Timer -= uiDiff;
 
         if (m_uiFear_Timer < uiDiff)
         {
             DoCast(m_creature,SPELL_FEAR);
-            m_uiFear_Timer = 15000+rand()%20000;
+            m_uiFear_Timer = urand(15000, 35000);
         }else m_uiFear_Timer -= uiDiff;
 
         if (m_uiThunderClap_Timer < uiDiff)
         {
             DoCast(m_creature,SPELL_THUNDERCLAP);
-            m_uiThunderClap_Timer = 15000+rand()%15000;
+            m_uiThunderClap_Timer = urand(15000, 30000);
         }else m_uiThunderClap_Timer -= uiDiff;
 
         DoMeleeAttackIfReady();

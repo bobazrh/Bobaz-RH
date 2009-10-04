@@ -334,8 +334,8 @@ scripts/northrend/nexus/nexus/boss_anomalus.cpp \
 scripts/northrend/nexus/nexus/boss_keristrasza.cpp \
 scripts/northrend/nexus/nexus/boss_ormorok.cpp \
 scripts/northrend/nexus/nexus/boss_telestra.cpp \
-scripts/northrend/nexus/nexus/instance_nexus.cpp \
 scripts/northrend/nexus/nexus/def_nexus.h \
+scripts/northrend/nexus/nexus/instance_nexus.cpp \
 scripts/northrend/obsidian_sanctum/boss_sartharion.cpp \
 scripts/northrend/obsidian_sanctum/def_obsidian_sanctum.h \
 scripts/northrend/obsidian_sanctum/instance_obsidian_sanctum.cpp \
@@ -352,7 +352,8 @@ scripts/northrend/ulduar/halls_of_stone/halls_of_stone.cpp \
 scripts/northrend/ulduar/ulduar/def_ulduar.h \
 scripts/northrend/ulduar/ulduar/instance_ulduar.cpp \
 scripts/northrend/utgarde_keep/utgarde_keep/boss_keleseth.cpp \
-scripts/northrend/utgarde_keep/utgarde_keep/boss_skarvald_dalronn.cpp \
+scripts/northrend/utgarde_keep/utgarde_keep/boss_skarvald_and_dalronn.cpp \
+scripts/northrend/utgarde_keep/utgarde_keep/boss_ingvar_the_pluderer.cpp \
 scripts/northrend/utgarde_keep/utgarde_keep/def_utgarde_keep.h \
 scripts/northrend/utgarde_keep/utgarde_keep/instance_utgarde_keep.cpp \
 scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_gortok.cpp \

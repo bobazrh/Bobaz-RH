@@ -5,6 +5,11 @@ DELETE FROM areatrigger_scripts WHERE entry=4560;
 INSERT INTO areatrigger_scripts VALUES (4560,'at_legion_teleporter');
 DELETE FROM areatrigger_scripts WHERE entry=3066;
 INSERT INTO areatrigger_scripts VALUES (3066,'at_ravenholdt');
+DELETE FROM areatrigger_scripts WHERE entry IN (4871, 4872, 4873);
+INSERT INTO areatrigger_scripts VALUES
+(4871,'at_warsong_grainery'),
+(4872,'at_torp_farm'),
+(4873,'at_warsong_slaughterhouse');
 
 /* BATTLEGROUNDS */
 UPDATE creature_template SET ScriptName='npc_spirit_guide' WHERE entry IN (13116, 13117);
@@ -726,6 +731,8 @@ UPDATE creature_template SET ScriptName='boss_anomalus' WHERE entry=26763;
 UPDATE creature_template SET ScriptName='boss_keristrasza' WHERE entry=26723;
 UPDATE creature_template SET ScriptName='boss_ormorok' WHERE entry=26794;
 UPDATE creature_template SET ScriptName='boss_telestra' WHERE entry=26731;
+UPDATE gameobject_template SET ScriptName='go_containment_sphere' WHERE entry IN (188526, 188527, 188528);
+UPDATE instance_template SET script='instance_nexus' WHERE map=576;
 
 /* OCULUS */
 
@@ -814,6 +821,7 @@ UPDATE creature_template SET ScriptName='npc_karynaku' WHERE entry=22112;
 UPDATE creature_template SET ScriptName='npc_wilda' WHERE entry=21027;
 UPDATE creature_template SET ScriptName='mob_torloth' WHERE entry=22076;
 UPDATE creature_template SET ScriptName='npc_lord_illidan_stormrage' WHERE entry=22083;
+UPDATE gameobject_template SET ScriptName='go_crystal_prison' WHERE entry=185126;
 
 /* SHATTRATH */
 UPDATE creature_template SET ScriptName='npc_dirty_larry' WHERE entry=19720;
@@ -847,6 +855,7 @@ UPDATE creature_template SET ScriptName='npc_kaya' WHERE entry=11856;
 
 /* STORM PEAKS */
 UPDATE creature_template SET ScriptName='npc_loklira_the_crone' WHERE entry=29975;
+UPDATE creature_template SET ScriptName='npc_thorim' WHERE entry=29445;
 UPDATE creature_template SET ScriptName='npc_roxi_ramrocket' WHERE entry=31247;
 
 /* STORMWIND CITY */

@@ -112,7 +112,7 @@ struct MANGOS_DLL_DECL boss_shahrazAI : public ScriptedAI
         FatalAttractionTimer = 60000;
         FatalAttractionExplodeTimer = 70000;
         ShriekTimer = 30000;
-        RandomYellTimer = 70000 + rand()%41 * 1000;
+        RandomYellTimer = urand(70000, 110000);
         EnrageTimer = 600000;
         ExplosionCount = 0;
 
@@ -150,7 +150,7 @@ struct MANGOS_DLL_DECL boss_shahrazAI : public ScriptedAI
 
     void TeleportPlayers()
     {
-        uint32 random = rand()%7;
+        uint32 random = urand(0, 6);
         float X = TeleportPoint[random].x;
         float Y = TeleportPoint[random].y;
         float Z = TeleportPoint[random].z;
@@ -208,14 +208,14 @@ struct MANGOS_DLL_DECL boss_shahrazAI : public ScriptedAI
 
             if (BeamCount > 3)
                 while(CurrentBeam == Beam)
-                    CurrentBeam = rand()%3;
+                    CurrentBeam = urand(0, 2);
 
         }else BeamTimer -= diff;
 
         // Random Prismatic Shield every 15 seconds.
         if (PrismaticShieldTimer < diff)
         {
-            uint32 random = rand()%6;
+            uint32 random = urand(0, 5);
             if (PrismaticAuras[random])
                 DoCast(m_creature, PrismaticAuras[random]);
             PrismaticShieldTimer = 15000;
@@ -231,7 +231,7 @@ struct MANGOS_DLL_DECL boss_shahrazAI : public ScriptedAI
             DoScriptText(urand(0, 1) ? SAY_SPELL2 : SAY_SPELL3, m_creature);
 
             FatalAttractionExplodeTimer = 2000;
-            FatalAttractionTimer = 40000 + rand()%31 * 1000;
+            FatalAttractionTimer = urand(40000, 70000);
         }else FatalAttractionTimer -= diff;
 
         if (FatalAttractionExplodeTimer < diff)
@@ -287,7 +287,7 @@ struct MANGOS_DLL_DECL boss_shahrazAI : public ScriptedAI
                 case 2: DoScriptText(SAY_TAUNT3, m_creature); break;
             }
 
-            RandomYellTimer = 60000 + rand()%91 * 1000;
+            RandomYellTimer = urand(60000, 150000);
         }else RandomYellTimer -= diff;
 
         DoMeleeAttackIfReady();
