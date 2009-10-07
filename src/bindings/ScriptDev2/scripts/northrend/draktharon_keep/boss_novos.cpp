@@ -61,7 +61,7 @@ Waypoint m_aSummon2=
 
 Waypoint m_aSummonElite = 
 {
-	=378.814, -791.131, 44.156
+	-378.814, -791.131, 44.156
 };
 
 /*######
@@ -97,6 +97,9 @@ struct MANGOS_DLL_DECL boss_novosAI : public ScriptedAI
 
 		m_uiHandlerCount = 0;
 		m_uiCrystalCount = 0;
+
+		m_bShielded=false;
+		m_creature->InterruptNonMeleeSpells(true);
 
 		if (m_pInstance)
         {
@@ -146,29 +149,29 @@ struct MANGOS_DLL_DECL boss_novosAI : public ScriptedAI
 
 		if(m_bShielded)
 		{
-			if (m_uiSummonTimer < diff)
+			if (m_uiSummonTimer < uiDiff)
 			{
 				Creature *pCreature = m_creature->SummonCreature(NPC_SHADOWCASTER, m_aSummon1.m_fX, m_aSummon1.m_fY, m_aSummon1.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->Attack(m_creature->SelectHostilTarget(),true);
+				pCreature->Attack(m_creature->getVictim(),true);
 				pCreature = m_creature->SummonCreature(NPC_FETIDTROLL, m_aSummon2.m_fX, m_aSummon2.m_fY, m_aSummon2.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->Attack(m_creature->SelectHostilTarget(),true);
-				m_uiSummonTimer = urand(1000, 3000);
-			}else m_uiSummonTimer -= diff;
+				pCreature->Attack(m_creature->getVictim(),true);
+				m_uiSummonTimer = urand(6000, 8000);
+			}else m_uiSummonTimer -= uiDiff;
 
-			if (m_uiSummonElite < diff)
+			if (m_uiSummonElite < uiDiff)
 			{
 				Creature *pCreature = m_creature->SummonCreature(NPC_HULKING, m_aSummonElite.m_fX, m_aSummonElite.m_fY, m_aSummonElite.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->Attack(m_creature->SelectHostilTarget(),true);
-				m_uiSummonTimer = urand(7000, 9000);
-			}else m_uiSummonElite -= diff;
+				pCreature->Attack(m_creature->getVictim(),true);
+				m_uiSummonElite = urand(11000, 13000);
+			}else m_uiSummonElite -= uiDiff;
 
-			if (m_uiHandlerCount < 4 && m_uiSummonHandler < diff)
+			if (m_uiHandlerCount < 4 && m_uiSummonHandler < uiDiff)
 			{
 				Creature *pCreature = m_creature->SummonCreature(NPC_HANDLER, m_aSummonElite.m_fX, m_aSummonElite.m_fY, m_aSummonElite.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->Attack(m_creature->SelectHostilTarget(),true);
-				m_uiSummonTimer = urand(12000, 14000);
+				pCreature->Attack(m_creature->getVictim(),true);
+				m_uiSummonHandler = urand(15000, 16000);
 				m_uiHandlerCount++;
-			}else m_uiSummonHandler -= diff;
+			}else m_uiSummonHandler -= uiDiff;
 		} else {
 			
 		}
@@ -201,10 +204,10 @@ struct MANGOS_DLL_DECL mob_crystal_handlerAI : public ScriptedAI
 		{
 			m_pInstance->SetData(GO_RITUAL_CRYSTAL_1,0);
 			Creature* pNovos = ((Creature *)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_NOVOS)));
-			((boss_novosAI*)(pNovos->AI()))->HandlerDied();
+			((boss_novosAI*)(pNovos->AI()))->HandlerDied(m_creature);
 		}
     }
-}
+};
 
 CreatureAI* GetAI_boss_novos(Creature* pCreature)
 {

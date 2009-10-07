@@ -308,6 +308,8 @@ scripts/northrend/azjol-nerub/azjol-nerub/instance_azjol-nerub.cpp \
 scripts/northrend/draktharon_keep/boss_novos.cpp \
 scripts/northrend/draktharon_keep/boss_tharonja.cpp \
 scripts/northrend/draktharon_keep/boss_trollgore.cpp \
+scripts/northrend/draktharon_keep/instance_draktharon.cpp \
+scripts/nodthrend/draktharon_keep/def_draktharon.h \
 scripts/northrend/gundrak/boss_colossus.cpp \
 scripts/northrend/gundrak/boss_galdarah.cpp \
 scripts/northrend/gundrak/boss_moorabi.cpp \
@@ -345,15 +347,14 @@ scripts/northrend/ulduar/halls_of_lightning/boss_loken.cpp \
 scripts/northrend/ulduar/halls_of_lightning/boss_volkhan.cpp \
 scripts/northrend/ulduar/halls_of_lightning/def_halls_of_lightning.h \
 scripts/northrend/ulduar/halls_of_lightning/instance_halls_of_lightning.cpp \
-scripts/northrend/utgarde_keep/utgarde_keep/boss_ingvar_the_plunderer.cpp \
 scripts/northrend/ulduar/halls_of_stone/boss_maiden_of_grief.cpp \
 scripts/northrend/ulduar/halls_of_stone/boss_sjonnir.cpp \
 scripts/northrend/ulduar/halls_of_stone/halls_of_stone.cpp \
 scripts/northrend/ulduar/ulduar/def_ulduar.h \
 scripts/northrend/ulduar/ulduar/instance_ulduar.cpp \
 scripts/northrend/utgarde_keep/utgarde_keep/boss_keleseth.cpp \
-scripts/northrend/utgarde_keep/utgarde_keep/boss_skarvald_and_dalronn.cpp \
-scripts/northrend/utgarde_keep/utgarde_keep/boss_ingvar_the_pluderer.cpp \
+scripts/northrend/utgarde_keep/utgarde_keep/boss_skarvald_dalronn.cpp \
+scripts/northrend/utgarde_keep/utgarde_keep/boss_ingvar_the_plunderer.cpp \
 scripts/northrend/utgarde_keep/utgarde_keep/def_utgarde_keep.h \
 scripts/northrend/utgarde_keep/utgarde_keep/instance_utgarde_keep.cpp \
 scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_gortok.cpp \

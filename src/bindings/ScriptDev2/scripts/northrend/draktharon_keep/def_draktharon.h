@@ -9,7 +9,7 @@ enum
     TYPE_NOVOS                  = 2,
     TYPE_DRED                   = 3,
 
-	NPC_DRAKTHARON				= 26631,
+	NPC_NOVOS				= 26631,
 
     GO_RITUAL_CRYSTAL_1			= 65700,
 	GO_RITUAL_CRYSTAL_2			= 65701,

@@ -25,10 +25,9 @@ EndScriptData */
 #include "def_draktharon.h"
 
 
-
 struct MANGOS_DLL_DECL instance_draktharon : public ScriptedInstance
 {
-    instance_naxxramas(Map* pMap) : ScriptedInstance(pMap) {Initialize();}
+    instance_draktharon(Map* pMap) : ScriptedInstance(pMap) {Initialize();}
 
     std::string strInstData;
     uint32 m_auiEncounter[MAX_ENCOUNTER];
@@ -45,9 +44,9 @@ struct MANGOS_DLL_DECL instance_draktharon : public ScriptedInstance
 
     void OnCreatureCreate(Creature* pCreature)
     {
-		switch(creature->GetEntry())
+		switch(pCreature->GetEntry())
         {
-			case NPC_NOVOS: m_iNovosGUID = pCreature->GetGUID;
+			case NPC_NOVOS: m_iNovosGUID = pCreature->GetGUID();
 		}
     }
 
@@ -80,6 +79,7 @@ struct MANGOS_DLL_DECL instance_draktharon : public ScriptedInstance
 
     void SetData(uint32 uiType, uint32 uiData)
     {
+		GameObject * pGo;
 		switch(uiType)
         {
 			case TYPE_NOVOS:
@@ -87,11 +87,12 @@ struct MANGOS_DLL_DECL instance_draktharon : public ScriptedInstance
 				if(uiData == NOT_STARTED)m_uiCrystalCounter=0;
 				break;
 			case GO_RITUAL_CRYSTAL_1:
-				if (m_uiCrystalCounter<4 && GameObject* pGo = instance->GetGameObject(m_goCrystals[m_uiCrystalCounter]))
+				if (m_uiCrystalCounter<4 && (pGo = instance->GetGameObject(m_goCrystals[m_uiCrystalCounter])))
 				{
-					m-uiCrystalCounter++;
-                    pGo->SetGoState(GO_STATE_READY);
+					m_uiCrystalCounter++;
+                    			pGo->SetGoState(GO_STATE_READY);
 				}
+				break;
 		}
     }
 
@@ -104,7 +105,7 @@ struct MANGOS_DLL_DECL instance_draktharon : public ScriptedInstance
     {
 		switch(uiData)
         {
-			case NPC_NOVOS:	          return m_iNovos;
+			case NPC_NOVOS:	          return m_iNovosGUID;
         }
         return 0;
     }
@@ -115,7 +116,7 @@ InstanceData* GetInstanceData_instance_draktharon(Map* pMap)
     return new instance_draktharon(pMap);
 }
 
-void AddSC_instance_naxxramas()
+void AddSC_instance_draktharon()
 {
     Script* pNewScript;
     pNewScript = new Script;
