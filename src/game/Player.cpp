@@ -17554,6 +17554,7 @@ void Player::AddSpellAndCategoryCooldowns(SpellEntry const* spellInfo, uint32 it
     {
         cat = spellInfo->Category;
         rec = spellInfo->RecoveryTime;
+        if(spellInfo->Id == 46584)rec=180*IN_MILISECONDS; //ugly Rise Dead CD hack
         catrec = spellInfo->CategoryRecoveryTime;
     }
 
