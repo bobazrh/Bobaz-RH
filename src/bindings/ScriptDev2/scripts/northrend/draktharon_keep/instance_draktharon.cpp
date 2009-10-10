@@ -87,9 +87,9 @@ struct MANGOS_DLL_DECL instance_draktharon : public ScriptedInstance
                 if(uiData == NOT_STARTED)
                 {
                     m_uiCrystalCounter=0;
-                    for(;m_uiCrystalCounter>=0;m_uiCrystalCounter--)
+                    for(int i=0;i<4;i++)
                     {
-                        if(pGo = instance->GetGameObject(m_goCrystals[m_uiCrystalCounter]))
+                        if(pGo = instance->GetGameObject(m_goCrystals[i]))
                             pGo->SetGoState(GO_STATE_ACTIVE);
                     }
                 }

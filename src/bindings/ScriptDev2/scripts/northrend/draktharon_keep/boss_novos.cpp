@@ -206,13 +206,13 @@ struct MANGOS_DLL_DECL boss_novosAI : public Scripted_NoMovementAI
 		} else {
 			if (m_uiWrathTimer < uiDiff)
 			{
-                DoCast(this->SelectUnit(SELECT_TARGET_RANDOM,1),(m_bIsHeroicMode) ? SPELL_WRATH_H : SPELL_WRATH);
+                DoCast(this->SelectUnit(SELECT_TARGET_RANDOM,0),(m_bIsHeroicMode) ? SPELL_WRATH_H : SPELL_WRATH);
                 m_uiWrathTimer = urand(12000,13500);
             } else m_uiWrathTimer -= uiDiff;
 
             if (m_uiFrostboltTimer < uiDiff)
 			{
-                DoCast(this->SelectUnit(SELECT_TARGET_RANDOM,1),(m_bIsHeroicMode) ? SPELL_FROSTBOLT_H : SPELL_FROSTBOLT);
+                DoCast(this->SelectUnit(SELECT_TARGET_RANDOM,0),(m_bIsHeroicMode) ? SPELL_FROSTBOLT_H : SPELL_FROSTBOLT);
                 m_uiFrostboltTimer = urand(4000,5500);
             } else m_uiFrostboltTimer -= uiDiff;
 
@@ -224,7 +224,7 @@ struct MANGOS_DLL_DECL boss_novosAI : public Scripted_NoMovementAI
 
             if (m_uiBlizzardTimer < uiDiff)
 			{
-                DoCast(this->SelectUnit(SELECT_TARGET_RANDOM,1),(m_bIsHeroicMode) ? SPELL_BLIZZARD_H : SPELL_BLIZZARD);
+                DoCast(this->SelectUnit(SELECT_TARGET_RANDOM,0),(m_bIsHeroicMode) ? SPELL_BLIZZARD_H : SPELL_BLIZZARD);
                 m_uiBlizzardTimer = urand(16000,17500);
             } else m_uiBlizzardTimer -= uiDiff;
 		}
