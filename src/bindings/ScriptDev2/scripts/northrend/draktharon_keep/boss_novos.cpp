@@ -68,9 +68,9 @@ Waypoint m_aSummonElite =
 ## boss_novos
 ######*/
 
-struct MANGOS_DLL_DECL boss_novosAI : public ScriptedAI
+struct MANGOS_DLL_DECL boss_novosAI : public Scripted_NoMovementAI
 {
-    boss_novosAI(Creature* pCreature) : ScriptedAI(pCreature)
+    boss_novosAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsHeroicMode = pCreature->GetMap()->IsHeroic();
@@ -111,7 +111,7 @@ struct MANGOS_DLL_DECL boss_novosAI : public ScriptedAI
     {
         DoScriptText(SAY_AGGRO, m_creature);
 		m_bShielded = true;
-		m_creature->CastSpell(m_creature,SPELL_ARCANE_FIELD,true);
+		m_creature->CastSpell(m_creature,SPELL_ARCANE_FIELD,false);
 		if (m_pInstance)
         {
             m_pInstance->SetData(TYPE_NOVOS, IN_PROGRESS);
@@ -152,23 +152,31 @@ struct MANGOS_DLL_DECL boss_novosAI : public ScriptedAI
 			if (m_uiSummonTimer < uiDiff)
 			{
 				Creature *pCreature = m_creature->SummonCreature(NPC_SHADOWCASTER, m_aSummon1.m_fX, m_aSummon1.m_fY, m_aSummon1.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->Attack(m_creature->getVictim(),true);
+                pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+                pCreature->AddThreat(m_creature->getVictim(),0.0f);
+                pCreature->SetInCombatWith(m_creature->getVictim());
 				pCreature = m_creature->SummonCreature(NPC_FETIDTROLL, m_aSummon2.m_fX, m_aSummon2.m_fY, m_aSummon2.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->Attack(m_creature->getVictim(),true);
+				pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+                pCreature->AddThreat(m_creature->getVictim(),0.0f);
+                pCreature->SetInCombatWith(m_creature->getVictim());
 				m_uiSummonTimer = urand(6000, 8000);
 			}else m_uiSummonTimer -= uiDiff;
 
 			if (m_uiSummonElite < uiDiff)
 			{
 				Creature *pCreature = m_creature->SummonCreature(NPC_HULKING, m_aSummonElite.m_fX, m_aSummonElite.m_fY, m_aSummonElite.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->Attack(m_creature->getVictim(),true);
+				pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+                pCreature->AddThreat(m_creature->getVictim(),0.0f);
+                pCreature->SetInCombatWith(m_creature->getVictim());
 				m_uiSummonElite = urand(11000, 13000);
 			}else m_uiSummonElite -= uiDiff;
 
 			if (m_uiHandlerCount < 4 && m_uiSummonHandler < uiDiff)
 			{
 				Creature *pCreature = m_creature->SummonCreature(NPC_HANDLER, m_aSummonElite.m_fX, m_aSummonElite.m_fY, m_aSummonElite.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->Attack(m_creature->getVictim(),true);
+				pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+                pCreature->AddThreat(m_creature->getVictim(),0.0f);
+                pCreature->SetInCombatWith(m_creature->getVictim());
 				m_uiSummonHandler = urand(15000, 16000);
 				m_uiHandlerCount++;
 			}else m_uiSummonHandler -= uiDiff;

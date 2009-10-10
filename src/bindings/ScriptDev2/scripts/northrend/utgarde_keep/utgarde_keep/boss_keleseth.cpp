@@ -165,7 +165,7 @@ struct MANGOS_DLL_DECL  boss_kelesethAI : public ScriptedAI
                         Skeleton->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
                         Skeleton->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY() , m_creature->GetPositionZ());
                         Skeleton->AddThreat(m_creature->getVictim(), 0.0f);
-			m_creature->SetInCombatWithZone();
+			            m_creature->SetInCombatWithZone();
                     }
                 }
                 Skeletons = true;
