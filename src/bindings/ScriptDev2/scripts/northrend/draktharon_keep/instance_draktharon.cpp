@@ -84,13 +84,21 @@ struct MANGOS_DLL_DECL instance_draktharon : public ScriptedInstance
         {
 			case TYPE_NOVOS:
 				m_auiEncounter[TYPE_NOVOS]=uiData;
-				if(uiData == NOT_STARTED)m_uiCrystalCounter=0;
+                if(uiData == NOT_STARTED)
+                {
+                    m_uiCrystalCounter=0;
+                    for(;m_uiCrystalCounter>=0;m_uiCrystalCounter--)
+                    {
+                        if(pGo = instance->GetGameObject(m_goCrystals[m_uiCrystalCounter]))
+                            pGo->SetGoState(GO_STATE_ACTIVE);
+                    }
+                }
 				break;
 			case GO_RITUAL_CRYSTAL_1:
 				if (m_uiCrystalCounter<4 && (pGo = instance->GetGameObject(m_goCrystals[m_uiCrystalCounter])))
 				{
 					m_uiCrystalCounter++;
-                    			pGo->SetGoState(GO_STATE_READY);
+                    pGo->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
 				}
 				break;
 		}

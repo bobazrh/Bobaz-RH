@@ -42,6 +42,18 @@ enum
 
 	SPELL_ARCANE_FIELD				= 47346,
 
+    SPELL_BLIZZARD                  = 49198,
+    SPELL_BLIZZARD_H                = 59909,
+
+    SPELL_ARCANE_BLAST              = 49034,
+    SPELL_ARCANE_BLAST_H            = 59854,
+
+    SPELL_WRATH                     = 50089,
+    SPELL_WRATH_H                   = 59856,
+
+    SPELL_FROSTBOLT                 = 49037,
+    SPELL_FROSTBOLT_H               = 59855
+
 };
 
 struct Waypoint
@@ -89,14 +101,24 @@ struct MANGOS_DLL_DECL boss_novosAI : public Scripted_NoMovementAI
 	uint32 m_uiHandlerCount;
 	uint32 m_uiCrystalCount;
 
+    uint32 m_uiWrathTimer;
+    uint32 m_uiFrostboltTimer;
+    uint32 m_uiArcaneBlastTimer;
+    uint32 m_uiBlizzardTimer;
+
     void Reset()
     {
 		m_uiSummonTimer = urand(1000,2000);
-		m_uiSummonElite = urand(6000,8000);
-		m_uiSummonHandler = urand(9000,10000);
+		m_uiSummonElite = urand(9000,12000);
+		m_uiSummonHandler = urand(15000,16000);
 
 		m_uiHandlerCount = 0;
 		m_uiCrystalCount = 0;
+
+        m_uiWrathTimer = urand(8000,12000);
+        m_uiFrostboltTimer = urand(2000,3000);
+        m_uiArcaneBlastTimer = urand(6000,6500);
+        m_uiBlizzardTimer = urand(10000,20000);
 
 		m_bShielded=false;
 		m_creature->InterruptNonMeleeSpells(true);
@@ -152,38 +174,60 @@ struct MANGOS_DLL_DECL boss_novosAI : public Scripted_NoMovementAI
 			if (m_uiSummonTimer < uiDiff)
 			{
 				Creature *pCreature = m_creature->SummonCreature(NPC_SHADOWCASTER, m_aSummon1.m_fX, m_aSummon1.m_fY, m_aSummon1.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-                pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+                //pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
                 pCreature->AddThreat(m_creature->getVictim(),0.0f);
                 pCreature->SetInCombatWith(m_creature->getVictim());
 				pCreature = m_creature->SummonCreature(NPC_FETIDTROLL, m_aSummon2.m_fX, m_aSummon2.m_fY, m_aSummon2.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+				//pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
                 pCreature->AddThreat(m_creature->getVictim(),0.0f);
                 pCreature->SetInCombatWith(m_creature->getVictim());
-				m_uiSummonTimer = urand(6000, 8000);
+				m_uiSummonTimer = urand(9000, 10000);
 			}else m_uiSummonTimer -= uiDiff;
 
 			if (m_uiSummonElite < uiDiff)
 			{
 				Creature *pCreature = m_creature->SummonCreature(NPC_HULKING, m_aSummonElite.m_fX, m_aSummonElite.m_fY, m_aSummonElite.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+				//pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
                 pCreature->AddThreat(m_creature->getVictim(),0.0f);
                 pCreature->SetInCombatWith(m_creature->getVictim());
-				m_uiSummonElite = urand(11000, 13000);
+				m_uiSummonElite = urand(14000, 16000);
 			}else m_uiSummonElite -= uiDiff;
 
 			if (m_uiHandlerCount < 4 && m_uiSummonHandler < uiDiff)
 			{
 				Creature *pCreature = m_creature->SummonCreature(NPC_HANDLER, m_aSummonElite.m_fX, m_aSummonElite.m_fY, m_aSummonElite.m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 10);
-				pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
+				//pCreature->RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
                 pCreature->AddThreat(m_creature->getVictim(),0.0f);
                 pCreature->SetInCombatWith(m_creature->getVictim());
-				m_uiSummonHandler = urand(15000, 16000);
+				m_uiSummonHandler = urand(25000, 36000);
 				m_uiHandlerCount++;
 			}else m_uiSummonHandler -= uiDiff;
-		} else {
-			
-		}
 
+		} else {
+			if (m_uiWrathTimer < uiDiff)
+			{
+                DoCast(this->SelectUnit(SELECT_TARGET_RANDOM,1),(m_bIsHeroicMode) ? SPELL_WRATH_H : SPELL_WRATH);
+                m_uiWrathTimer = urand(12000,13500);
+            } else m_uiWrathTimer -= uiDiff;
+
+            if (m_uiFrostboltTimer < uiDiff)
+			{
+                DoCast(this->SelectUnit(SELECT_TARGET_RANDOM,1),(m_bIsHeroicMode) ? SPELL_FROSTBOLT_H : SPELL_FROSTBOLT);
+                m_uiFrostboltTimer = urand(4000,5500);
+            } else m_uiFrostboltTimer -= uiDiff;
+
+            if (m_uiArcaneBlastTimer < uiDiff)
+			{
+                DoCast(m_creature->getVictim(),(m_bIsHeroicMode) ? SPELL_ARCANE_BLAST_H : SPELL_ARCANE_BLAST);
+                m_uiArcaneBlastTimer = urand(10000,11000);
+            } else m_uiArcaneBlastTimer -= uiDiff;
+
+            if (m_uiBlizzardTimer < uiDiff)
+			{
+                DoCast(this->SelectUnit(SELECT_TARGET_RANDOM,1),(m_bIsHeroicMode) ? SPELL_BLIZZARD_H : SPELL_BLIZZARD);
+                m_uiBlizzardTimer = urand(16000,17500);
+            } else m_uiBlizzardTimer -= uiDiff;
+		}
         //DoMeleeAttackIfReady();
     }
 	
