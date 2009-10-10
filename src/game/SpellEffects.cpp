@@ -259,6 +259,22 @@ void Spell::EffectInstaKill(uint32 /*i*/)
     if( !unitTarget || !unitTarget->isAlive() )
         return;
 
+    // Death Pact
+ 	if(m_spellInfo->Id==48743)
+	{	Unit *target = m_targets.getUnitTarget();
+		if(target && !target->isDead())
+		{
+			int32 heal =  m_caster->GetMaxHealth()  * 0.4;
+			m_caster->ModifyHealth(heal);
+			m_caster->SendHealSpellLog(m_caster,48743,heal,false);
+			target->SetHealth(0);
+			target->setDeathState(JUST_DIED);
+			m_targets.setUnitTarget(NULL);
+		}
+		return;
+	}
+
+
     // Demonic Sacrifice
     if(m_spellInfo->Id==18788 && unitTarget->GetTypeId()==TYPEID_UNIT)
     {

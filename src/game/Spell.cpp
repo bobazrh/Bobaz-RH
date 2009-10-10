@@ -4657,6 +4657,19 @@ SpellCastResult Spell::CheckCast(bool strict)
                     return SPELL_FAILED_BAD_TARGETS;
                 break;
             }
+            case SPELL_EFFECT_INSTAKILL:
+            {
+                // Death Pact
+	            if(m_spellInfo->Id == 48743 && m_caster->GetTypeId()==TYPEID_PLAYER)
+	            {
+		            Unit *pTarget =  m_caster->GetUnit(*m_caster, ((Player *)m_caster)->GetSelection());
+		            if(!pTarget || pTarget->isDead() || !pTarget->GetOwner()) 
+                        return SPELL_FAILED_BAD_TARGETS;
+		            if(((Creature*)pTarget)->GetCreatureType()!=CREATURE_TYPE_UNDEAD || pTarget->GetOwnerGUID() != m_caster->GetGUID()) 
+                        return SPELL_FAILED_BAD_TARGETS;
+		            m_targets.setUnitTarget(pTarget);
+	            }
+            }
             default:break;
         }
     }
