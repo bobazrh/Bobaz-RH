@@ -4402,11 +4402,26 @@ void Aura::HandlePeriodicEnergize(bool apply, bool Real)
 
     m_isPeriodic = apply;
 
-    // Replenishment (0.25% from max)
-    // Infinite Replenishment
-    if (GetId() == 57669 ||
-        GetId() == 61782)
-        m_modifier.m_amount = m_target->GetMaxPower(POWER_MANA) * 25 / 10000;
+	switch (m_spellProto->Id)
+	{
+		case 57669:			// Replenishment (0.25% from max)
+		case 61782:			// Infinite Replenishment
+			{
+				m_modifier.m_amount = m_target->GetMaxPower(POWER_MANA) * 25 / 10000;
+				return;
+			}
+		case 29166: //Innervate (value% of base mana)
+		case 54833: //Glyph of Innervate (+value% of casters base mana for caster)
+			{
+				Unit* caster = GetCaster();
+				m_modifier.m_amount = (caster->GetCreateMana()  * (GetSpellProto()->EffectBasePoints[0]+1) / 100) / (m_maxduration/1000);
+				if (m_spellProto->Id == 29166 && caster->HasAura(54832) && m_target->HasAura(29166))
+					caster->CastSpell(caster,54833,true,0,0,caster->GetGUID());
+				return;
+			}
+		default:
+			break;
+	}
 }
 
 void Aura::HandleAuraPowerBurn(bool apply, bool /*Real*/)
